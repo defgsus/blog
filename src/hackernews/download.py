@@ -19,7 +19,7 @@ class HackerNewsItems:
         self.work_queue = asyncio.Queue()
         self.expand_relation = False
         self.mongo = pymongo.mongo_client.MongoClient()
-        self.mongo.drop_database("hackernews")
+        # self.mongo.drop_database("hackernews")
         self.db = self.mongo.get_database("hackernews")
         self.db_items = self.db.get_collection("items")
         self._last_verbose_time = 0
