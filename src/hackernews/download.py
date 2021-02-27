@@ -15,7 +15,7 @@ class HackerNewsItems:
     URL = "https://hacker-news.firebaseio.com/v0"
 
     def __init__(self):
-        self.items = dict()
+        self.downloaded_items = set()
         self.work_queue = asyncio.Queue()
         self.expand_relation = False
         self.mongo = pymongo.mongo_client.MongoClient()
@@ -57,9 +57,9 @@ class HackerNewsItems:
 
         while not self.work_queue.empty():
             item_index = await self.work_queue.get()
-            if item_index not in self.items:
+            if item_index not in self.downloaded_items:
                 item = await self.get_item(item_index)
-                self.items[item_index] = item
+                self.downloaded_items.add(item_index)
                 if not item:
                     print("EMPTY", item_index, item)
                 elif "error" in item:
@@ -71,13 +71,13 @@ class HackerNewsItems:
                     if self.expand_relation:
                         if item.get("kids"):
                             for kid_index in item["kids"]:
-                                if kid_index not in self.items:
+                                if kid_index not in self.downloaded_items:
                                     self.work_queue.put_nowait(kid_index)
 
             if task_id == 0:
                 cur_time = time.time()
                 if cur_time - self._last_verbose_time > 1:
-                    num_items = len(self.items)
+                    num_items = len(self.downloaded_items)
                     num_per_sec = (num_items - self._last_verbose_items) / (cur_time - self._last_verbose_time)
                     print(f"downloaded/stored: {num_items} items ({num_per_sec:0.2f}/sec)")
 
@@ -95,5 +95,5 @@ if __name__ == "__main__":
     api = HackerNewsItems()
     api.download(0, 10000, num_tasks=10)
 
-    print(json.dumps(api.items, indent=2))
-    print(len(api.items))
+    print(json.dumps(api.downloaded_items, indent=2))
+    print(len(api.downloaded_items))
