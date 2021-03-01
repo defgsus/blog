@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+
+{%- include head.html -%}
+
+    {% if page.custom_js %}
+        {% for js_file in page.custom_js %}
+            <script type="text/javascript" src="{{ site.baseurl }}/assets/js/{{ js_file }}.js"></script>
+        {% endfor %}
+    {% endif %}
+
+<body>
+
+{%- include header.html -%}
+
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        {{ content }}
+    </div>
+</main>
+
+{%- include footer.html -%}
+
+</body>
+
+</html>

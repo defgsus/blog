@@ -1,0 +1,9 @@
+{% extends "index.md.j2" %}
+
+{% block header -%}
+---
+{% for key, value in meta.items() %}{{key}}: {{value}}
+{% endfor %}
+---
+{{ super() }}
+{% endblock header %}

@@ -1,2 +1,7 @@
+*.zip
+*.json
+*.ndjson
+__pycache__/
+.ipynb_checkpoints/
 .idea/
 env/
