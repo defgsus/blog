@@ -6,9 +6,12 @@ from traitlets.config import Config
 from nbconvert.exporters.markdown import MarkdownExporter
 from nbformat.notebooknode import NotebookNode
 
+
 class JekyllExporter(MarkdownExporter):
 
-    RE_HIDE = re.compile(r"^# hide")
+    RE_HIDE = re.compile(r"^# hide$")
+    RE_HIDE_CODE = re.compile(r"^# hide-code$")
+
     ENABLE = {
         "plotly": {
             "custom_js": ["require-stub", "plotly.min"],
@@ -46,7 +49,7 @@ class JekyllExporter(MarkdownExporter):
         for key, value in context["meta"].items():
             if isinstance(value, (list, tuple)):
                 context["meta"][key] = "\n" + "\n".join(f"  - {v}" for v in value)
-        
+
         return context
 
     def from_notebook_node(self, nb: NotebookNode, resources=None, my_var=None, **kw):
@@ -65,7 +68,6 @@ class JekyllExporter(MarkdownExporter):
         for cell in nb["cells"]:
             if cell.get("source"):
                 if self.RE_HIDE.findall(cell["source"]):
-                    print("HIDDEN", cell)
                     continue
 
             if cell.get("outputs"):
@@ -73,13 +75,13 @@ class JekyllExporter(MarkdownExporter):
                     if output.get("data"):
                         for key, value in output["data"].items():
                             if isinstance(value, str):
-                                output["data"][key] = self.process_cell_output(key, value)
+                                output["data"][key] = self.process_cell_output(output, key, value)
 
             cells.append(cell)
 
         nb["cells"] = cells
 
-    def process_cell_output(self, key: str, text: str) -> str:
+    def process_cell_output(self, output: dict, key: str, text: str) -> str:
         if "MutationObserver" in text:
             try:
                 # plotly adds some notebook specific javascript which we do not need
@@ -87,7 +89,6 @@ class JekyllExporter(MarkdownExporter):
                 idx = text.index("var gd = document.getElementById(")
                 idx2 = text.index("x.observe(outputEl, {childList: true});\n}}")
                 text = text[:idx] + text[idx2+43:]
-                print(repr(text))
             except IndexError:
                 pass
 
