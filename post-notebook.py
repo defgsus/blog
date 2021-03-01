@@ -53,8 +53,10 @@ def export_notebook(args):
 
     subprocess.check_call(commands)
 
+    # -- move asset files --
+
     asset_path = f"{today}-{output_filename}_files"
-    print("EX", os.path.join(output_dir, asset_path))
+
     if os.path.exists(os.path.join(output_dir, asset_path)):
         printe(f"moving {asset_path} to assets")
         if os.path.exists(os.path.join("blog", "assets", "nb", asset_path)):

@@ -9,8 +9,8 @@ from nbformat.notebooknode import NotebookNode
 
 class JekyllExporter(MarkdownExporter):
 
-    RE_HIDE = re.compile(r"^# hide$")
-    RE_HIDE_CODE = re.compile(r"^# hide-code$")
+    RE_HIDE = re.compile(r"^# hide[^\-]")
+    RE_HIDE_CODE = re.compile(r"^# hide-code")
 
     ENABLE = {
         "plotly": {
@@ -70,6 +70,8 @@ class JekyllExporter(MarkdownExporter):
                 if self.RE_HIDE.findall(cell["source"]):
                     continue
 
+                cell["source"] = self.process_cell_source(cell, cell["source"])
+
             if cell.get("outputs"):
                 for i, output in enumerate(cell["outputs"]):
                     if output.get("data"):
@@ -80,6 +82,12 @@ class JekyllExporter(MarkdownExporter):
             cells.append(cell)
 
         nb["cells"] = cells
+
+    def process_cell_source(self, cell: dict, text: str) -> str:
+        if self.RE_HIDE_CODE.findall(text):
+            return ""
+
+        return text
 
     def process_cell_output(self, output: dict, key: str, text: str) -> str:
         if "MutationObserver" in text:

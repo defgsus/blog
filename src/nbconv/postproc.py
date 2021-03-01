@@ -15,10 +15,15 @@ class JekyllPostProcessor(PostProcessorBase):
         with open(input) as fp:
             text = fp.read()
 
-        # move references to assets
+        # -- remove empty cells --
+
+        changed_text = text.replace("""```python\n\n```""", "")
+
+        # -- move references to assets --
+
         filename = ".".join(os.path.basename(input).split(".")[:-1]) + "_files"
 
-        changed_text = text.replace(f"{filename}/", f"{{{{site.baseurl}}}}/assets/nb/{filename}/")
+        changed_text = changed_text.replace(f"{filename}/", f"{{{{site.baseurl}}}}/assets/nb/{filename}/")
 
         if changed_text != text:
             printe(f"Postprocessing {input}")
