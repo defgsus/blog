@@ -1,11 +1,13 @@
 import sys
 import json
+import math
 import argparse
 import pymongo
 import datetime
 import urllib.parse
+from typing import Tuple
 from tqdm import tqdm
-from elastipy import Exporter
+from elastipy import Exporter, connections
 
 
 def parse_args():
@@ -13,7 +15,7 @@ def parse_args():
 
     parser.add_argument(
         "command", type=str,
-        help="'dump', 'export', 'delete-index'",
+        help="'dump', 'export', 'delete-index', 'index-stats'",
     )
 
     parser.add_argument(
@@ -29,6 +31,13 @@ def parse_args():
     parser.add_argument(
         "-o", "--offset", type=int, default=0, nargs="?",
         help="Offset to start dumping/exporting",
+    )
+
+    parser.add_argument(
+        "--chunk-size", type=int, default=500, nargs="?",
+        help="Number of documents per chunk exported to elasticsearch. "
+             "Defaults to 500, but might need to be decreased if available "
+             "system memory is too low",
     )
 
     return parser.parse_args()
@@ -48,6 +57,8 @@ class HackerNewsDb:
             self.mongo = pymongo.mongo_client.MongoClient()
             self.db = self.mongo.get_database("hackernews")
             self.db_items = self.db.get_collection("items")
+            #print(self.db_items.index_information())
+            #self.db_items.create_index({"timestamp": 1})
 
     def num_items(self):
         if not self.source:
@@ -57,7 +68,7 @@ class HackerNewsDb:
 
     def items(self, offset: int = 0):
         if not self.source:
-            yield from self.db_items.find().sort([("time", 1)]).skip(offset)
+            yield from self.db_items.find().sort([("_id", 1)]).skip(offset)
 
         elif self.source == "-":
             offset = -offset
@@ -99,7 +110,7 @@ class HackerNewsItemsExporter(Exporter):
             "text": {
                 "type": "text",
                 "analyzer": "stop",
-                "term_vector": "with_positions_offsets_payloads",
+                "term_vector": "yes",
                 "store": True,
                 "fielddata": True,
             },
@@ -107,10 +118,11 @@ class HackerNewsItemsExporter(Exporter):
             "title": {
                 "type": "text",
                 "analyzer": "stop",
-                "term_vector": "with_positions_offsets_payloads",
+                "term_vector": "yes",
                 "store": True,
                 "fielddata": True,
             },
+            "title_length": {"type": "integer"},
             "type": {"type": "keyword"},
             "url": {
                 "properties": {
@@ -125,6 +137,7 @@ class HackerNewsItemsExporter(Exporter):
             }
         }
     }
+
     #def get_document_index(self, es_data: dict) -> str:
     #    timestamp = es_data.get("timestamp")
     #    year = timestamp.strftime("%Y") if timestamp else "0"
@@ -154,6 +167,16 @@ class HackerNewsItemsExporter(Exporter):
             "text_length": len(data.get("text") or ""),
             "url": split_url(data.get("url")),
         })
+
+        for field in ("text", "title"):
+            if data.get(field):
+                e, e_all = get_byte_entropy(data[field].encode("utf-8", errors="ignore"))
+                data.update({
+                    f"{field}_length": len(data[field]),
+                    f"{field}_entropy": e,
+                    f"{field}_entropy_256": e_all,
+                })
+
         return data
 
 
@@ -170,9 +193,28 @@ def split_url(url):
         "host": u.netloc or None,
         "path": u.path or None,
         "ext": dot_path[-1] if len(dot_path) > 1 else None,
-        "query": sorted(query.keys()) or None,
-        "value": sorted(set(sum(query.values(), []))) or None,
+        "query": [q[:128] for q in sorted(query.keys())] or None,
+        "value": [v[:128] for v in sorted(set(sum(query.values(), [])))] or None,
     }
+
+
+def get_byte_entropy(data: bytes) -> Tuple[float, float]:
+    counter = dict()
+    for b in data:
+        counter[b] = counter.get(b, 0) + 1
+
+    total = len(data)
+    num_bytes = len(counter)
+    num_bytes_all = 256
+    entropy = 0.
+    entropy_all = 0.
+    if num_bytes > 1:
+        for b, count in counter.items():
+            prob = count / total
+            entropy -= prob * math.log(prob, num_bytes)
+            entropy_all -= prob * math.log(prob, num_bytes_all)
+
+    return entropy, entropy_all
 
 
 if __name__ == "__main__":
@@ -187,17 +229,29 @@ if __name__ == "__main__":
         for item in tqdm(db.items(), total=db.num_items()):
             if offset >= 0:
                 print(json.dumps(item, indent=indent))
+                # title = item.get("title") or ""
+                # print("\n", get_byte_entropy(bytes(title)), "\n")
             offset += 1
 
     elif args.command == "delete-index":
         exporter = HackerNewsItemsExporter()
         exporter.delete_index()
 
+    elif args.command == "index-stats":
+        es = connections.get()
+        stats = es.indices.stats(HackerNewsItemsExporter.INDEX_NAME)
+        print(json.dumps(stats, indent=2))
+
     elif args.command == "export":
         exporter = HackerNewsItemsExporter()
 
-        exporter.export_list(db.items(offset=args.offset), verbose=True, count=db.num_items())
-
+        exporter.export_list(
+            db.items(offset=args.offset),
+            verbose=True,
+            count=db.num_items(),
+            chunk_size=args.chunk_size,
+        )
+    
     else:
         print(f"Invalid command '{args.command}'")
         exit(1)
