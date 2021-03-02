@@ -11,7 +11,7 @@ If you download on a separate server, call:
 python download.py
 
 # and once it's finished
-python data.py dump | zip -9 | hn-items.zip
+python data.py dump | zip -9 > hn-items.zip
 ``` 
 
 then on your elasticsearch system:
