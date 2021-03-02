@@ -9,9 +9,12 @@ from nbformat.notebooknode import NotebookNode
 
 class JekyllExporter(MarkdownExporter):
 
+    # hide cell source and output
     RE_HIDE = re.compile(r"^# hide[^\-]")
+    # hide cell source but display output
     RE_HIDE_CODE = re.compile(r"^# hide-code")
 
+    # enable: xxx will include special requisites in the page
     ENABLE = {
         "plotly": {
             "custom_js": ["require-stub", "plotly.min"],
@@ -35,7 +38,7 @@ class JekyllExporter(MarkdownExporter):
             },
         }
         if nb.get("cells") and nb["cells"][0].get("source"):
-            keywords = ["layout", "date", "categories", "title", "enable"]
+            keywords = ["layout", "date", "categories", "tags", "title", "enable"]
             for line in nb["cells"][0]["source"].splitlines():
                 if ":" in line:
                     key, value = line[:line.index(":")].strip(), line[line.index(":")+1:].strip()
@@ -90,6 +93,10 @@ class JekyllExporter(MarkdownExporter):
         return text
 
     def process_cell_output(self, output: dict, key: str, text: str) -> str:
+        if "define('plotly'" in text:
+            # remove the plotly library inline script
+            text = ""
+
         if "MutationObserver" in text:
             try:
                 # plotly adds some notebook specific javascript which we do not need
@@ -97,7 +104,7 @@ class JekyllExporter(MarkdownExporter):
                 idx = text.index("var gd = document.getElementById(")
                 idx2 = text.index("x.observe(outputEl, {childList: true});\n}}")
                 text = text[:idx] + text[idx2+43:]
-            except IndexError:
+            except ValueError:
                 pass
 
         return text

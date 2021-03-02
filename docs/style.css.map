@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "style.css",
+	"sources": [
+		"style.scss"
+	],
+	"sourcesContent": [
+		".page-content .wrapper {\n  max-width: 70%\n}\n\ntable th, table td {\n  padding: .2rem .2rem;\n}\n"
+	],
+	"names": [],
+	"mappings": "AAAA,AAAA,aAAa,CAAC,QAAQ,CAAC,EACrB,SAAS,EAAE,GACb,GAAC;;AAED,AAAA,KAAK,CAAC,EAAE,EAAE,KAAK,CAAC,EAAE,CAAC,EACjB,OAAO,EAAE,WAAW,GACrB"
+}

@@ -11,7 +11,6 @@ def printe(*args, **kwargs):
 class JekyllPostProcessor(PostProcessorBase):
 
     def postprocess(self, input):
-        print("INPZ", input)
         with open(input) as fp:
             text = fp.read()
 
