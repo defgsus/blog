@@ -15,7 +15,7 @@ plot.set_backend("plotly")
 plotly.io.templates.default = "plotly_dark"
 es = connections.get()
 
-plotly.colors.sequential
+
 def heatmap(s, agg_x, agg_y, metric=None, percent=False, digits=2, height=None, **kwargs):
     s = s.copy()
     agg = agg_x(s)
