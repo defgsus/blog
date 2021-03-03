@@ -23,11 +23,19 @@ def parse_args():
         help="path to the notebook file",
     )
 
+    parser.add_argument(
+        "-d", "--date", type=str,
+        help="Override the publishing day using 'YYYY-MM-DD'",
+    )
+
     return parser.parse_args()
 
 
 def export_notebook(args):
     today = datetime.date.today()
+
+    if args.date:
+        today = datetime.datetime.strptime(args.date, "%Y-%m-%d").date()
 
     notebook_filename = os.path.basename(args.notebook)
     output_filename = ".".join(notebook_filename.split(".")[:-1]).lower()
