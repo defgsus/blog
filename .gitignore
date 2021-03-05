@@ -1,6 +1,8 @@
 *.zip
 *.json
 *.ndjson
+src/har_research/hars/
+src/har_research/*profile/
 __pycache__/
 .ipynb_checkpoints/
 .idea/
