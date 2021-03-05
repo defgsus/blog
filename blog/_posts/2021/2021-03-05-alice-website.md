@@ -1,6 +1,6 @@
 ---
 layout: post
-date: 2021-03-05T16:35:35.366239+01:00
+date: 2021-03-05T16:42:26.810202+01:00
 title: Alice visits a website (DRAFT)
 tags: privacy data ads
 
@@ -640,7 +640,7 @@ Alice might not like that at all and decline. She's still annoyed by the commeri
 
 Let's assume that the technology of Pods is completely secure and only Alice herself decides what goes in and what comes out and to whom. Still we have Urchin lingering on the page, freely executing javascript and collecting data about Alice as usual.
 
-So this is not merely a technological issue. A community like Tim Berners-Lee's [Inrupt](https://inrupt.com/about) must convince the major website owners to restrict the Urchin's actions to those allowed by Alice's profile. This has started with the [Data Protection Act 2018](https://en.wikipedia.org/wiki/Data_Protection_Act_2018) but this is not near anything useful at the moment. 
+So this is not merely a technological issue. A community like Tim Berners-Lee's [Inrupt](https://inrupt.com/about) must convince the major website owners to restrict the Urchin's actions to those allowed by Alice's profile. This has started with the [General Data Protection Regulation](https://en.wikipedia.org/wiki/General_Data_Protection_Regulation) in Europe but it's not near anything useful at the moment. 
 
 How can we trust Urchin or Bob? Well, if Alice's Pod eventually contains **all** of her data at some point in the future, Urchins want to have access so they'll need to play nice. We will see. 
 
