@@ -20,11 +20,16 @@ pd.set_option('display.max_rows', 500)
 #   if key somewhere in mime-type-string
 MIME_TYPES = {
     "html": "html",
+    "xml": "html",
     "javascript": "js",
     "font": "font",
     "css": "css",
     "image": "img",
     "octet-stream": "data",
+    "json": "data",
+    "text": "text",
+    "video": "video",
+    "mpegurl": "video",
 }
 
 
@@ -113,6 +118,7 @@ class HarFile:
 
     def connections(self):
         per_host = dict()
+        max_strength = 0
         for e in self.data["entries"]:
             url = urllib.parse.urlparse(e["request"]["url"])
             host = ".".join(url.netloc.split(".")[-2:])
@@ -125,6 +131,7 @@ class HarFile:
                     "res": 0,
                     "res_cookie": 0,
                     "res_type": {},
+                    "strength": 0,
                 }
             info = per_host[host]
             info["req"] += 1
@@ -134,12 +141,17 @@ class HarFile:
             info["res"] += 1
             info["res_cookie"] += len(e["response"]["cookies"])
 
+            info["strength"] += info["req"] + info["req_cookie"] + \
+                                info["req_param"] + info["res"] + info["res_cookie"]
+            max_strength = max(max_strength, info["strength"])
+
             mime = e["response"]["content"].get("mimeType")
             #if not mime:
             #   print(json.dumps(e, indent=2))
             if not mime:
                 info["res_type"]["-"] = info["res_type"].get("-", 0) + 1
             else:
+                _matched = False
                 for match, type in MIME_TYPES.items():
                     if match in mime:
                         # tracking pixels?
@@ -147,12 +159,16 @@ class HarFile:
                             type = "tp"
 
                         info["res_type"][type] = info["res_type"].get(type, 0) + 1
+                        _matched = True
                         break
+                if not _matched:
+                    print("UNMATCHED ", mime)
 
         return [
             {
                 "host": host,
                 **info,
+                "strength": info["strength"] / max(1, max_strength)
             }
             for host, info in per_host.items()
         ]
