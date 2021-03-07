@@ -31,10 +31,13 @@ class JekyllExporter(MarkdownExporter):
         return 'jekyll_template.j2'
 
     def context_variables(self, nb: NotebookNode):
+        dt = datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat()
         context = {
             "meta": {
                 "layout": "post",
-                "date": datetime.datetime.now(datetime.timezone.utc).astimezone().isoformat(),
+                # TODO: Overridden date via ``post-notebook.py -d`` is not
+                #   recognized here
+                # "date": dt,
             },
         }
         if nb.get("cells") and nb["cells"][0].get("source"):

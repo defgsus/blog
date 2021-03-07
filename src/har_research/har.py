@@ -227,7 +227,7 @@ class HarFile:
                 text = e["response"]["content"].get("text")
                 if text:
                     for h in by_key:
-                        if h in text:
+                        if h != key and h in text:
                             by_key[key]["to"].add(h)
                             by_key[h]["from"].add(key)
 
@@ -238,9 +238,9 @@ class HarFile:
 
         return by_key
 
-    def get_connection_graph_nx(self):
+    def get_dependency_graph_nx(self):
         import networkx as nx
-        hosts = self.get_connection_graph()
+        hosts = self.get_dependency_graph()
         graph = nx.DiGraph()
         for host, value in hosts.items():
             graph.add_node(host)
@@ -248,6 +248,92 @@ class HarFile:
             for to_host in value["to"]:
                 graph.add_edge(host, to_host)
         return graph
+
+    @classmethod
+    def get_entry_size(cls, e):
+        """
+        Try to get real size of the request and response,
+        because har-file might contain data but no size values.
+        :returns: tuple of request-size, response-size
+        """
+        try:
+            num_in = (e["request"].get("headersSize") or 0) + (e["request"].get("bodySize") or 0)
+            if num_in == 0:
+                num_in = sum(len(h["name"]) + len(h["value"]) for h in e["request"]["headers"])
+                num_in += sum(len(h["name"]) + len(h["value"]) for h in e["request"]["queryString"])
+
+            num_out = (e["response"].get("headersSize") or 0)
+            if num_out == 0:
+                num_out = sum(len(h["name"]) + len(h["value"]) for h in e["response"]["headers"])
+
+            if (e["response"].get("bodySize") or 0) > 0:
+                num_out += e["response"]["bodySize"]
+            else:
+                num_out += (e["response"]["content"].get("size") or 0)
+            return num_in, num_out
+        except KeyError:
+            print(json.dumps(e, indent=2))
+            raise
+
+    def get_actions(
+            self,
+            key_path: str = "request.short_host",
+            as_df: bool = False,
+    ):
+        """
+        Return a couple of counters for various actions that are
+        associated with each request/response.
+
+        :param key_path: str, dotted path to the value that
+            separates the entries, typically the host name.
+        :param as_df: bool, return a pandas.DataFrame
+        :return: dict: key -> dict of values, where ``key`` is each value
+            behind the ``key_path``
+        """
+        actions = dict()
+        for e in self:
+            key = get_value_path(e, key_path)
+            if key not in actions:
+                actions[key] = {
+                    "count": 0,
+                    "in_out_ratio": 0,
+                    "receive_params": 0,
+                    "send_media": 0,
+                    "send_cookie": 0,
+                    "send_js": 0,
+                    "send_tp": 0,
+                    "send_js_canvas": 0,
+                }
+            actions[key]["count"] += 1
+            actions[key]["send_cookie"] += len(e["response"]["cookies"])
+            for p in e["request"]["queryString"]:
+                actions[key]["receive_params"] += len(p["name"]) + len(p["value"])
+
+            num_in, num_out = self.get_entry_size(e)
+            ratio = 1
+            if num_out:
+                ratio = num_in / num_out
+            actions[key]["in_out_ratio"] = ratio
+
+            mime = e["response"]["content"].get("mimeType")
+            text = e["response"]["content"].get("text")
+            if mime and e["response"]["content"]["size"]:
+                if "javascript" in mime:
+                    if text:
+                        actions[key]["send_js"] += 1
+                        if re.findall("[cC]anvas", text):
+                            actions[key]["send_js_canvas"] += 1
+                elif "image" in mime:
+                    if e["response"]["content"]["size"] < 100:
+                        actions[key]["send_tp"] += 1
+                    else:
+                        actions[key]["send_media"] += 1
+
+        if as_df:
+            df = pd.DataFrame([{"key": key, **value} for key, value in actions.items()])
+            df.index = df.pop("key")
+            return df
+        return actions
 
 
 def get_value_path(data, path: Union[list, tuple, str]):
@@ -277,4 +363,4 @@ if __name__ == "__main__":
 
     #har.filtered({"response.content.mimeType": "image", "request.url": r"reddit\.com"}).dump_connections()
 
-    har.get_connection_graph()
+    #har.get_dependency_graph()

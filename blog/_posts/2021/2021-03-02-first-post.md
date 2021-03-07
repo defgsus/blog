@@ -1,6 +1,5 @@
 ---
 layout: post
-date: 2021-03-03T12:31:43.062781+01:00
 title: jupekyll
 enable: plotly
 custom_js: 
