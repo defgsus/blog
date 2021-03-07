@@ -1462,7 +1462,7 @@ And in fact, the internet looks like this right now:
 
 
 
-Alice just opened **reddit.com** without any script/ad-blockers, clicked the *Yes-allow-all-just-leave-me-alone* button and browsed for 5 minutes. You can get an [HTTP Archive](https://en.wikipedia.org/wiki/HAR_\(file_format\)) file of Alice's session [here](https://github.com/defgsus/blog/src/har_research/hars/alice-visits-reddit-stripped.har).
+Alice just opened **reddit.com** without any script/ad-blockers, clicked the *Yes-allow-all-just-leave-me-alone* button and browsed for 5 minutes. You can get an [HTTP Archive](https://en.wikipedia.org/wiki/HAR_\(file_format\)) (HAR) file of Alice's session [here](https://raw.githubusercontent.com/defgsus/blog/master/src/har_research/hars/alice-visits-reddit-stripped.har).
 
 The red connection lines mean that the content loaded from server **A** requested more content from server **B**. For example, the contents loaded from **googlesyndication.com** (whatever that actually is), requested more content from **retailads.net**, **quantserver.com**, **webgains.com**, etc... 
 
