@@ -1,4 +1,77 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://defgsus.github.io/blog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://defgsus.github.io/blog/" rel="alternate" type="text/html" /><updated>2021-03-07T17:51:17+01:00</updated><id>https://defgsus.github.io/blog/feed.xml</id><title type="html">def.gsus-</title><subtitle>Programming stuff mainly</subtitle><entry><title type="html">Alice visits a website (DRAFT)</title><link href="https://defgsus.github.io/blog/2021/03/05/alice-website.html" rel="alternate" type="text/html" title="Alice visits a website (DRAFT)" /><published>2021-03-05T00:00:00+01:00</published><updated>2021-03-05T00:00:00+01:00</updated><id>https://defgsus.github.io/blog/2021/03/05/alice-website</id><content type="html" xml:base="https://defgsus.github.io/blog/2021/03/05/alice-website.html">&lt;p&gt;Alice wants to visit a website. She’s clicking something in a browser and up comes the page.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://defgsus.github.io/blog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://defgsus.github.io/blog/" rel="alternate" type="text/html" /><updated>2021-03-07T18:40:17+01:00</updated><id>https://defgsus.github.io/blog/feed.xml</id><title type="html">def.gsus-</title><subtitle>Programming stuff mainly</subtitle><entry><title type="html">Extract HAR files with Selenium / Firefox</title><link href="https://defgsus.github.io/blog/2021/03/07/selenium-firefox-har-extract.html" rel="alternate" type="text/html" title="Extract HAR files with Selenium / Firefox" /><published>2021-03-07T00:00:00+01:00</published><updated>2021-03-07T00:00:00+01:00</updated><id>https://defgsus.github.io/blog/2021/03/07/selenium-firefox-har-extract</id><content type="html" xml:base="https://defgsus.github.io/blog/2021/03/07/selenium-firefox-har-extract.html">&lt;p&gt;&lt;a href=&quot;https://www.selenium.dev/&quot;&gt;Selenium&lt;/a&gt; is a framework for automating 
+browser interaction. Basically it starts a browser, surfs a website,
+injects a script and exposes everything that can be done with javascript
+to read or interact with the page. And a few things more.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/HAR_\(file_format\)&quot;&gt;HAR&lt;/a&gt; is a file 
+format to store web traffic of a browser for later analysis. They can be
+exported from all the major browsers built-in development tools.&lt;/p&gt;
+
+&lt;p&gt;There was always a way to retrieve those HAR files when running a browser
+with selenium but in changed over time.&lt;/p&gt;
+
+&lt;p&gt;In 2021, this is the&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;using Python&lt;/li&gt;
+  &lt;li&gt;using Firefox&lt;/li&gt;
+  &lt;li&gt;not using &lt;a href=&quot;https://github.com/lightbody/browsermob-proxy&quot;&gt;BrowserMob Proxy&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;way:&lt;/p&gt;
+
+&lt;p&gt;Get a zip of the 
+&lt;a href=&quot;https://github.com/firefox-devtools/har-export-trigger&quot;&gt;har-export-trigger&lt;/a&gt;
+extension. You can either download a &lt;em&gt;signed&lt;/em&gt; version from addons.mozilla or 
+you package the contents of the repository yourself.&lt;/p&gt;
+
+&lt;p&gt;The necessity is just this: The browser’s devtools can only be accessed 
+through a background extension script but selenium exposes just an ordinary
+page script. The har-export-trigger helps by defining an object in the 
+page context that can request the HAR from the background.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;selenium&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;webdriver&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;webdriver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FirefoxOptions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# open the devtools right from the start
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;add_argument&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;--devtools&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;   
+
+&lt;span class=&quot;n&quot;&gt;profile&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;webdriver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FirefoxProfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# switch to the netmonitor
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;profile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;set_preference&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;devtools.toolbox.selectedTool&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;netmonitor&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# keep the network log when changing pages
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;profile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;set_preference&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;devtools.netmonitor.persistlog&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;browser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;webdriver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Firefox&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;firefox_options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;firefox_profile&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;profile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# record interesting stuff
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# load extension
+# (temporary is required when addon is not signed by mozilla)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;browser&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;install_addon&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;har-export-trigger.zip&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temporary&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# call the secret 'HAR.triggerExport()' function
+#   and return the result of the promise to python
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;har_data&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;browser&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute_async_script&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;&quot;HAR.triggerExport().then(arguments[0]);&quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The data-flow is a bit over-the-top:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;background loads HAR data as js object&lt;/li&gt;
+  &lt;li&gt;passes it as message to the page context&lt;/li&gt;
+  &lt;li&gt;there it will be transmitted to selenium (probably as json)&lt;/li&gt;
+  &lt;li&gt;and python extracts it as a python dict&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;It’s probably not good for capturing HD videos but quite helpful for
+everything else.&lt;/p&gt;</content><author><name></name></author><category term="security" /><category term="data" /><category term="selenium" /><summary type="html">Selenium is a framework for automating browser interaction. Basically it starts a browser, surfs a website, injects a script and exposes everything that can be done with javascript to read or interact with the page. And a few things more.</summary></entry><entry><title type="html">Alice visits a website (DRAFT)</title><link href="https://defgsus.github.io/blog/2021/03/05/alice-website.html" rel="alternate" type="text/html" title="Alice visits a website (DRAFT)" /><published>2021-03-05T00:00:00+01:00</published><updated>2021-03-05T00:00:00+01:00</updated><id>https://defgsus.github.io/blog/2021/03/05/alice-website</id><content type="html" xml:base="https://defgsus.github.io/blog/2021/03/05/alice-website.html">&lt;p&gt;Alice wants to visit a website. She’s clicking something in a browser and up comes the page.&lt;/p&gt;
 
 &lt;!-- Generated by graphviz version 2.40.1 (20161225.0304)
  --&gt;
