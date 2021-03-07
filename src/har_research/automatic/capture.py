@@ -13,6 +13,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+PATH = os.path.abspath(os.path.dirname(__file__))
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -53,21 +56,37 @@ class CaptureError(Exception):
     pass
 
 
+class Extension:
+    def __init__(self, short_path: str):
+        self.short_path = short_path
+        self.long_path = os.path.join(PATH, short_path)
+        self.zip_path = self.long_path + ".zip"
+
+    def get_zip(self, repackage=False):
+        if repackage or not os.path.exists(self.zip_path):
+            printe("creating extension package", self.short_path + ".zip")
+            shutil.make_archive(self.long_path, "zip", self.long_path)
+        return self.zip_path
+
+
 class Capture:
 
-    PATH = os.path.abspath(os.path.dirname(__file__))
-    EXTENSION_PATH = os.path.join(PATH, "har-export-trigger")
+    EXTENSION_PATH = os.path.join(PATH, )
     EXTENSION_ZIP = EXTENSION_PATH + ".zip"
     RECORDING_PATH = os.path.join(PATH, "recordings")
 
     def __init__(
             self,
             url: str,
-            headless: bool = False
+            headless: bool = False,
+            repackage_extensions: bool = False,
     ):
         self.url = url
         self.timestamp = datetime.datetime.now()
         self._script_helper = None
+        self.repackage_extensions = repackage_extensions
+        self.extension = Extension("extension")
+        self.extension_har = Extension("har-export-trigger")
 
         options = webdriver.FirefoxOptions()
         if headless:
@@ -83,7 +102,12 @@ class Capture:
             firefox_options=options,
             firefox_profile=profile,
         )
-        #self.browser.install_addon(self.EXTENSION_ZIP, temporary=True)
+
+    def install_extension(self, ext: Extension):
+        self.browser.install_addon(
+            ext.get_zip(repackage=self.repackage_extensions),
+            temporary=True,
+        )
 
     def recording_path(self, create=False):
         url = urllib.parse.urlparse(self.url)
@@ -96,11 +120,6 @@ class Capture:
             os.makedirs(path)
         return path
 
-    @classmethod
-    def bundle_extension(cls):
-        printe("creating extension zip", cls.EXTENSION_ZIP)
-        shutil.make_archive(cls.EXTENSION_PATH, "zip", cls.EXTENSION_PATH)
-
     def run(
             self,
             accept_consent: bool = True,
@@ -112,6 +131,7 @@ class Capture:
         try:
             try:
                 self.browser.get(self.url)
+                self.install_extension(self.extension)
                 time.sleep(1)
 
                 if interactive:
@@ -133,7 +153,7 @@ class Capture:
             except KeyboardInterrupt:
                 pass
 
-            self.browser.install_addon(self.EXTENSION_ZIP, temporary=True)
+            self.install_extension(self.extension_har)
             time.sleep(1)
             self.store_recording()
 
@@ -237,10 +257,10 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    if not os.path.exists(Capture.EXTENSION_ZIP) or args.bundle_extension:
-        Capture.bundle_extension()
-
-    cap = Capture(args.url)
+    cap = Capture(
+        url=args.url,
+        repackage_extensions=args.bundle_extension,
+    )
 
     cap.run(
         stay_seconds=args.wait,
