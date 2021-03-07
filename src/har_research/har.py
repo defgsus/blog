@@ -11,9 +11,10 @@ import glob
 import json
 import urllib.parse
 from copy import deepcopy
+from typing import Optional, Union
 
 import pandas as pd
-pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_rows', 1000)
 
 
 # convert a mime-type string to short type
@@ -49,6 +50,14 @@ class HarFile:
                 with open(fn) as fp:
                     data = json.load(fp)["log"]
 
+                for e in data["entries"]:
+                    url = urllib.parse.urlparse(e["request"]["url"])
+                    e["request"].update({
+                        "host": url.netloc,
+                        "short_host": ".".join(url.netloc.split(".")[-2:]),
+                        "path": url.path,
+                    })
+
                 self.data["entries"] += data["entries"]
                 self.data["pages"] += data["pages"]
 
@@ -57,6 +66,9 @@ class HarFile:
 
     def __getitem__(self, i):
         return self.data["entries"][i]
+
+    def __iter__(self):
+        return self.data["entries"].__iter__()
 
     def dump(self):
         print(json.dumps(self.data, indent=2))
@@ -69,6 +81,11 @@ class HarFile:
         Return a filtered HarFile
 
         :param filters: Dict[str, str]
+
+            key is path to param
+            value can be
+                - str, will be used as regex
+                - function with value argument
 
             {
                 "request.url": r"123[a-z]+",
@@ -97,8 +114,10 @@ class HarFile:
 
     def _filter_path(self, data, path: list, value) -> bool:
         if len(path) == 0:
-            if isinstance(data, str):
+            if isinstance(value, str):
                 return bool(re.findall(value, data))
+            elif callable(value):
+                return value(data)
             else:
                 return data == value
         else:
@@ -116,12 +135,17 @@ class HarFile:
                     f"Can not handle type '{type(data).__name__}' for remaining path {path}"
                 )
 
+    def connections_df(self):
+        df = pd.DataFrame(self.connections())
+        df.index = df.pop("host")
+        df.sort_values("strength", ascending=False, inplace=True)
+        return df
+
     def connections(self):
         per_host = dict()
         max_strength = 0
-        for e in self.data["entries"]:
-            url = urllib.parse.urlparse(e["request"]["url"])
-            host = ".".join(url.netloc.split(".")[-2:])
+        for e in self:
+            host = e["request"]["short_host"]
             if host not in per_host:
                 per_host[host] = {
                     "req": 0,
@@ -173,15 +197,84 @@ class HarFile:
             for host, info in per_host.items()
         ]
 
+    def get_dependency_graph(
+            self,
+            key_path: str = "request.short_host",
+            with_referer: bool = True,
+            with_text_match: bool = False,
+    ):
+        by_key = {}
+        for e in self:
+            key = get_value_path(e, key_path)
+            if key not in by_key:
+                by_key[key] = {
+                    "count": 0,
+                    "to": set(),
+                    "from": set(),
+                }
+            by_key[key]["count"] += 1
+
+        for e in self:
+            key = get_value_path(e, key_path)
+            for header in e["request"]["headers"]:
+                if header["name"].lower() == "referer" and with_referer:
+                    for h in by_key:
+                        if h in header["value"] and h != key:
+                            by_key[h]["to"].add(key)
+                            by_key[key]["from"].add(h)
+
+            if with_text_match:
+                text = e["response"]["content"].get("text")
+                if text:
+                    for h in by_key:
+                        if h in text:
+                            by_key[key]["to"].add(h)
+                            by_key[h]["from"].add(key)
+
+        for h in by_key.values():
+            h["to"] = sorted(h["to"])
+            h["from"] = sorted(h["from"])
+        # print(json.dumps(hosts, indent=2))
+
+        return by_key
+
+    def get_connection_graph_nx(self):
+        import networkx as nx
+        hosts = self.get_connection_graph()
+        graph = nx.DiGraph()
+        for host, value in hosts.items():
+            graph.add_node(host)
+        for host, value in hosts.items():
+            for to_host in value["to"]:
+                graph.add_edge(host, to_host)
+        return graph
+
+
+def get_value_path(data, path: Union[list, tuple, str]):
+    if isinstance(path, str):
+        path = path.split(".")
+
+    if len(path) == 0:
+        return data
+    else:
+        if isinstance(data, dict):
+            return get_value_path(data.get(path[0]), path[1:])
+        elif isinstance(data, (tuple, list)):
+            return get_value_path(data[int(path[0])], path[1:])
+        else:
+            raise TypeError(f"Can not handle type '{type(data).__name__}' with subpath {'.'.join(path)}")
+
 
 if __name__ == "__main__":
-    har = HarFile("./hars/*reddit*")
+    har = HarFile("./hars/*spiegel*")
     print(len(har))
     #har = har.filtered({"request.queryString.name": "cookie"})
-    print(len(har))
+    #print(len(har))
 
-    df = pd.DataFrame(har.connections())
-    df.sort_values("req_param_len", ascending=False, inplace=True)
-    print(df)
+    #df = pd.DataFrame(har.connections())
+    #df.sort_values("req_param_len", ascending=False, inplace=True)
+    #print(df)
 
     #har.filtered({"response.content.mimeType": "image", "request.url": r"reddit\.com"}).dump_connections()
+
+    har.get_connection_graph()

@@ -1,0 +1,3 @@
+[submodule "src/har_research/automatic/har-export-trigger"]
+	path = src/har_research/automatic/har-export-trigger
+	url = https://github.com/firefox-devtools/har-export-trigger

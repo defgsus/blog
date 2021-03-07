@@ -1,8 +1,12 @@
 *.zip
 *.json
 *.ndjson
+geckodriver
+geckodriver.log
+src/har_research/adscripts/
 src/har_research/hars/
 src/har_research/*profile/
+src/har_research/automatic/recordings/
 __pycache__/
 .ipynb_checkpoints/
 .idea/
