@@ -6,11 +6,14 @@ import sys
 import datetime
 import json
 import argparse
+import re
+import traceback
 sys.path.insert(0, "..")
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 
 
 PATH = os.path.abspath(os.path.dirname(__file__))
@@ -21,7 +24,12 @@ def parse_args():
 
     parser.add_argument(
         "url", type=str,
-        help="Url of website to capture (including protocol)"
+        help="Url of website to capture (including protocol). If no protocol is given, "
+             "a filename is assumed listing an url per line."
+    )
+    parser.add_argument(
+        "--headless", type=bool, nargs="?", default=False, const=True,
+        help="Opens firefox without GUI"
     )
     parser.add_argument(
         "-i", "--interactive", type=bool, nargs="?", default=False, const=True,
@@ -34,6 +42,14 @@ def parse_args():
     parser.add_argument(
         "-r", "--require-consent", type=bool, nargs="?", default=False, const=True,
         help="Require accepting the cookie consent"
+    )
+    parser.add_argument(
+        "-s", "--scroll-page", type=bool, nargs="?", default=False, const=True,
+        help="Scroll the page down until end or 20,000 pixels"
+    )
+    parser.add_argument(
+        "--offset", type=int, nargs="?", default=0,
+        help="Offset to start when reading urls from file"
     )
     parser.add_argument(
         "--wait", type=int, nargs="?", default=1,
@@ -71,8 +87,6 @@ class Extension:
 
 class Capture:
 
-    EXTENSION_PATH = os.path.join(PATH, )
-    EXTENSION_ZIP = EXTENSION_PATH + ".zip"
     RECORDING_PATH = os.path.join(PATH, "recordings")
 
     def __init__(
@@ -96,6 +110,7 @@ class Capture:
         profile = webdriver.FirefoxProfile()
         profile.set_preference("devtools.toolbox.selectedTool", "netmonitor")
         profile.set_preference("devtools.netmonitor.persistlog", True)
+        profile.set_preference("webdriver.load.strategy", "unstable")
 
         self.browser = webdriver.Firefox(
             executable_path="./geckodriver",
@@ -122,15 +137,21 @@ class Capture:
 
     def run(
             self,
-            accept_consent: bool = True,
-            require_consent: bool = True,
-            scroll_page_down: bool = True,
+            accept_consent: bool = False,
+            require_consent: bool = False,
+            scroll_page_down: bool = False,
             stay_seconds: float = 1,
             interactive: bool = False,
     ):
         try:
             try:
-                self.browser.get(self.url)
+                self.browser.set_page_load_timeout(10)
+                try:
+                    printe(f"browsing {self.url}")
+                    self.browser.get(self.url)
+                except TimeoutException:
+                    pass
+
                 self.install_extension(self.extension)
                 time.sleep(1)
 
@@ -257,14 +278,39 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    cap = Capture(
-        url=args.url,
-        repackage_extensions=args.bundle_extension,
-    )
+    if "://" in args.url:
+        urls = [args.url]
+    else:
+        with open(args.url) as fp:
+            urls = [s.strip() for s in fp.readlines()]
+            urls = list(filter(lambda u: u and not u.startswith("#"), urls))
+            for i, u in enumerate(urls):
+                if "://" not in u:
+                    urls[i] = f"https://{u}"
 
-    cap.run(
-        stay_seconds=args.wait,
-        accept_consent=args.accept_consent,
-        require_consent=args.require_consent,
-        interactive=args.interactive,
-    )
+    for i, url in enumerate(urls):
+        if i+1 < args.offset:
+            continue
+
+        if len(urls) > 1:
+            printe(f"\n### {i+1}/{len(urls)} ### {url}")
+
+        try:
+            cap = Capture(
+                url=url,
+                headless=args.headless,
+                repackage_extensions=args.bundle_extension and i == 0,
+            )
+
+            cap.run(
+                stay_seconds=args.wait,
+                accept_consent=args.accept_consent,
+                require_consent=args.require_consent,
+                scroll_page_down=args.scroll_page,
+                interactive=args.interactive,
+            )
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            traceback.print_exc()
+

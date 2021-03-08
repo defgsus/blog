@@ -36,9 +36,9 @@ def accept_consent_iframe(cap: Capture):
 def accept_consent_button(cap: Capture):
     buttons = cap.browser.find_elements_by_tag_name("button")
 
-    for text in ("Accept", "Zustimmen"):
+    for text in ("accept", "agree", "consent", "zustimmen", "stimme zu"):
         for elem in buttons:
-            if elem.text and text in elem.text:
+            if elem.text and text in elem.text.lower():
                 try:
                     elem.click()
                     cap.sleep_after_consent_click()
