@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "description": "Helper to capture HAR files",
+  "name": "HAR Capture",
+  "version": "0.0.1",
+  "homepage_url": "https://github.com/defgsus/",
+
+  "permissions": [
+    "<all_urls>",
+    "tabs",
+    "storage",
+    "webRequest"
+  ],
+
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}
