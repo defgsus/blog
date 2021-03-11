@@ -6,13 +6,15 @@ https://pgl.yoyo.org/adservers/#
 https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/TCFv2/IAB%20Tech%20Lab%20-%20Consent%20string%20and%20vendor%20list%20formats%20v2.md#definitions
 
 """
+import os
 import re
 import glob
 import json
 import urllib.parse
 from copy import deepcopy
-from typing import Optional, Union
+from typing import Optional, Union, Generator, Tuple
 
+from tqdm import tqdm
 import pandas as pd
 pd.set_option('display.max_rows', 1000)
 
@@ -34,32 +36,98 @@ MIME_TYPES = {
 }
 
 
+def parse_url(url: str) -> dict:
+    url = urllib.parse.urlparse(url)
+
+    short_host = url.netloc.split(".")
+    if len(short_host) > 2:
+        if short_host[-2] in ("co", "com"):
+            short_host = short_host[-3:]
+        else:
+            short_host = short_host[-2:]
+
+    return {
+        "protocol": url.scheme,
+        "host": url.netloc,
+        "short_host": ".".join(short_host),
+        "path": url.path,
+        "params": url.params,
+    }
+
+
+def enrich_entry(e: dict) -> None:
+    """
+    Add some convenience stuff to a HAR entry
+    :param e: dict, will be updated with new data
+    """
+    url = parse_url(e["request"]["url"])
+    e["request"].update(url)
+
+
+def iter_har_entries(*glob_pattern: str) -> Generator[Tuple[str, dict, dict], None, None]:
+    """
+    Iterate through all entries of all found HAR files.
+
+    Yields a tuple of (filename, first-entry, current-entry)
+
+    :param glob_pattern: str, wildcard pattern
+    """
+    for pattern in glob_pattern:
+        for filename in glob.glob(pattern):
+            with open(filename) as fp:
+                data = json.load(fp)
+
+            first_entry = None
+            for entry in data["log"]["entries"]:
+                enrich_entry(entry)
+                if not first_entry:
+                    first_entry = entry
+
+                yield filename, first_entry, entry
+
+
 class HarFile:
     """
     Base class for loading one or several ``har`` files.
     """
-    def __init__(self, filename: str):
+    def __init__(
+            self,
+            filename: str,
+            require: bool = True,
+            remove_data: bool = False,
+            verbose: bool = False,
+    ):
         """
         Loads one or several har files
+
         :param filename: str, handles bash wildcards
+        :param require: bool, If True raise IOError when nothing is found
+        :param remove_data: bool, Will remove data via the HarFile._remove_data() method
+            to save memory
+        :param verbose: bool, Show loading progress
         """
         self.filename = filename
         self.data = {"entries": [], "pages": []}
         if self.filename:
-            for fn in glob.iglob(self.filename):
+            if not verbose:
+                gen = glob.iglob(self.filename)
+            else:
+                gen = tqdm(glob.glob(self.filename))
+            for fn in gen:
                 with open(fn) as fp:
                     data = json.load(fp)["log"]
 
                 for e in data["entries"]:
-                    url = urllib.parse.urlparse(e["request"]["url"])
-                    e["request"].update({
-                        "host": url.netloc,
-                        "short_host": ".".join(url.netloc.split(".")[-2:]),
-                        "path": url.path,
-                    })
+                    enrich_entry(e)
+
+                if remove_data:
+                    self._remove_data(data["entries"])
 
                 self.data["entries"] += data["entries"]
                 self.data["pages"] += data["pages"]
+
+            if require and not self.data["entries"]:
+                raise IOError(f"No HARs found at '{filename}'")
 
     def __len__(self):
         return len(self.data["entries"])
@@ -97,11 +165,14 @@ class HarFile:
         har = self.__class__(None)
         har.filename = self.filename
         har.data = deepcopy(self.data)
-        har.data["entries"] = list(filter(
-            lambda e: self._filter_entry(e, filters),
-            har.data["entries"],
-        ))
+        har.data["entries"] = list(self.filtered_iter(filters))
         return har
+
+    def filtered_iter(self, filters: dict) -> Generator[dict, None, None]:
+        yield from filter(
+            lambda e: self._filter_entry(e, filters),
+            self.data["entries"],
+        )
 
     def _filter_entry(self, entry: dict, filters: dict = None) -> bool:
         if not filters:
@@ -134,6 +205,71 @@ class HarFile:
                 raise TypeError(
                     f"Can not handle type '{type(data).__name__}' for remaining path {path}"
                 )
+
+    @classmethod
+    def _remove_data(
+            cls,
+            entries,
+            mime_types: Tuple[str] = ("video", "image"),
+            max_size: int = 10000,
+    ):
+        for e in entries:
+            mime = e["response"]["content"].get("mimeType")
+            remove = False
+            if mime:
+                for mt in mime_types:
+                    if mt in mime:
+                        remove = True
+                        break
+            if not remove:
+                if e["response"]["content"].get("text"):
+                    e["response"]["content"]["text"] = e["response"]["content"]["text"][:max_size]
+            else:
+                data = e["response"]["content"].pop("text", None)
+                del data
+
+    def dump_pretty(self, file=None, max_data=1024):
+        width, _ = os.get_terminal_size()
+        width = max(1, width - 3)
+        for e in self:
+            print("\n" + "-" * width, file=file)
+            print("Url:", e["request"]["url"].split("?")[0], file=file)
+            print("Method:", e["request"]["method"], file=file)
+            print("Date:", e["startedDateTime"], file=file)
+            print("Headers:", file=file)
+            max_len = max(0, *(len(q["name"]) for q in e["request"]["headers"]))
+            for q in e["request"]["headers"]:
+                print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
+
+            if e["request"]["queryString"]:
+                print("Query:", file=file)
+                max_len = max(0, *(len(q["name"]) for q in e["request"]["queryString"]))
+                for q in e["request"]["queryString"]:
+                    print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
+
+            if e["request"].get("postData"):
+                data = None
+                if e["request"]["postData"].get("text"):
+                    data = e["request"]["postData"].get("text")
+                elif e["request"]["postData"].get("params"):
+                    print(e)
+                    raise NotImplementedError
+                if data:
+                    print(f"Post:\n{data}")
+
+            if e["response"]["headers"]:
+                print("Response headers:", file=file)
+                max_len = max(0, *(len(q["name"]) for q in e["response"]["headers"]))
+                for q in e["response"]["headers"]:
+                    print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
+
+            content = None
+            for key in ("text", "data"):
+                if e["response"]["content"].get(key):
+                    content = e["response"]["content"][key]
+                    break
+            if content:
+                print(f"Content:\n{content[:max_data]}", file=file)
 
     def connections_df(self):
         df = pd.DataFrame(self.connections())
@@ -352,8 +488,14 @@ def get_value_path(data, path: Union[list, tuple, str]):
 
 
 if __name__ == "__main__":
-    har = HarFile("./hars/*spiegel*")
+    har = HarFile("./automatic/recordings/*/*.json", verbose=True, remove_data=True)
     print(len(har))
+    #har = har.filtered({"request.queryString.name": "tid"})
+    har = har.filtered({"request.method": "POST"})
+    print(len(har))
+    #har = har.filtered({"request.url": "https://ib.adnxs.com/ut/v3/prebid"})
+    #har.dump_pretty(max_data=10000)
+    #
     #har = har.filtered({"request.queryString.name": "cookie"})
     #print(len(har))
 

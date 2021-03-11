@@ -20,11 +20,11 @@ class Graph:
             "fontname": "Helvetica"
         }
 
-    def node(self, id: str, label: str, **kwargs):
+    def node(self, id: str, label: str = None, **kwargs):
         merged_kwargs = self.default_kwargs.copy()
         merged_kwargs.update(kwargs)
         merged_kwargs.setdefault("style", "filled")
-        self.g.node(id, label, **merged_kwargs)
+        self.g.node(id, label or id, **merged_kwargs)
 
     def edge(self, *args, **kwargs):
         merged_kwargs = self.default_kwargs.copy()

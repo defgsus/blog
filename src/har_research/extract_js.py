@@ -81,7 +81,7 @@ def dump_script(e: dict, file=None):
 
 if __name__ == "__main__":
 
-    har = HarFile("./hars/*spiegel*")
+    har = HarFile("./automatic/recordings/www.waz.de/*.json")
     print(len(har), "requests")
 
     har = har.filtered({
