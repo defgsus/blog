@@ -1,8 +1,10 @@
 *.zip
 *.json
 *.ndjson
+*.sh
 geckodriver
 geckodriver.log
+cache/
 src/har_research/adscripts/
 src/har_research/hars/
 src/har_research/*profile/

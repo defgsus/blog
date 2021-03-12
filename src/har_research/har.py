@@ -23,16 +23,24 @@ pd.set_option('display.max_rows', 1000)
 #   if key somewhere in mime-type-string
 MIME_TYPES = {
     "html": "html",
-    "xml": "html",
+    "xml": "xml",
     "javascript": "js",
+    "ecmascript": "js",
+    "wasm": "wasm",
     "font": "font",
+    "woff": "font",
     "css": "css",
     "image": "img",
     "octet-stream": "data",
-    "json": "data",
+    "json": "json",
+    "form-data": "form",
     "text": "text",
     "video": "video",
     "mpegurl": "video",
+    "audio": "audio",
+    "unknown": "unknown",
+    "opendocument": "odf",
+    "shockwave-flash": "flash",
 }
 
 
@@ -64,7 +72,10 @@ def enrich_entry(e: dict) -> None:
     e["request"].update(url)
 
 
-def iter_har_entries(*glob_pattern: str) -> Generator[Tuple[str, dict, dict], None, None]:
+def iter_har_entries(
+        *glob_pattern: str,
+        require: bool = True,
+) -> Generator[Tuple[str, dict, dict], None, None]:
     """
     Iterate through all entries of all found HAR files.
 
@@ -72,8 +83,10 @@ def iter_har_entries(*glob_pattern: str) -> Generator[Tuple[str, dict, dict], No
 
     :param glob_pattern: str, wildcard pattern
     """
+    num_files = 0
     for pattern in glob_pattern:
         for filename in glob.glob(pattern):
+            num_files += 1
             with open(filename) as fp:
                 data = json.load(fp)
 
@@ -84,6 +97,9 @@ def iter_har_entries(*glob_pattern: str) -> Generator[Tuple[str, dict, dict], No
                     first_entry = entry
 
                 yield filename, first_entry, entry
+
+    if require and not num_files:
+        raise IOError(f"No HARs found at {glob_pattern}")
 
 
 class HarFile:

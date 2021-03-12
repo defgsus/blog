@@ -2,6 +2,7 @@
 A simple script to accumulate connection data
 from all recorded HAR files.
 """
+import argparse
 import sys
 sys.path.insert(0, "../..")
 sys.path.insert(0, "..")
@@ -14,6 +15,20 @@ class Encoder(json.JSONEncoder):
         if isinstance(o, set):
             o = sorted(o)
         return o
+
+
+def build_index(generator, host_field: str = "host"):
+    per_host = dict()
+    for filename, first_entry, e in tqdm(generator):
+        key = parse_url(e["request"]["url"])[host_field]
+        if key not in per_host:
+            per_host[key] = set()
+        per_host[key].add(filename)
+
+        #if len(per_host) > 1000:
+        #    break
+
+    return per_host
 
 
 def get_connections(
@@ -68,6 +83,7 @@ def get_character_histogram_per_host(
         generator,
         host_field: str = "short_host",
         as_bytes: bool = False,
+        with_mime: bool = False,
 ):
     def _count(data: dict, text: str):
         if as_bytes:
@@ -78,6 +94,18 @@ def get_character_histogram_per_host(
     per_host = dict()
     for filename, first_entry, entry in tqdm(generator):
         key = entry["request"][host_field]
+        if with_mime:
+            # print(entry["response"]["content"])
+            mime = entry["response"]["content"].get("mimeType")
+            if not mime:
+                continue
+            if mime:
+                for match, value in MIME_TYPES.items():
+                    if match in mime:
+                        mime = value
+                        break
+                key += " | " + mime
+
         if key not in per_host:
             per_host[key] = {
                 "count": 0,
@@ -128,14 +156,43 @@ def get_character_histogram_per_host(
     return per_host
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "what", type=str, nargs="+",
+        help="'index', 'bh-long', 'bh-mime-long'"
+    )
+
+    return parser.parse_args()
+
+
+
 if __name__ == "__main__":
 
-    generator = iter_har_entries("./recordings/*/*.json")
+    args = parse_args()
 
-    #get_connections(generator, "./data/all-connections.json")
-    data = get_character_histogram_per_host(generator, as_bytes=True, host_field="host")
+    for what in args.what:
 
-    with open("./data/bytes-histogram-longhost.json", "w") as fp:
-        json.dump(data, fp, indent=None, cls=Encoder)
+        generator = iter_har_entries("./recordings/*/*.json")
 
-    #print(data)
+        if what == "index":
+            data = build_index(generator, "host")
+            filename = "index"
+
+        elif what == "bh-long":
+            data = get_character_histogram_per_host(generator, as_bytes=True, host_field="host")
+            filename = "bytes-histogram-longhost"
+
+        elif what == "bh-mime-long":
+            data = get_character_histogram_per_host(generator, as_bytes=True, with_mime=True, host_field="host")
+            filename = "bytes-histogram-mime-longhost"
+
+        else:
+            raise ValueError(f"Unrecognized '{what}'")
+
+        #get_connections(generator, "./data/all-connections.json")
+
+        with open(f"./data/{filename}.json", "w") as fp:
+            json.dump(data, fp, indent=None, cls=Encoder)
+
