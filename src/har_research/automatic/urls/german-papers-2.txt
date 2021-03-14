@@ -1,0 +1,66 @@
+
+https://www.aachener-nachrichten.de/        Aachener Nachrichten
+https://www.abendzeitung-muenchen.de/       Abendzeitung (München)
+https://www.all-in.de/                      Allgäuer Zeitung
+https://www.augsburger-allgemeine.de/       Augsburger Allgemeine
+https://www.azonline.de/                    Allgemeine Zeitung
+https://www.badische-zeitung.de/            Badische Zeitung
+https://www.berliner-zeitung.de/            Berliner Zeitung
+https://www.berliner-kurier.de/             Berliner Kurier
+https://bnn.de/                             Badische Neueste Nachrichten
+https://www.bz-berlin.de/                   B.Z.
+https://www.das-parlament.de/               Das Parlament
+https://www.donaukurier.de/                 Donaukurier
+# https://www.eberbacher-zeitung.de/          Eberbacher Zeitung
+https://www.echo-online.de/                 Darmstädter Echo
+https://www.freiepresse.de/chemnitz         Freie Presse
+https://www.focus.de/                       Focus
+https://www.general-anzeiger-bonn.de/       General-Anzeiger
+https://www.goettinger-tageblatt.de/        Göttinger Tageblatt
+https://www.heise.de/                       Heise
+https://www.idowa.de/landshut               Landshuter Zeitung
+https://www.infranken.de/                   Fränkischer Tag
+https://www.kn-online.de/                   Kieler Nachrichten
+https://www.kreiszeitung.de/                Kreiszeitung
+https://www.ln-online.de/                   Lübecker Nachrichten
+https://www.lr-online.de/                   Lausitzer Rundschau
+https://www.lvz.de/                         Leipziger Volkszeitung
+https://www.main-echo.de/                   Main-Echo
+https://www.mainpost.de/                    Main-Post
+https://www.maz-online.de/                  Märkische Allgemeine
+https://www.medical-tribune.de/             Medical Tribune
+https://www.merkur.de/                      Münchner Merkur
+https://www.mittelbayerische.de/            Mittelbayerische Zeitung
+https://www.morgenweb.de/                   Mannheimer Morgen
+https://www.moz.de/                         Märkische Oderzeitung
+https://www.muensterschezeitung.de/         Münstersche Zeitung
+https://www.neuepresse.de/                  Neue Presse
+https://www.nordbayern.de/                  Nürnberger Nachrichten
+https://www.nordkurier.de/                  Nordkurier
+https://www.noz.de/                         Neue Osnabrücker Zeitung
+https://www.nw.de/                          Neue Westfälische
+https://www.nwzonline.de/                   Nordwest-Zeitung
+https://www.onetz.de/                       Der neue Tag
+https://www.ostsee-zeitung.de/              Ostsee-Zeitung
+https://www.ovb-online.de/                  Oberbayerisches Volksblatt
+https://www.rhein-zeitung.de/               Rhein-Zeitung
+https://www.rheinpfalz.de/                  Die Rheinpfalz
+https://www.rnz.de/                         Rhein-Neckar-Zeitung
+https://www.saarbruecker-zeitung.de/        Saarbrücker Zeitung
+https://www.saechsische.de/                 Sächsische Zeitung
+https://www.schwaebische.de/                Schwäbische Zeitung
+https://www.schwarzwaelder-bote.de/         Schwarzwälder Bote
+https://spiegel.de/                         Spiegel
+https://www.stimme.de/                      Heilbronner Stimme
+https://www.stuttgarter-nachrichten.de/     Stuttgarter Nachrichten
+https://www.stuttgarter-zeitung.de/         Stuttgarter Zeitung
+https://www.suedkurier.de/                  Südkurier
+https://www.svz.de/                         Schweriner Volkszeitung
+https://www.swp.de/                         Südwest Presse
+https://www.tagesspiegel.de/                Der Tagesspiegel
+https://www.tz.de/                          tz
+https://www.volksfreund.de/                 Trierischer Volksfreund
+https://www.volksstimme.de/                 Volksstimme
+https://www.westfalen-blatt.de/             Westfalen-Blatt
+https://www.wiesbadener-kurier.de/          Wiesbadener Kurier
+https://www.wz.de/                          WZ Westdeutsche Zeitung

@@ -5,7 +5,6 @@ https://www.aerztezeitung.de/
 https://www.bayernkurier.de/
 https://www.bild.de/
 https://www.boersen-zeitung.de/
-https://www.handelsblatt.com/
 https://deutsche-wirtschafts-nachrichten.de/
 https://www.die-tagespost.de/
 https://www.epochtimes.de/
@@ -13,6 +12,7 @@ https://www.faz.net/
 https://www.fr.de/
 https://www.freitag.de/
 https://www.generalanzeiger.de/
+https://www.handelsblatt.com/
 https://jungefreiheit.de/
 https://www.jungewelt.de/
 https://www.juedische-allgemeine.de/
