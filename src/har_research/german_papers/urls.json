@@ -1,7 +1,8 @@
 [
   {
     "url": "www.architekturzeitung.com",
-    "title": ""
+    "title": "Architekturzeitung",
+    "publisher": ""
   },
   {
     "url": "www.aerztezeitung.de",
@@ -10,7 +11,8 @@
   },
   {
     "url": "www.bayernkurier.de",
-    "title": ""
+    "title": "Bayernkurier",
+    "publisher": ""
   },
   {
     "url": "www.bild.de",
@@ -19,11 +21,13 @@
   },
   {
     "url": "www.boersen-zeitung.de",
-    "title": ""
+    "title": "B\u00f6rsenzeitung",
+    "publisher": ""
   },
   {
     "url": "deutsche-wirtschafts-nachrichten.de",
-    "title": ""
+    "title": "Deutsche Wirtschaftsnachrichten",
+    "publisher": ""
   },
   {
     "url": "www.die-tagespost.de",
@@ -32,7 +36,8 @@
   },
   {
     "url": "www.epochtimes.de",
-    "title": ""
+    "title": "The Epoch Times",
+    "publisher": ""
   },
   {
     "url": "www.faz.net",
@@ -51,7 +56,8 @@
   },
   {
     "url": "www.generalanzeiger.de",
-    "title": ""
+    "title": "Generalanzeiger",
+    "publisher": ""
   },
   {
     "url": "www.handelsblatt.com",
@@ -60,7 +66,8 @@
   },
   {
     "url": "jungefreiheit.de",
-    "title": ""
+    "title": "Junge Freiheit",
+    "publisher": ""
   },
   {
     "url": "www.jungewelt.de",
@@ -74,11 +81,13 @@
   },
   {
     "url": "www.kath.net",
-    "title": ""
+    "title": "Katholische Nachrichten",
+    "publisher": ""
   },
   {
     "url": "linkezeitung.de",
-    "title": ""
+    "title": "Linke Zeitung",
+    "publisher": ""
   },
   {
     "url": "www.mz-web.de",
@@ -97,7 +106,8 @@
   },
   {
     "url": "www.sonntagsblatt.de",
-    "title": ""
+    "title": "Sonntagsblatt",
+    "publisher": ""
   },
   {
     "url": "www.sueddeutsche.de",
@@ -116,7 +126,8 @@
   },
   {
     "url": "www.waz.de",
-    "title": ""
+    "title": "Westdeutsche Allgemeine Zeitung",
+    "publisher": ""
   },
   {
     "url": "www.wa.de",
@@ -200,7 +211,8 @@
   },
   {
     "url": "www.focus.de",
-    "title": ""
+    "title": "Focus",
+    "publisher": ""
   },
   {
     "url": "www.general-anzeiger-bonn.de",
@@ -214,7 +226,8 @@
   },
   {
     "url": "www.heise.de",
-    "title": ""
+    "title": "Heise Online",
+    "publisher": ""
   },
   {
     "url": "www.idowa.de",

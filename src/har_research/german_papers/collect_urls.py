@@ -9,6 +9,66 @@ from web import get_web_file
 from har_research.har import parse_url
 
 
+handmade_meta = {
+    "www.architekturzeitung.com": {
+        "title": "Architekturzeitung",
+        "publisher": "",
+    },
+    "www.bayernkurier.de": {
+        "title": "Bayernkurier",
+        "publisher": "",
+    },
+    "www.boersen-zeitung.de": {
+        "title": "Börsenzeitung",
+        "publisher": "",
+    },
+    "deutsche-wirtschafts-nachrichten.de": {
+        "title": "Deutsche Wirtschaftsnachrichten",
+        "publisher": "",
+    },
+    "www.epochtimes.de": {
+        "title": "The Epoch Times",
+        "publisher": "",
+    },
+    "www.generalanzeiger.de": {
+        "title": "Generalanzeiger",
+        "publisher": "",
+    },
+    "jungefreiheit.de": {
+        "title": "Junge Freiheit",
+        "publisher": "",
+    },
+    "www.kath.net": {
+        "title": "Katholische Nachrichten",
+        "publisher": "",
+    },
+    "linkezeitung.de": {
+        "title": "Linke Zeitung",
+        "publisher": "",
+    },
+    "www.sonntagsblatt.de": {
+        "title": "Sonntagsblatt",
+        "publisher": "",
+    },
+    "www.waz.de": {
+        "title": "Westdeutsche Allgemeine Zeitung",
+        "publisher": "",
+    },
+    "www.focus.de": {
+        "title": "Focus",
+        "publisher": "",
+    },
+    "www.heise.de": {
+        "title": "Heise Online",
+        "publisher": "",
+    },
+    "": {
+        "title": "",
+        "publisher": "",
+    },
+}
+
+
 def printe(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -115,7 +175,9 @@ def get_meta_info(urls=None):
                 "title": meta["Zeitung"],
                 "publisher": meta["Verlag"]
             })
-        if not meta:
+        elif url["host"] in handmade_meta:
+            metas.append({"url": url["host"], **handmade_meta[url["host"]]})
+        else:
             metas.append({"url": url["host"], "title": ""})
             printe("NOT FOUND", url["short_host"])
 
