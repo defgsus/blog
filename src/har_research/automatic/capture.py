@@ -284,6 +284,8 @@ if __name__ == "__main__":
         with open(args.url) as fp:
             urls = [s.strip() for s in fp.readlines()]
             urls = list(filter(lambda u: u and not u.startswith("#"), urls))
+            print(urls)
+            urls = [s.split()[0].strip() for s in urls]
             for i, u in enumerate(urls):
                 if "://" not in u:
                     urls[i] = f"https://{u}"

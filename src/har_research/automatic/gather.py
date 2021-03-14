@@ -3,11 +3,27 @@ A simple script to accumulate connection data
 from all recorded HAR files.
 """
 import argparse
+import time
 import sys
 sys.path.insert(0, "../..")
 sys.path.insert(0, "..")
 
+import numpy as np
+from sklearn.cluster import SpectralClustering
+
 from har import *
+from clusters import LiveClusterer
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "what", type=str, nargs="+",
+        help="'index', 'bh-long', 'bh-mime-long', 'bh-cluster'"
+    )
+
+    return parser.parse_args()
 
 
 class Encoder(json.JSONEncoder):
@@ -156,16 +172,68 @@ def get_character_histogram_per_host(
     return per_host
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+def get_histogram_clusters(generator, threshold=.4) -> dict:
+    def byte_histogram(text: str):
+        text = text.encode("utf-8")
+        histogram = np.zeros((256, ))
+        for c in text:
+            histogram[c] += 1
+        if text:
+            histogram = np.round(histogram / len(text) * 100, 3)
 
-    parser.add_argument(
-        "what", type=str, nargs="+",
-        help="'index', 'bh-long', 'bh-mime-long'"
-    )
+        return histogram
 
-    return parser.parse_args()
+    clusterer = LiveClusterer()
+    filename_index = dict()
 
+    entry_index = 0
+    last_verbose_time = 0
+    for filename, first_entry, entry in tqdm(generator):
+        if filename not in filename_index:
+            filename_index[filename] = len(filename_index)
+            entry_index = 0
+
+        if entry["request"].get("postData") and entry["request"]["postData"].get("text"):
+            text = entry["request"]["postData"]["text"]
+            if isinstance(text, dict):
+                text = json.dumps(text)
+
+            # url = parse_url(entry["request"]["url"])
+            key = (filename_index[filename], entry_index)
+
+            clusterer.add(
+                key,
+                byte_histogram(text),
+                threshold=threshold,
+            )
+
+            cur_time = time.time()
+            if cur_time - last_verbose_time > 1:
+                last_verbose_time = cur_time
+                print(f"{len(clusterer.clusters)} clusters")
+
+        entry_index += 1
+
+        #if len(clusterer.clusters) > 10:
+        #    break
+
+    clusterer = clusterer.recluster_below_count(2)
+
+    data = {
+        "clusters": [
+            {
+                "histogram": list(np.round(cl["data"], 3)),
+                "keys": cl["keys"],
+                "count": cl["count"],
+            }
+            for cl in clusterer.clusters
+        ],
+        "index": {
+            value: key
+            for key, value in filename_index.items()
+        }
+    }
+    return data
 
 
 if __name__ == "__main__":
@@ -188,11 +256,18 @@ if __name__ == "__main__":
             data = get_character_histogram_per_host(generator, as_bytes=True, with_mime=True, host_field="host")
             filename = "bytes-histogram-mime-longhost"
 
+        elif what == "bh-cluster":
+            data = get_histogram_clusters(generator, threshold=.3)
+            filename = "bytes-histogram-clusters-03"
+
         else:
             raise ValueError(f"Unrecognized '{what}'")
 
         #get_connections(generator, "./data/all-connections.json")
 
-        with open(f"./data/{filename}.json", "w") as fp:
-            json.dump(data, fp, indent=None, cls=Encoder)
+        if filename:
+            with open(f"./data/{filename}.json", "w") as fp:
+                json.dump(data, fp, indent=None, cls=Encoder)
 
+import PIL.Image
+PIL.Image.frombytes()
