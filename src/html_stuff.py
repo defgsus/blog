@@ -1,21 +1,43 @@
 import secrets
+from typing import Union, List, Optional
+
 import plotly.express as px
+import pandas as pd
 
 
-def html_heatmap(matrix, labels_x, labels_y, display: bool = True):
+def html_heatmap(
+        matrix: Union[List[List], pd.DataFrame],
+        labels_x: Optional[List[str]] = None,
+        labels_y: Optional[List[str]] = None,
+        transpose: bool = False,
+        display: bool = True,
+        colors: Union[str, List[str]] = "Viridis",
+):
     if display:
-        from IPython import display, HTML
+        from IPython.display import display, HTML
 
-    min_val = min(min(row) for row in matrix)
-    max_val = max(max(row) for row in matrix)
+    if not isinstance(matrix, pd.DataFrame):
+        matrix = pd.DataFrame(matrix)
 
-    colors = px.colors.PLOTLY_SCALES["Viridis"]
+    min_val = matrix.min().min()
+    max_val = matrix.max().max()
+    if not labels_x:
+        labels_x = matrix.columns
+    if not labels_y:
+        labels_y = matrix.index
+
+    if transpose:
+        matrix = matrix.transpose()
+        labels_x, labels_y = labels_y, labels_x
+
+    if isinstance(colors, str):
+        colors = px.colors.PLOTLY_SCALES[colors]
 
     ID = secrets.token_hex(8)
     html = f"""<style>
         .heatmap-{ID} {{
             display: grid;
-            grid-template-columns: repeat({len(matrix[0])}, 1fr);
+            grid-template-columns: repeat({matrix.shape[1]}, 1fr);
         }}
         .heatmap-{ID} .hmc {{
             padding-bottom: 100%;
@@ -30,13 +52,16 @@ def html_heatmap(matrix, labels_x, labels_y, display: bool = True):
     html += """</style>"""
 
     html += f"""<div class="heatmap-{ID}">"""
-    for row, label_y in zip(matrix, labels_y):
+    for row, label_y in zip(matrix.iloc, labels_y):
         for v, label_x in zip(row, labels_x):
-            vc = int(max(0, (v - min_val) / (max_val - min_val) * len(colors) - 1e-5))
-            html += f"""<div class="hmc v{vc}" title="{label_x}/{label_y}: {v}"></div>"""
+            if v > 0:
+                vc = int(max(0, (v - min_val) / (max_val - min_val) * len(colors) - 1e-5))
+                vc = f" v{vc}"
+            else:
+                vc = ""
+            html += f"""<div class="hmc{vc}" title="{label_x} / {label_y}: {v}"></div>"""
     html += """</div>"""
     if display:
         display(HTML(html))
     else:
         return html
-

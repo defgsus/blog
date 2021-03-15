@@ -6,51 +6,101 @@ from web import get_web_file
 from har_research.har import *
 
 
-class SiteStatistics:
+EXCLUDE_REFERRER_PATHS = {
+    "www.handelsblatt.com": [
+        re.compile(r"^/downloads/.*"),
+    ],
+    "www.architekturzeitung.com": [
+        re.compile(r"^/architekturgalerie-architektur.*"),
+        re.compile(r".*datenschutz-architekturzeitung.*"),
+    ],
+}
+
+class WebsiteStatistics:
 
     def __init__(self):
         with open("urls.json") as fp:
-            self.websites = json.load(fp)
-            self.requested_hosts = dict()
-
-    def df(self):
-        return pd.DataFrame(self.websites)
+            websites = json.load(fp)
+            self.websites = {
+                ws["url"]: {
+                    "url": ws["url"],
+                    "title": ws["title"],
+                    "publisher": ws["publisher"],
+                    "requests": dict(),
+                }
+                for ws in websites
+            }
 
     def iter_website_hars(self):
-        for ws in self.websites:
+        for ws in tqdm(self.websites.values()):
             files = list(glob.glob(f"../automatic/recordings/{ws['url']}/*.json"))
             files.sort(reverse=True)
             har = HarFile(files[0])
-            print(ws)
+            # print(ws)
             yield ws, har
 
     def parse_hars(self):
         for ws, har in self.iter_website_hars():
-            self.requested_hosts[ws["url"]] = dict()
-            hosts = self.requested_hosts[ws["url"]]
+            requests = dict()
+            ws["requests"] = requests
+
+            article_paths = set()
+            for e in har:
+                url = parse_url(e["request"]["url"])
+
+                referrer = None
+                for h in e["request"]["headers"]:
+                    if h["name"].lower() == "referer":
+                        referrer = h["value"]
+                        break
+                e["referrer"] = referrer
 
             for e in har:
                 url = parse_url(e["request"]["url"])
                 key = url["short_host"]
+                is_third = not (ws["url"] in url["host"] or url["host"] in ws["url"])
+                referrer = e["referrer"]
 
-                hosts[key] = hosts.get(key, 0) + 1
+                if key not in requests:
+                    requests[key] = {
+                        "is_third": is_third,
+                        "count": 0,
+                        "article_referer": 0,
+                        "bytes_sent": 0,
+                        "bytes_received": 0,
+                    }
+                request = requests[key]
+                request["count"] += 1
+                request["bytes_sent"] = sum(len(e["name"]) + len(e["value"]) for e in e["request"]["queryString"])
+                if "postData" in e["request"]:
+                    request["bytes_sent"] += e["request"]["postData"].get("size", 0)
 
-            ws["requests"] = len(har)
-            ws["servers"] = len(hosts)
+                request["bytes_received"] += e["response"]["content"].get("size", 0)
+
+                if is_third and referrer:
+                    ref_url = parse_url(referrer)
+                    if ref_url["host"] == ws["url"]:
+                        if len(ref_url["path"]) > 20 and not ref_url["path"].endswith(".css"):
+                            #article_paths.add(ref_url["path"])
+                            request["article_referer"] += 1
+
+            ws["num_requests"] = sum(r["count"] for r in ws["requests"].values())
+            #print(ws["url"])
+            #print(" ", referrer)
+            #for p in article_paths:
+            #    print(" ", p)
 
     def save_json(self, filename: str):
         with open(filename, "w") as fp:
             json.dump({
                 "websites": self.websites,
-                "requested_hosts": self.requested_hosts,
             }, fp)
 
 
 if __name__ == "__main__":
 
-    stats = SiteStatistics()
+    stats = WebsiteStatistics()
 
     stats.parse_hars()
     stats.save_json("website-stats.json")
-    print(stats.df())
 
