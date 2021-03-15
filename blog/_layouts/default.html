@@ -7,9 +7,15 @@
 
     <link rel="stylesheet" href="{{ site.baseurl }}/style.css">
 
+    {% if page.custom_css %}
+        {% for css_file in page.custom_css %}
+            <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/{{ css_file }}">
+        {% endfor %}
+    {% endif %}
+
     {% if page.custom_js %}
         {% for js_file in page.custom_js %}
-            <script type="text/javascript" src="{{ site.baseurl }}/assets/js/{{ js_file }}.js"></script>
+            <script type="text/javascript" src="{{ site.baseurl }}/assets/js/{{ js_file }}"></script>
         {% endfor %}
     {% endif %}
 

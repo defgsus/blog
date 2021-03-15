@@ -1,0 +1,6 @@
+Type: IPython Notebook Extension
+Name: datatables-offline
+Link: README.md
+Description: Try to patch jQuery.dataTables.js into notebook without using jupyter_require
+Main: main.js
+Compatibility: 4.x, 5.x

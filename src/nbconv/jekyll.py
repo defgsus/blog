@@ -14,10 +14,14 @@ class JekyllExporter(MarkdownExporter):
     # hide cell source but display output
     RE_HIDE_CODE = re.compile(r"^# hide-code")
 
-    # enable: xxx will include special requisites in the page
+    # 'enable: xxx' in front-matter will include special requisites in the page
     ENABLE = {
         "plotly": {
-            "custom_js": ["require-stub", "plotly.min"],
+            "custom_js": ["require-stub.js", "plotly.min.js"],
+        },
+        "datatables": {
+            "custom_js": ["jquery-3.6.0.min.js", "jquery.dataTables-1.10.24.min.js"],
+            "custom_css": ["jquery.dataTables.min.css"],
         }
     }
 
