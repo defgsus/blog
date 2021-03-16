@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Messin’ with jQuery and Jupyter | def.gsus-</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Messin’ with jQuery and Jupyter" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Just yesterday, my tables got too long!" />
+<meta property="og:description" content="Just yesterday, my tables got too long!" />
+<link rel="canonical" href="https://defgsus.github.io/blog/2021/03/16/messing-with-jquery.html" />
+<meta property="og:url" content="https://defgsus.github.io/blog/2021/03/16/messing-with-jquery.html" />
+<meta property="og:site_name" content="def.gsus-" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-03-16T00:00:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Messin’ with jQuery and Jupyter" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Messin’ with jQuery and Jupyter","dateModified":"2021-03-16T00:00:00+01:00","datePublished":"2021-03-16T00:00:00+01:00","url":"https://defgsus.github.io/blog/2021/03/16/messing-with-jquery.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://defgsus.github.io/blog/2021/03/16/messing-with-jquery.html"},"description":"Just yesterday, my tables got too long!","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://defgsus.github.io/blog/feed.xml" title="def.gsus-" /></head>
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+
+    <link rel="stylesheet" href="/blog/style.css">
+
+    
+        
+            <link rel="stylesheet" href="/blog/assets/css/jquery.dataTables.min.css">
+        
+    
+
+    
+        
+            <script type="text/javascript" src="/blog/assets/js/jquery-3.6.0.min.js"></script>
+        
+            <script type="text/javascript" src="/blog/assets/js/jquery.dataTables-1.10.24.min.js"></script>
+        
+    
+
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">def.gsus-</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Messin&#39; with jQuery and Jupyter</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-03-16T00:00:00+01:00" itemprop="datePublished">Mar 16, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Just yesterday, my tables got too long!</p>
+
+<h4 id="first-reaction">First reaction</h4>
+<p>Maybe i can just attach a piece of javascript to the pandas.DataFrame rendering to make them at least sortable.</p>
+
+<h4 id="second-to-kind-othird-reaction">Second to kind o’third reaction</h4>
+<p>A well.. let’s look up someone elses code first before spending two nights implementing horrible javascript templating within python strings kind o’stuff.</p>
+
+<h4 id="fourth-to-sixteenth-reaction">Fourth to sixteenth reaction</h4>
+<p>Ohh! There’s a jQuery plugin called <a href="https://datatables.net/manual/options">DataTables</a> which can add sorting and paging to pure html tables. There must be something for jupyter already.. Let’s try <a href="https://github.com/mwouts/itables">itables</a>… Ohh, i need to adjust my script blocker because everything is loaded from <code class="language-plaintext highlighter-rouge">cdn.datatables.net</code>… Aah, they use this jupyter built-in <code class="language-plaintext highlighter-rouge">requirejs</code>, maybe i can just replace the paths… Ohh, how do i provide them to the notebook?
+Ahh, maybe just render a <code class="language-plaintext highlighter-rouge">&lt;script&gt;</code> tag into an output cell… Uhm, <code class="language-plaintext highlighter-rouge">$(...).DataTables is not a function</code>.. Maybe if i add it to the header of the notebook html.. Öh, how exactly? … C’mon! … F** S** .. Aaahh. Just write an <a href="https://github.com/ipython-contrib/jupyter_contrib_nbextensions">nbextension</a>… What the? … Ömmh, have all these javascript errors been there before? .. Oh! It works! It works! Let’s .. oh, it doesn’t work …</p>
+
+<p>… and so on.</p>
+
+<p>Finally, there is <a href="https://github.com/defgsus/blog/tree/master/src/datatables-offline">this extension</a> which just cruedly injects the DataTables into the jupyter-provided jquery. I find it often complicated when the framework provides jquery but one wants to add another plugin.</p>
+
+<p>The css got adjusted a bit so it matches with my <code class="language-plaintext highlighter-rouge">onedork</code> <a href="https://github.com/dunovank/jupyter-themes">jupyter theme</a>. Also the images are provided by the extension and do not require a CDN.</p>
+
+<p>Now is it possible to render a blog post with this homebrewn setup?</p>
+
+<p>Here’s the standard DataFrame representation:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="n">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">))).</span><span class="nb">round</span><span class="p">()</span>
+<span class="n">df</span><span class="p">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div></div>
+
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>76.0</td>
+      <td>68.0</td>
+      <td>77.0</td>
+      <td>30.0</td>
+      <td>67.0</td>
+      <td>68.0</td>
+      <td>44.0</td>
+      <td>36.0</td>
+      <td>35.0</td>
+      <td>15.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>33.0</td>
+      <td>31.0</td>
+      <td>31.0</td>
+      <td>97.0</td>
+      <td>83.0</td>
+      <td>62.0</td>
+      <td>98.0</td>
+      <td>25.0</td>
+      <td>7.0</td>
+      <td>67.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>35.0</td>
+      <td>55.0</td>
+      <td>96.0</td>
+      <td>91.0</td>
+      <td>18.0</td>
+      <td>79.0</td>
+      <td>86.0</td>
+      <td>11.0</td>
+      <td>16.0</td>
+      <td>15.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>92.0</td>
+      <td>84.0</td>
+      <td>50.0</td>
+      <td>6.0</td>
+      <td>33.0</td>
+      <td>96.0</td>
+      <td>67.0</td>
+      <td>21.0</td>
+      <td>85.0</td>
+      <td>14.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>99.0</td>
+      <td>6.0</td>
+      <td>96.0</td>
+      <td>77.0</td>
+      <td>36.0</td>
+      <td>34.0</td>
+      <td>68.0</td>
+      <td>97.0</td>
+      <td>78.0</td>
+      <td>42.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>It is already quite cool and useful, but not for 500 rows..</p>
+
+<p>The DataTables enhanced version:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">secrets</span>
+
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">datatable</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="p">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">max_rows</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">max_cols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+    <span class="n">paging</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="n">table_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">):</span>    
+    <span class="n">table_id</span> <span class="o">=</span> <span class="n">table_id</span> <span class="ow">or</span> <span class="sa">f</span><span class="s">"table-</span><span class="si">{</span><span class="n">secrets</span><span class="p">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="si">}</span><span class="s">"</span>
+    <span class="n">html</span> <span class="o">=</span> <span class="n">df</span><span class="p">.</span><span class="n">to_html</span><span class="p">(</span>
+        <span class="n">table_id</span><span class="o">=</span><span class="n">table_id</span><span class="p">,</span>
+        <span class="n">escape</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">max_rows</span><span class="o">=</span><span class="n">max_rows</span><span class="p">,</span>
+        <span class="n">max_cols</span><span class="o">=</span><span class="n">max_cols</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="n">kwargs</span><span class="p">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s">"paging"</span><span class="p">:</span> <span class="n">paging</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="n">options_str</span> <span class="o">=</span> <span class="n">json</span><span class="p">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">html</span> <span class="o">+=</span> <span class="sa">f</span><span class="s">"""&lt;script type="text/javascript"&gt;
+        jQuery("#</span><span class="si">{</span><span class="n">table_id</span><span class="si">}</span><span class="s">").DataTable(</span><span class="si">{</span><span class="n">options_str</span><span class="si">}</span><span class="s">);
+    &lt;/script&gt;"""</span>
+
+    <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">html</span><span class="p">))</span>
+
+<span class="n">datatable</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">paging</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<table border="1" class="dataframe" id="table-2344fbd85f84944566e4">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>76.0</td>
+      <td>68.0</td>
+      <td>77.0</td>
+      <td>30.0</td>
+      <td>67.0</td>
+      <td>68.0</td>
+      <td>44.0</td>
+      <td>36.0</td>
+      <td>35.0</td>
+      <td>15.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>33.0</td>
+      <td>31.0</td>
+      <td>31.0</td>
+      <td>97.0</td>
+      <td>83.0</td>
+      <td>62.0</td>
+      <td>98.0</td>
+      <td>25.0</td>
+      <td>7.0</td>
+      <td>67.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>35.0</td>
+      <td>55.0</td>
+      <td>96.0</td>
+      <td>91.0</td>
+      <td>18.0</td>
+      <td>79.0</td>
+      <td>86.0</td>
+      <td>11.0</td>
+      <td>16.0</td>
+      <td>15.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>92.0</td>
+      <td>84.0</td>
+      <td>50.0</td>
+      <td>6.0</td>
+      <td>33.0</td>
+      <td>96.0</td>
+      <td>67.0</td>
+      <td>21.0</td>
+      <td>85.0</td>
+      <td>14.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>99.0</td>
+      <td>6.0</td>
+      <td>96.0</td>
+      <td>77.0</td>
+      <td>36.0</td>
+      <td>34.0</td>
+      <td>68.0</td>
+      <td>97.0</td>
+      <td>78.0</td>
+      <td>42.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>70.0</td>
+      <td>76.0</td>
+      <td>67.0</td>
+      <td>82.0</td>
+      <td>82.0</td>
+      <td>100.0</td>
+      <td>29.0</td>
+      <td>58.0</td>
+      <td>49.0</td>
+      <td>54.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>14.0</td>
+      <td>18.0</td>
+      <td>25.0</td>
+      <td>26.0</td>
+      <td>93.0</td>
+      <td>47.0</td>
+      <td>78.0</td>
+      <td>2.0</td>
+      <td>25.0</td>
+      <td>67.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>64.0</td>
+      <td>6.0</td>
+      <td>28.0</td>
+      <td>56.0</td>
+      <td>55.0</td>
+      <td>65.0</td>
+      <td>10.0</td>
+      <td>34.0</td>
+      <td>55.0</td>
+      <td>14.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>65.0</td>
+      <td>72.0</td>
+      <td>87.0</td>
+      <td>45.0</td>
+      <td>48.0</td>
+      <td>32.0</td>
+      <td>19.0</td>
+      <td>19.0</td>
+      <td>10.0</td>
+      <td>49.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>66.0</td>
+      <td>53.0</td>
+      <td>54.0</td>
+      <td>87.0</td>
+      <td>24.0</td>
+      <td>79.0</td>
+      <td>0.0</td>
+      <td>35.0</td>
+      <td>57.0</td>
+      <td>66.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>32.0</td>
+      <td>95.0</td>
+      <td>63.0</td>
+      <td>94.0</td>
+      <td>86.0</td>
+      <td>70.0</td>
+      <td>65.0</td>
+      <td>57.0</td>
+      <td>81.0</td>
+      <td>59.0</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>23.0</td>
+      <td>22.0</td>
+      <td>58.0</td>
+      <td>17.0</td>
+      <td>33.0</td>
+      <td>16.0</td>
+      <td>85.0</td>
+      <td>95.0</td>
+      <td>19.0</td>
+      <td>52.0</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>99.0</td>
+      <td>62.0</td>
+      <td>33.0</td>
+      <td>88.0</td>
+      <td>78.0</td>
+      <td>19.0</td>
+      <td>28.0</td>
+      <td>42.0</td>
+      <td>61.0</td>
+      <td>23.0</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>42.0</td>
+      <td>49.0</td>
+      <td>45.0</td>
+      <td>30.0</td>
+      <td>35.0</td>
+      <td>27.0</td>
+      <td>20.0</td>
+      <td>87.0</td>
+      <td>30.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>86.0</td>
+      <td>75.0</td>
+      <td>7.0</td>
+      <td>29.0</td>
+      <td>32.0</td>
+      <td>2.0</td>
+      <td>98.0</td>
+      <td>18.0</td>
+      <td>89.0</td>
+      <td>63.0</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>78.0</td>
+      <td>98.0</td>
+      <td>80.0</td>
+      <td>9.0</td>
+      <td>14.0</td>
+      <td>81.0</td>
+      <td>35.0</td>
+      <td>96.0</td>
+      <td>50.0</td>
+      <td>63.0</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>32.0</td>
+      <td>78.0</td>
+      <td>18.0</td>
+      <td>54.0</td>
+      <td>53.0</td>
+      <td>64.0</td>
+      <td>4.0</td>
+      <td>69.0</td>
+      <td>24.0</td>
+      <td>10.0</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>99.0</td>
+      <td>17.0</td>
+      <td>27.0</td>
+      <td>83.0</td>
+      <td>33.0</td>
+      <td>29.0</td>
+      <td>56.0</td>
+      <td>20.0</td>
+      <td>25.0</td>
+      <td>15.0</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>4.0</td>
+      <td>14.0</td>
+      <td>89.0</td>
+      <td>95.0</td>
+      <td>35.0</td>
+      <td>34.0</td>
+      <td>35.0</td>
+      <td>38.0</td>
+      <td>88.0</td>
+      <td>85.0</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>87.0</td>
+      <td>37.0</td>
+      <td>11.0</td>
+      <td>67.0</td>
+      <td>52.0</td>
+      <td>66.0</td>
+      <td>76.0</td>
+      <td>80.0</td>
+      <td>87.0</td>
+      <td>36.0</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>70.0</td>
+      <td>71.0</td>
+      <td>42.0</td>
+      <td>94.0</td>
+      <td>24.0</td>
+      <td>76.0</td>
+      <td>75.0</td>
+      <td>63.0</td>
+      <td>7.0</td>
+      <td>4.0</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>10.0</td>
+      <td>8.0</td>
+      <td>45.0</td>
+      <td>18.0</td>
+      <td>39.0</td>
+      <td>96.0</td>
+      <td>63.0</td>
+      <td>21.0</td>
+      <td>23.0</td>
+      <td>44.0</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>46.0</td>
+      <td>56.0</td>
+      <td>4.0</td>
+      <td>95.0</td>
+      <td>24.0</td>
+      <td>63.0</td>
+      <td>38.0</td>
+      <td>67.0</td>
+      <td>53.0</td>
+      <td>94.0</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>2.0</td>
+      <td>44.0</td>
+      <td>74.0</td>
+      <td>95.0</td>
+      <td>94.0</td>
+      <td>79.0</td>
+      <td>19.0</td>
+      <td>4.0</td>
+      <td>27.0</td>
+      <td>7.0</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>30.0</td>
+      <td>70.0</td>
+      <td>77.0</td>
+      <td>13.0</td>
+      <td>26.0</td>
+      <td>5.0</td>
+      <td>27.0</td>
+      <td>9.0</td>
+      <td>11.0</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>17.0</td>
+      <td>52.0</td>
+      <td>44.0</td>
+      <td>34.0</td>
+      <td>53.0</td>
+      <td>89.0</td>
+      <td>19.0</td>
+      <td>40.0</td>
+      <td>14.0</td>
+      <td>72.0</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>53.0</td>
+      <td>14.0</td>
+      <td>71.0</td>
+      <td>92.0</td>
+      <td>32.0</td>
+      <td>90.0</td>
+      <td>85.0</td>
+      <td>58.0</td>
+      <td>90.0</td>
+      <td>21.0</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>96.0</td>
+      <td>98.0</td>
+      <td>73.0</td>
+      <td>61.0</td>
+      <td>36.0</td>
+      <td>70.0</td>
+      <td>40.0</td>
+      <td>0.0</td>
+      <td>6.0</td>
+      <td>79.0</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>83.0</td>
+      <td>39.0</td>
+      <td>8.0</td>
+      <td>82.0</td>
+      <td>25.0</td>
+      <td>71.0</td>
+      <td>0.0</td>
+      <td>80.0</td>
+      <td>71.0</td>
+      <td>96.0</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>16.0</td>
+      <td>87.0</td>
+      <td>49.0</td>
+      <td>80.0</td>
+      <td>76.0</td>
+      <td>27.0</td>
+      <td>20.0</td>
+      <td>57.0</td>
+      <td>92.0</td>
+      <td>47.0</td>
+    </tr>
+  </tbody>
+</table>
+<script type="text/javascript">
+        jQuery("#table-2344fbd85f84944566e4").DataTable({"paging": true});
+    </script>
+
+<p>Does it work when loading the notebook the first time? <strong>No</strong></p>
+
+<p>Does it always work? <strong>Not always</strong></p>
+
+<p>Why not using <code class="language-plaintext highlighter-rouge">$().DataTable</code>? <strong>It does not work</strong></p>
+
+<p>Is the styling of this whole blog worth the trouble? <strong>The styling is terrible but it’s worth the trouble</strong></p>
+
+<p>What was the point again? <strong>It works offline and does not involve third parties when browsing this post</strong></p>
+
+  </div><a class="u-url" href="/blog/2021/03/16/messing-with-jquery.html" hidden></a>
+</article>
+
+    </div>
+</main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">def.gsus-</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">def.gsus-</li><li><a class="u-email" href="mailto:echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d">echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/defgsus"><svg class="svg-icon"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg> <span class="username">defgsus</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Programming stuff mainly</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
