@@ -3,8 +3,8 @@ layout: post
 title: jupekyll
 enable: plotly
 custom_js: 
-  - require-stub
-  - plotly.min
+  - require-stub.js
+  - plotly.min.js
 
 ---
 
