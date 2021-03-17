@@ -16,6 +16,7 @@ EXCLUDE_REFERRER_PATHS = {
     ],
 }
 
+
 class WebsiteStatistics:
 
     def __init__(self):
@@ -38,6 +39,28 @@ class WebsiteStatistics:
             har = HarFile(files[0])
             # print(ws)
             yield ws, har
+
+    def get_whois(self):
+        import random
+        import time
+        from har_research.whois import run_whois, whois_to_dict
+        hosts = set()
+        for ws, har in self.iter_website_hars():
+            for e in har:
+                hosts.add(e["request"]["short_host"])
+                ip = e.get("serverIPAddress")
+                if ip and e["request"]["short_host"] == e["request"]["host"]:
+                    hosts.add(ip)
+            #if len(hosts) > 100:
+            #    break
+        print("whoissing...")
+        for host in tqdm(hosts):
+            content = run_whois(host)
+            d = whois_to_dict(content)
+            print(f"{host:40} - {d}")
+            #print(f"\n------------------ whois {host} ------------------\n")
+            #print(content)
+            # time.sleep(random.uniform(1, 2))
 
     def parse_hars(self):
         for ws, har in self.iter_website_hars():
@@ -101,6 +124,7 @@ if __name__ == "__main__":
 
     stats = WebsiteStatistics()
 
+    #stats.get_whois()
     stats.parse_hars()
     stats.save_json("website-stats.json")
 
