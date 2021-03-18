@@ -42,6 +42,8 @@ class JekyllExporter(MarkdownExporter):
                 # TODO: Overridden date via ``post-notebook.py -d`` is not
                 #   recognized here
                 # "date": dt,
+                "custom_css": set(),
+                "custom_js": set(),
             },
         }
         if nb.get("cells") and nb["cells"][0].get("source"):
@@ -51,10 +53,12 @@ class JekyllExporter(MarkdownExporter):
                     key, value = line[:line.index(":")].strip(), line[line.index(":")+1:].strip()
                     if key in keywords:
                         context["meta"][key] = value
+
                     if key == "enable":
                         for en_key in self.ENABLE:
                             if en_key in value:
-                                context["meta"].update(self.ENABLE[en_key])
+                                for set_key, value_list in self.ENABLE[en_key].items():
+                                    context["meta"][set_key] |= set(value_list)
 
         for key, value in context["meta"].items():
             if isinstance(value, (list, tuple)):

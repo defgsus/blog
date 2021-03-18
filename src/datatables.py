@@ -1,5 +1,6 @@
 import json
 import secrets
+from typing import Dict
 
 import pandas as pd
 
@@ -9,7 +10,9 @@ def datatable(
         max_rows: int = 1000,
         max_cols: int = None,
         paging: bool = True,
+        compact: bool = True,
         table_id: str = None,
+        description: Dict[str, str] = None,
         **kwargs,
 ):
     from IPython.display import display, HTML
@@ -20,6 +23,7 @@ def datatable(
         escape=True,
         max_rows=max_rows,
         max_cols=max_cols,
+        classes="compact" if compact else None,
     )
 
     kwargs.update({
@@ -30,5 +34,11 @@ def datatable(
     html += f"""<script type="text/javascript">
         jQuery("#{table_id}").DataTable({options_str});
     </script>"""
+
+    if description:
+        html += """<div class="table-description"><ul>"""
+        for key, text in description.items():
+            html += f"""<li><b>{key}</b>: {text}</li>"""
+        html += """</ul></div>"""
 
     display(HTML(html))

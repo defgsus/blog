@@ -28,6 +28,7 @@ class WebsiteStatistics:
                     "title": ws["title"],
                     "publisher": ws["publisher"],
                     "requests": dict(),
+                    "shareholders": [],
                 }
                 for ws in websites
             }
@@ -61,6 +62,33 @@ class WebsiteStatistics:
             #print(f"\n------------------ whois {host} ------------------\n")
             #print(content)
             # time.sleep(random.uniform(1, 2))
+
+    def get_ownership(self):
+        from kek import Kek
+        MAPPING = {
+            "BILD-Zeitung": "Bild",
+            "Generalanzeiger": "General-Anzeiger (Bonn)",
+        }
+
+        missing = 0
+        for ws in self.websites.values():
+            media = Kek.instance().find_media(name="*"+ws["url"])
+            if not media:
+                media = Kek.instance().find_media(name=MAPPING.get(ws["title"], ws["title"]))
+            # print("%30s" % ws["title"], (media or {}).get("name", "---"))
+            if not media:
+                missing += 1
+            else:
+                ws["shareholders"] = [
+                    {
+                        "name": o.get("fullName") or o["name"],
+                        "id": o["squuid"],
+                        "value": round(perc, 4),
+                    }
+                    for o, perc in media.top_owners()
+                ]
+        if missing:
+            print(missing, "missing ownerships")
 
     def parse_hars(self):
         for ws, har in self.iter_website_hars():
@@ -125,6 +153,7 @@ if __name__ == "__main__":
     stats = WebsiteStatistics()
 
     #stats.get_whois()
+    stats.get_ownership()
     stats.parse_hars()
     stats.save_json("website-stats.json")
 

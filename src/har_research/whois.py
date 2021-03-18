@@ -8,12 +8,12 @@ from typing import Optional
 import argparse
 
 
-class Cache:
+class WhoisCache:
 
-    PATH = os.path.abspath(os.path.join(
-        os.path.dirname(__file__),
+    PATH = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
         "whois-cache",
-    ))
+    )
 
     __instance = None
 
@@ -25,6 +25,10 @@ class Cache:
 
     def __init__(self):
         self._objects = dict()
+
+    def get_dict(self, type: str, id: str) -> dict:
+        text = self.get(type, id)
+        return whois_to_dict(text or "")
 
     def get(self, type: str, id: str) -> Optional[str]:
         if type not in self._objects:
@@ -57,7 +61,7 @@ class Cache:
 
 def run_whois(obj: str, read_cache: bool = True, store_cache: bool = True) -> str:
     if read_cache:
-        content = Cache.instance().get("whois", obj)
+        content = WhoisCache.instance().get("whois", obj)
         if content:
             return content
 
@@ -71,7 +75,7 @@ def run_whois(obj: str, read_cache: bool = True, store_cache: bool = True) -> st
         content = f"ERROR {e}"
 
     if store_cache:
-        Cache.instance().store("whois", obj, content)
+        WhoisCache.instance().store("whois", obj, content)
 
     return content
 

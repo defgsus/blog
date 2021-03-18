@@ -1,10 +1,35 @@
 ---
 ---
 
+$page-background: #f7f7f7;
+$code-background: #f0f0f0;
+
+body {
+  background: $page-background;
+}
+
 .page-content .wrapper {
   max-width: 70%
 }
 
+
+pre, code {
+  background: $code-background;
+}
+
+.highlighter-rouge .highlight {
+  background: $code-background;
+}
+
+
 table th, table td {
   padding: .2rem .2rem;
+}
+
+
+.table-description {
+  color: #a0a0a0;
+  b {
+    color: #808080;
+  }
 }

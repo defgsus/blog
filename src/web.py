@@ -2,7 +2,7 @@ import os
 import requests
 import sys
 
-CACHE_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "cache"))
+CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cache")
 
 
 def get_web_file(url: str, filename: str):
