@@ -61,6 +61,8 @@ class JekyllExporter(MarkdownExporter):
                                     context["meta"][set_key] |= set(value_list)
 
         for key, value in context["meta"].items():
+            if isinstance(value, set):
+                value = sorted(value)
             if isinstance(value, (list, tuple)):
                 context["meta"][key] = "\n" + "\n".join(f"  - {v}" for v in value)
 
