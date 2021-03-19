@@ -97,11 +97,14 @@ WHOIS_KEYS = {
 }
 
 WHOIS_IGNORE_RESPONSE = (
-    "",
     "REDACTED FOR PRIVACY",
     "DATA REDACTED",
     "Not Disclosed",
     "Whois Privacy Service",
+    "WhoisGuard",
+    "Domain Privacy Service FBO Registrant.",
+    "Domain Protection Services",
+    "Contact Privacy Inc. Customer"
 )
 
 
@@ -115,7 +118,14 @@ def whois_to_dict(text: str) -> dict:
             try:
                 idx = text.index(key + ":")
                 value = text[idx+len(key)+1:].split("\n")[0].strip()
-                if value not in WHOIS_IGNORE_RESPONSE:
+                if not value:
+                    continue
+                do_ignore = False
+                for ignore in WHOIS_IGNORE_RESPONSE:
+                    if value in ignore or ignore in value:
+                        do_ignore = True
+                        break
+                if not do_ignore:
                     ret[section_key] = value
                     break
             except ValueError:
