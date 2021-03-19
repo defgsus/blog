@@ -5,6 +5,11 @@ import plotly.express as px
 import pandas as pd
 
 
+def display_html(content):
+    from IPython.display import display, HTML
+    display(HTML(content))
+
+
 def html_heatmap(
         matrix: Union[List[List], pd.DataFrame],
         labels_x: Optional[List[str]] = None,
