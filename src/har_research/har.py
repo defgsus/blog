@@ -244,48 +244,52 @@ class HarFile:
                 data = e["response"]["content"].pop("text", None)
                 del data
 
-    def dump_pretty(self, file=None, max_data=1024):
+    def dump_pretty(self, query=False, headers=False, post=False, response=False, all=False, file=None, max_data=1024):
         width, _ = os.get_terminal_size()
         width = max(1, width - 3)
         for e in self:
             print("\n" + "-" * width, file=file)
-            print("Url:", e["request"]["url"].split("?")[0], file=file)
-            print("Method:", e["request"]["method"], file=file)
+            print("Url:", e["request"]["method"], e["request"]["url"].split("?")[0], file=file)
             print("Date:", e["startedDateTime"], file=file)
-            print("Headers:", file=file)
-            max_len = max(0, *(len(q["name"]) for q in e["request"]["headers"]))
-            for q in e["request"]["headers"]:
-                print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
-
-            if e["request"]["queryString"]:
-                print("Query:", file=file)
-                max_len = max(0, *(len(q["name"]) for q in e["request"]["queryString"]))
-                for q in e["request"]["queryString"]:
+            if headers or all:
+                print("Headers:", file=file)
+                max_len = max(0, *(len(q["name"]) for q in e["request"]["headers"]))
+                for q in e["request"]["headers"]:
                     print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
 
-            if e["request"].get("postData"):
-                data = None
-                if e["request"]["postData"].get("text"):
-                    data = e["request"]["postData"].get("text")
-                elif e["request"]["postData"].get("params"):
-                    print(e)
-                    raise NotImplementedError
-                if data:
-                    print(f"Post:\n{data}")
+            if query or all:
+                if e["request"]["queryString"]:
+                    print("Query:", file=file)
+                    max_len = max(0, *(len(q["name"]) for q in e["request"]["queryString"]))
+                    for q in e["request"]["queryString"]:
+                        print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
 
-            if e["response"]["headers"]:
-                print("Response headers:", file=file)
-                max_len = max(0, *(len(q["name"]) for q in e["response"]["headers"]))
-                for q in e["response"]["headers"]:
-                    print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
+            if post or all:
+                if e["request"].get("postData"):
+                    data = None
+                    if e["request"]["postData"].get("text"):
+                        data = e["request"]["postData"].get("text")
+                    elif e["request"]["postData"].get("params"):
+                        print(e)
+                        raise NotImplementedError
+                    if data:
+                        print(f"Post:\n{data}")
 
-            content = None
-            for key in ("text", "data"):
-                if e["response"]["content"].get(key):
-                    content = e["response"]["content"][key]
-                    break
-            if content:
-                print(f"Content:\n{content[:max_data]}", file=file)
+            if headers or all:
+                if e["response"]["headers"]:
+                    print("Response headers:", file=file)
+                    max_len = max(0, *(len(q["name"]) for q in e["response"]["headers"]))
+                    for q in e["response"]["headers"]:
+                        print(f"  {q['name']:{max_len}} : {q['value']}", file=file)
+
+            if response or all:
+                content = None
+                for key in ("text", "data"):
+                    if e["response"]["content"].get(key):
+                        content = e["response"]["content"][key]
+                        break
+                if content:
+                    print(f"Content:\n{content[:max_data]}", file=file)
 
     def connections_df(self):
         df = pd.DataFrame(self.connections())

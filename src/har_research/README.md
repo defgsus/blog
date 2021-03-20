@@ -12,6 +12,7 @@ first-party CSS if you're interested in some ad tech points of view.
 - https://clearcode.cc/blog/
 - https://www.adexchanger.com/the-sell-sider/
 - https://github.com/prebid/prebid-server
+- https://github.com/prebid/headerbid-expert
 - https://www.outbrain.com/blog/programmatic-advertising/
 
 
