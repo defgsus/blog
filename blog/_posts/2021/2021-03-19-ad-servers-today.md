@@ -891,19 +891,19 @@ What *exactly* happens there is subject of more research but the majority of tho
 
 Eventually a third-party **ad exchange network** will deliver a piece of html that contains an ad. The website runner is called the **publisher**, the blank spaces are **inventory** and it's sold to **advertisers** which in turn work on behalf of the **brands**. And because it's all done algorithmically it's called **programmatic**.
 
-For quite some time, the **waterfalling** method was the widely used method for maximizing income of all participants in the advertising process. 
+For quite some time, the **waterfall** method was the widely used method for maximizing income of all participants in the advertising process. 
 
-> "Anybody an ad for a dollar? No? Well, 99 cent maybe? 98? Great!"
+> "Does my trusted first-party ad supplier has an ad for this user? No? Well, how about my second-loveliest worldwide-top-ads supplier? A dollar, great!"
 
-This method was argued to be a bit slow. Also, why should the publisher decrease the price instead of increasing it? So it got gradually replaced by organizing auctions: 
+This method was argued to be a bit slow. Also, the publisher may miss ads for a higher price by not looking into the 5th remnant-crap-exchange. So it got gradually replaced by organizing auctions: 
 
-> "Anybody an ad? Floor price one dollar. Oh, you there would pay 1.20? Congratulations! Now gimme that ad."
+> "Hey everyone! Anybody an ad? Floor price one dollar. Oh, you there would pay 1.20? Congratulations! Now gimme that ad."
 
 And why would anyone pay those 1.20? Because it's a well measured prosperous website. Because an ad might perfectly fit to the content of the visited page or sub-page and therefore must generate a high level of **leads**. And because *something* in all the data bits transmitted from the browser to the advertisers tells them which ad might be most successful for the particular and potential customer using the browser. This is archived by the even more complicated and mysterious art of profiling and combination of several **first-party publisher data** with whatever else can be collected and attributed to a digital identity.
 
 So here's already a good explanation for most of the thrird-party web traffic: The more, the better! 
 
-Advertisers and exchangers are a bit concerned since a couple of years while publishers not only relied on the bidding process of exchange networks to deliver the best ads for the best price but they actually started to **waterfall the exchange networks**: 
+Advertisers and exchangers are a bit concerned since a couple of years because publishers not only relied on the bidding process of exchange networks to deliver the best ads for the best price but they actually started to **waterfall the exchanges**: 
 
 > "Hey, would someone please run an auction at 2 dollars? Nothing today? Well, i was just thinking, maybe someone had the perfect ad for this identity. 1.75 then? Great! I'll keep your ad for the moment and just run another auction to make sure.." 
 
