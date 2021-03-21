@@ -76,7 +76,6 @@ def html_heatmap(
             /*height: %(label_width)s;*/
             padding: 0;
             padding-bottom: .3rem;
-            /*margin-left: -1rem;*/
             text-align: left;
             width: 0;
             line-height: 0.6rem;
@@ -88,10 +87,21 @@ def html_heatmap(
         }
         .heatmap-%(ID)s .hmc {
             padding-bottom: 100%%;
-            border: 1px solid rgba(0, 0, 0, .3);
+            border-top: 1px solid rgba(255, 255, 255, .2);
+            border-left: 1px solid rgba(255, 255, 255, .1);
+            border-right: 1px solid rgba(0, 0, 0, .1);
+            border-bottom: 1px solid rgba(0, 0, 0, .3);
         }
         .heatmap-%(ID)s .hmc.hmc-empty {
             border: none;
+            border-left: 1px solid rgba(0, 0, 0, .2);
+            border-top: 1px solid rgba(0, 0, 0, .2);
+            border-right: 1px solid rgba(255, 255, 255, .2);
+            border-bottom: 1px solid rgba(255, 255, 255, .2);
+        }
+        .heatmap-%(ID)s .hmc.hmc-overlap {
+            border: none;
+            padding: 0;
         }
     """ % {
         "ID": ID,
@@ -179,6 +189,7 @@ if __name__ == "__main__":
             df,
             transpose=True,
             display=False,
+            filter_x="m",
         )
 
     html = f"""

@@ -43,8 +43,10 @@
         }
 
         if (is_x) {
-            for (let i=index.length; i < min_cells_x; ++i)
-                index.push(i + labels.length);
+            if (index.length < min_cells_x)
+                index.push(labels.length);
+            /*for (let i=index.length; i < min_cells_x; ++i)
+                index.push(i + labels.length);*/
         }
 
         return index;
@@ -91,15 +93,19 @@
             html += `<div class="hmlabel" title="${label}">${label}</div>`;
 
             for (const x of index_x) {
-                if (x < data.labels_x.length && typeof row[x] === "number" && !isNaN(row[x])) {
+                if (x < data.labels_x.length) {
                     const
                         value = row[x],
-                        col = Math.min(__num_colors__ - 1, Math.floor((value - min_val) * color_factor)),
                         title = `${data.labels_x[x]} / ${data.labels_y[y]}: ${value}`;
+
+                    let col = "empty";
+                    if (typeof value === "number" && !isNaN(value))
+                        col = Math.min(__num_colors__ - 1, Math.floor((value - min_val) * color_factor));
+
                     html += `<div class="hmc hmc-${col}" title="${title}"></div>`;
                 }
                 else {
-                    html += `<div class="hmc hmc-empty"></div>`;
+                    html += `<div class="hmc hmc-overlap"></div>`;
                 }
             }
         }
@@ -107,7 +113,12 @@
         render_x_labels("hmlabelvb");
 
         const elem = document.querySelector(".heatmap-__id__");
-        elem.style = `grid-template-columns: __label_width__ repeat(${index_x.length}, 1fr);`;
+        const need_extra_space = (index_x[index_x.length-1] >= data.labels_x.length);
+        const num_cells = need_extra_space ? index_x.length - 1 : index_x.length;
+        let columns = `__label_width__ repeat(${num_cells}, 1fr)`;
+        if (need_extra_space)
+            columns += ` ${min_cells_x - index_x.length + 1}fr`;
+        elem.style = `grid-template-columns: ${columns}`;
         elem.innerHTML = html;
     }
 
