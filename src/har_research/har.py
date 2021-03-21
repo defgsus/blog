@@ -45,6 +45,9 @@ MIME_TYPES = {
 
 
 def parse_url(url: str) -> dict:
+    if "://" not in url:
+        url = "unknown://" + url
+
     url = urllib.parse.urlparse(url)
 
     short_host = url.netloc.split(".")
@@ -55,7 +58,7 @@ def parse_url(url: str) -> dict:
             short_host = short_host[-2:]
 
     return {
-        "protocol": url.scheme,
+        "protocol": url.scheme if url.scheme != "unknown" else "",
         "host": url.netloc,
         "short_host": ".".join(short_host),
         "path": url.path,

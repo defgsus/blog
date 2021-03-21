@@ -5,7 +5,7 @@ def get_color_map(name: str, max_length: int = 50) -> Optional[List[str]]:
     """
     Picks one of plotly's or matplotlib's color maps
 
-    https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html
+    https://matplotlib.org/stable/tutorials/colors/colormaps.html
 
     :param name: str, case-sensitive name
     :return: List of html color strings or None

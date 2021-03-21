@@ -2,6 +2,8 @@
 
     const
         heatmap_data___id__ = __data__,
+        max_label_length = __max_label_length__,
+        keep_label_front = __keep_label_front__,
         min_cells_x = __min_cells_x__,
         max_cells_x = __max_cells_x__,
         max_cells_y = __max_cells_y__;
@@ -36,17 +38,7 @@
         if (elem)
             elem.addEventListener("change", render_heatmap_lazy);
     }
-    /*
-    document.querySelector(`.heatmap-__id__ .heatmap-grid`).addEventListener("wheel", function (e) {
-        if (e.target.classList.contains("hmc")) {
-            e.preventDefault();
-            const int_offset_y = Math.floor(heatmap_filters.offset_y);
-            heatmap_filters.offset_y += e.deltaY / 4.;
-            if (int_offset_y !== Math.floor(heatmap_filters.offset_y))
-                render_heatmap_lazy(20);
-        }
-    });
-    */
+
     document.addEventListener("load", function () {
         render_heatmap();
     });
@@ -122,14 +114,6 @@
         input_elem.setAttribute("max", num_pages);
         cur_page = Math.max(0, Math.min(cur_page, num_pages - 1));
 
-        /*
-        const elem = get_filter_elem(dim, "page");
-        if (num_pages < 2 && !elem.hasAttribute("hidden"))
-            elem.setAttribute("hidden", "hidden");
-        else if (num_pages >= 2 && elem.hasAttribute("hidden"))
-            elem.removeAttribute("hidden");
-        */
-
         if (cur_page !== heatmap_filters[`page_${dim}`]) {
             input_elem.value = cur_page + 1;
             heatmap_filters[`page_${dim}`] = cur_page;
@@ -138,14 +122,20 @@
         const page_offset = cur_page * per_page;
         return index.slice(page_offset, page_offset + per_page);
     }
-    /*
-    function apply_offset(dim, index, per_page) {
-        let offset = heatmap_filters[`offset_${dim}`];
-        offset = Math.max(0, Math.min(offset, index.length - per_page));
 
-        heatmap_filters[`offset_${dim}`] = offset;
-        return index.slice(offset, offset + per_page);
-    }*/
+    function limit_label_length(text) {
+        if (text && text.length && text.length > max_label_length) {
+            if (keep_label_front) {
+                text = text.slice(text.length - max_label_length, text.length);
+                text = ".." + text;
+            }
+            else {
+                text = text.slice(0, max_label_length);
+                text = text + "..";
+            }
+        }
+        return text;
+    }
 
     function render_heatmap() {
         const data = heatmap_data___id__;
@@ -161,10 +151,10 @@
 
         [index_x, index_y] = filter_index_empty_cells(data.matrix, index_x, index_y);
 
+        const filtered_size = [index_x.length, index_y.length];
+
         index_x = paginate("x", index_x, max_cells_x);
         index_y = paginate("y", index_y, max_cells_y);
-        /*index_x = apply_offset("x", index_x, max_cells_x);
-        index_y = apply_offset("y", index_y, max_cells_y);*/
 
         const need_extra_space = (index_x.length < min_cells_x);
 
@@ -192,7 +182,7 @@
             for (const x of render_index_x) {
                 const label = data.labels_x[x];
                 if (label)
-                    html += `<div class="${class_name}" title="${label}">${label}</div>`;
+                    html += `<div class="${class_name}" title="${label}">${limit_label_length(label)}</div>`;
                 else
                     html += `<div class="${class_name}"></div>`;
             }
@@ -203,7 +193,7 @@
             const row = data.matrix[y];
 
             const label = data.labels_y[y];
-            html += `<div class="hmlabel" title="${label}">${label}</div>`;
+            html += `<div class="hmlabel" title="${label}">${limit_label_length(label)}</div>`;
 
             for (const x of render_index_x) {
                 if (x < data.labels_x.length) {
@@ -228,8 +218,10 @@
         let elem = document.querySelector(".heatmap-__id__ .heatmap-dimensions");
         if (elem) {
             let text = `dimensions: ${data.labels_x.length} x ${data.labels_y.length}`;
+            if (filtered_size[0] !== data.labels_x.length || filtered_size[1] !== data.labels_y.length)
+                text += `, filtered: ${filtered_size[0]} x ${filtered_size[1]}`;
             if (index_x.length !== data.labels_x.length || index_y.length !== data.labels_y.length)
-                text += ` (display: ${index_x.length} x ${index_y.length})`;
+                text += `, display: ${index_x.length} x ${index_y.length}`;
             elem.textContent = text;
         }
 

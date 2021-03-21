@@ -18,9 +18,13 @@ def html_heatmap(
         filterable: bool = True,
         filter_x: str = None,
         filter_y: str = None,
+        show_empty_x: bool = True,
+        show_empty_y: bool = True,
         display: bool = True,
         colors: Union[str, List[str]] = "GnBu",
         label_width: str = "10rem",
+        max_label_length: int = 30,
+        keep_label_front: bool = False,
         min_cells_x: int = 20,
         max_cells_x: int = 100,
         max_cells_y: int = 100,
@@ -64,6 +68,9 @@ def html_heatmap(
         }
         .heatmap-filters-axis {
             display: grid;
+        }
+        .heatmap-filters-axis label {
+            display: inline;
         }
         .heatmap-filters-axis div {
             grid-row: row;
@@ -144,9 +151,9 @@ def html_heatmap(
             return f"""
                 <div class="heatmap-filters-axis heatmap-filters-axis-{dim}">
                     <div class="heatmap-filter-cell-string"><label>
-                        filter <input type="text" value="{filter_value or ""}"></label>
+                        {dim} filter <input type="text" value="{filter_value or ""}"></label>
                     </div>
-                    <div class="heatmap-filter-cell-empty"><label>
+                    <div class="heatmap-filter-cell-empty" {"hidden" if not has_empty_cells else ""}><label>
                         show empty <input type="checkbox" {"checked" if show_empty else ""}></label>
                     </div>
                     <div class="heatmap-filter-cell-page"><label>
@@ -156,8 +163,8 @@ def html_heatmap(
             """
         html += f"""
             <div class="heatmap-filters">
-                {render_axis_params("x", filter_x, True, 0)}
-                {render_axis_params("y", filter_y, True, 0)}
+                {render_axis_params("x", filter_x, show_empty_x, 0)}
+                {render_axis_params("y", filter_y, show_empty_y, 0)}
                 <label class="heatmap-dimensions"></label>    
             </div>
         """
@@ -171,13 +178,15 @@ def html_heatmap(
         "filters": json.dumps({
             "x": filter_x,
             "y": filter_y,
-            "empty_x": True,
-            "empty_y": True,
+            "empty_x": show_empty_x,
+            "empty_y": show_empty_y,
             "page_x": 0,
             "page_y": 0,
             "offset_x": 0,
             "offset_y": 0,
         }),
+        "max_label_length": max_label_length,
+        "keep_label_front": json.dumps(keep_label_front),
         "min_cells_x": min_cells_x,
         "max_cells_x": max_cells_x,
         "max_cells_y": max_cells_y,
@@ -209,7 +218,7 @@ if __name__ == "__main__":
         def random_name():
             return "".join(
                 random.choice(["ku", "ka", "bo", "ba", "su", "la", "to", "mi", "no", "ha"])
-                for _ in range(random.randrange(3, 9))
+                for _ in range(random.randrange(3, 15))
             )
 
         rows = []
@@ -229,6 +238,9 @@ if __name__ == "__main__":
             labels_x=labels_x,
             labels_y=labels_y,
             display=False,
+            label_width="15rem",
+            max_label_length=20,
+            keep_label_front=True,
             min_cells_x=40,
             #max_cells_y=100,
             #colors=["red", "green", "blue"],
