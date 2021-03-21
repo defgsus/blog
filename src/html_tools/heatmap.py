@@ -71,8 +71,14 @@ def html_heatmap(
         .heatmap-filters-axis .heatmap-filter-cell-string {
             grid-column: 1 / 6;
         }
+        .heatmap-filters-axis .heatmap-filter-cell-page {
+            width: 14rem;
+        }
         .heatmap-filters-axis input[type="text"] {
             width: 85%%;
+        }
+        .heatmap-filters-axis input[type="number"] {
+            width: 4rem;
         }
         
         .heatmap-grid {
@@ -115,7 +121,7 @@ def html_heatmap(
             border-right: 1px solid rgba(255, 255, 255, .2);
             border-bottom: 1px solid rgba(255, 255, 255, .2);
         }
-        .heatmap-%(ID)s .hmc.hmc-overlap {
+        .heatmap-%(ID)s .hmc-overlap {
             border: none;
             padding: 0;
         }
@@ -144,7 +150,7 @@ def html_heatmap(
                         show empty <input type="checkbox" {"checked" if show_empty else ""}></label>
                     </div>
                     <div class="heatmap-filter-cell-page"><label>
-                        page <input type="number" value="{page+1}"> of <span class="heatmap-page-{dim}-count">1</span></label>
+                        page <input type="number" value="{page+1}" min="1"> of <span class="heatmap-page-count">1</span></label>
                     </div>
                 </div>
             """
@@ -169,6 +175,8 @@ def html_heatmap(
             "empty_y": True,
             "page_x": 0,
             "page_y": 0,
+            "offset_x": 0,
+            "offset_y": 0,
         }),
         "min_cells_x": min_cells_x,
         "max_cells_x": max_cells_x,

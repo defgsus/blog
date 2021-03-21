@@ -36,18 +36,28 @@
         if (elem)
             elem.addEventListener("change", render_heatmap_lazy);
     }
-
+    /*
+    document.querySelector(`.heatmap-__id__ .heatmap-grid`).addEventListener("wheel", function (e) {
+        if (e.target.classList.contains("hmc")) {
+            e.preventDefault();
+            const int_offset_y = Math.floor(heatmap_filters.offset_y);
+            heatmap_filters.offset_y += e.deltaY / 4.;
+            if (int_offset_y !== Math.floor(heatmap_filters.offset_y))
+                render_heatmap_lazy(20);
+        }
+    });
+    */
     document.addEventListener("load", function () {
         render_heatmap();
     });
 
     let render_timeout = null;
 
-    function render_heatmap_lazy() {
+    function render_heatmap_lazy(delay=250) {
         if (render_timeout)
             window.clearTimeout(render_timeout);
 
-        render_timeout = window.setTimeout(render_heatmap, 250);
+        render_timeout = window.setTimeout(render_heatmap, delay);
     }
 
     function filter_labels_to_index(labels, filter) {
@@ -103,26 +113,39 @@
     }
 
     function paginate(dim, index, per_page) {
-        const elem = get_filter_elem(dim, "page");
 
         let cur_page = heatmap_filters[`page_${dim}`],
-            num_pages = Math.floor(index.length / per_page);
+            num_pages = Math.ceil(index.length / per_page);
 
+        get_filter_elem(dim, "page", ".heatmap-page-count").textContent = `${num_pages}`;
+        const input_elem = get_filter_elem(dim, "page", "input");
+        input_elem.setAttribute("max", num_pages);
         cur_page = Math.max(0, Math.min(cur_page, num_pages - 1));
 
+        /*
+        const elem = get_filter_elem(dim, "page");
         if (num_pages < 2 && !elem.hasAttribute("hidden"))
             elem.setAttribute("hidden", "hidden");
         else if (num_pages >= 2 && elem.hasAttribute("hidden"))
             elem.removeAttribute("hidden");
+        */
 
         if (cur_page !== heatmap_filters[`page_${dim}`]) {
-            get_filter_elem(dim, "page", "input").value = cur_page;
+            input_elem.value = cur_page + 1;
             heatmap_filters[`page_${dim}`] = cur_page;
         }
 
         const page_offset = cur_page * per_page;
         return index.slice(page_offset, page_offset + per_page);
     }
+    /*
+    function apply_offset(dim, index, per_page) {
+        let offset = heatmap_filters[`offset_${dim}`];
+        offset = Math.max(0, Math.min(offset, index.length - per_page));
+
+        heatmap_filters[`offset_${dim}`] = offset;
+        return index.slice(offset, offset + per_page);
+    }*/
 
     function render_heatmap() {
         const data = heatmap_data___id__;
@@ -140,6 +163,8 @@
 
         index_x = paginate("x", index_x, max_cells_x);
         index_y = paginate("y", index_y, max_cells_y);
+        /*index_x = apply_offset("x", index_x, max_cells_x);
+        index_y = apply_offset("y", index_y, max_cells_y);*/
 
         const need_extra_space = (index_x.length < min_cells_x);
 
