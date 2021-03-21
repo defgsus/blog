@@ -3,24 +3,45 @@
     const
         heatmap_data___id__ = __data__,
         min_cells_x = __min_cells_x__,
+        max_cells_x = __max_cells_x__,
         max_cells_y = __max_cells_y__;
 
     let heatmap_filters = __filters__;
-    let render_timeout = null;
+
+    function get_filter_elem(dim, what, sub_element) {
+        const axis_selector = `.heatmap-__id__ .heatmap-filters-axis-${dim}`;
+        return document.querySelector(`${axis_selector} .heatmap-filter-cell-${what} ${sub_element || ""}`);
+    }
+
+    function get_filters(dim) {
+        let elem = get_filter_elem(dim, "string", "input");
+        if (elem)
+            heatmap_filters[dim] = elem.value;
+        elem = get_filter_elem(dim, "empty", "input");
+        if (elem)
+            heatmap_filters[`empty_${dim}`] = elem.checked;
+        elem = get_filter_elem(dim, "page", "input");
+        if (elem)
+            heatmap_filters[`page_${dim}`] = Math.max(0, parseInt(elem.value) - 1);
+    }
 
     for (const dim of "xy") {
-        let elem = document.querySelector(".heatmap-filters-__id__ input.filter-" + dim);
-        if (elem) {
-            elem.addEventListener("input", function (e) {
-                heatmap_filters[dim] = e.target.value;
-                render_heatmap_lazy();
-            });
-        }
+        let elem = get_filter_elem(dim, "string", "input");
+        if (elem)
+            elem.addEventListener("input", render_heatmap_lazy);
+        elem = get_filter_elem(dim, "empty", "input");
+        if (elem)
+            elem.addEventListener("change", render_heatmap_lazy);
+        elem = get_filter_elem(dim, "page", "input");
+        if (elem)
+            elem.addEventListener("change", render_heatmap_lazy);
     }
 
     document.addEventListener("load", function () {
         render_heatmap();
     });
+
+    let render_timeout = null;
 
     function render_heatmap_lazy() {
         if (render_timeout)
@@ -29,7 +50,7 @@
         render_timeout = window.setTimeout(render_heatmap, 250);
     }
 
-    function filter_labels_to_index(labels, filter, is_x) {
+    function filter_labels_to_index(labels, filter) {
         let index = [];
         for (let x=0; x < labels.length; ++x)
             index.push(x);
@@ -44,26 +65,83 @@
             });
         }
 
-        let need_extra_space = false;
-        if (is_x) {
-            if (index.length < min_cells_x)
-                need_extra_space = true;
-        } else {
-            if (max_cells_y && index.length > max_cells_y) {
-                index = index.slice(0, max_cells_y);
+        return index;
+    }
+
+    function filter_index_empty_cells(matrix, index_x, index_y) {
+        if (!heatmap_filters.empty_y) {
+            let new_index_y = [];
+            for (const y of index_y) {
+                const row = matrix[y];
+                let has_number = false;
+                for (const x of index_x) {
+                    let value = row[x];
+                    if (typeof value === "number" && !isNaN(value)) {
+                        has_number = true;
+                        break;
+                    }
+                }
+                if (has_number)
+                    new_index_y.push(y);
             }
+            index_y = new_index_y;
+        }
+        if (!heatmap_filters.empty_x) {
+            let index_x_has_number = {};
+            for (const y of index_y) {
+                const row = matrix[y];
+                for (const x of index_x) {
+                    let value = row[x];
+                    if (typeof value === "number" && !isNaN(value))
+                        index_x_has_number[x] = true;
+                }
+            }
+            index_x = index_x.filter(function(x) { return index_x_has_number[x]; });
         }
 
-        return [index, need_extra_space];
+        return [index_x, index_y];
+    }
+
+    function paginate(dim, index, per_page) {
+        const elem = get_filter_elem(dim, "page");
+
+        let cur_page = heatmap_filters[`page_${dim}`],
+            num_pages = Math.floor(index.length / per_page);
+
+        cur_page = Math.max(0, Math.min(cur_page, num_pages - 1));
+
+        if (num_pages < 2 && !elem.hasAttribute("hidden"))
+            elem.setAttribute("hidden", "hidden");
+        else if (num_pages >= 2 && elem.hasAttribute("hidden"))
+            elem.removeAttribute("hidden");
+
+        if (cur_page !== heatmap_filters[`page_${dim}`]) {
+            get_filter_elem(dim, "page", "input").value = cur_page;
+            heatmap_filters[`page_${dim}`] = cur_page;
+        }
+
+        const page_offset = cur_page * per_page;
+        return index.slice(page_offset, page_offset + per_page);
     }
 
     function render_heatmap() {
         const data = heatmap_data___id__;
         const num_colors = __num_colors__;
 
-        let index_x, index_y, need_extra_space;
-        [index_y, need_extra_space] = filter_labels_to_index(data.labels_y, heatmap_filters.y);
-        [index_x, need_extra_space] = filter_labels_to_index(data.labels_x, heatmap_filters.x, true);
+        get_filters("x");
+        get_filters("y");
+        console.log(heatmap_filters);
+
+        let
+            index_x = filter_labels_to_index(data.labels_x, heatmap_filters.x),
+            index_y = filter_labels_to_index(data.labels_y, heatmap_filters.y);
+
+        [index_x, index_y] = filter_index_empty_cells(data.matrix, index_x, index_y);
+
+        index_x = paginate("x", index_x, max_cells_x);
+        index_y = paginate("y", index_y, max_cells_y);
+
+        const need_extra_space = (index_x.length < min_cells_x);
 
         const render_index_x = need_extra_space
             ? index_x.concat([data.labels_x.length])
@@ -122,13 +200,15 @@
 
         render_x_labels("hmlabelvb");
 
-        let elem = document.querySelector(".heatmap-filters-__id__ .hm-dimensions");
-        let text = `dimensions: ${data.labels_x.length} x ${data.labels_y.length}`;
-        if (index_x.length !== data.labels_x.length || index_y.length !== data.labels_y.length)
-            text += ` (display: ${index_x.length} x ${index_y.length})`;
-        elem.textContent = text;
+        let elem = document.querySelector(".heatmap-__id__ .heatmap-dimensions");
+        if (elem) {
+            let text = `dimensions: ${data.labels_x.length} x ${data.labels_y.length}`;
+            if (index_x.length !== data.labels_x.length || index_y.length !== data.labels_y.length)
+                text += ` (display: ${index_x.length} x ${index_y.length})`;
+            elem.textContent = text;
+        }
 
-        elem = document.querySelector(".heatmap-__id__");
+        elem = document.querySelector(".heatmap-__id__ .heatmap-grid");
         let columns = `__label_width__ repeat(${index_x.length}, 1fr)`;
         if (need_extra_space)
             columns += ` ${min_cells_x - index_x.length + 1}fr`;

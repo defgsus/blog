@@ -22,7 +22,8 @@ def html_heatmap(
         colors: Union[str, List[str]] = "GnBu",
         label_width: str = "10rem",
         min_cells_x: int = 20,
-        max_cells_y: Optional[int] = None,
+        max_cells_x: int = 100,
+        max_cells_y: int = 100,
 ):
     if display:
         from IPython.display import display, HTML
@@ -34,6 +35,8 @@ def html_heatmap(
         labels_x = matrix.columns
     if not labels_y:
         labels_y = matrix.index
+
+    has_empty_cells = matrix.isnull().values.any()
 
     if transpose:
         matrix = matrix.transpose()
@@ -56,12 +59,24 @@ def html_heatmap(
         .heatmap-%(ID)s {
             display: grid;
         }
-        .heatmap-filters-{ID} label {
+        .heatmap-filters {
             color: #a0a0a0;
-            width: 100%%;
         }
-        .heatmap-filters-{ID} input {
-            width: 70%%;
+        .heatmap-filters-axis {
+            display: grid;
+        }
+        .heatmap-filters-axis div {
+            grid-row: row;
+        }
+        .heatmap-filters-axis .heatmap-filter-cell-string {
+            grid-column: 1 / 6;
+        }
+        .heatmap-filters-axis input[type="text"] {
+            width: 85%%;
+        }
+        
+        .heatmap-grid {
+            display: grid;
         }
         .heatmap-%(ID)s .hmlabel,
         .heatmap-%(ID)s .hmlabelv,
@@ -116,16 +131,32 @@ def html_heatmap(
     if title:
         html += f"<h3>{title}</h3>"
 
+    html += f"""<div class="heatmap-{ID}">"""
+
     if filterable:
+        def render_axis_params(dim: str, filter_value: str, show_empty: bool, page: int) -> str:
+            return f"""
+                <div class="heatmap-filters-axis heatmap-filters-axis-{dim}">
+                    <div class="heatmap-filter-cell-string"><label>
+                        filter <input type="text" value="{filter_value or ""}"></label>
+                    </div>
+                    <div class="heatmap-filter-cell-empty"><label>
+                        show empty <input type="checkbox" {"checked" if show_empty else ""}></label>
+                    </div>
+                    <div class="heatmap-filter-cell-page"><label>
+                        page <input type="number" value="{page+1}"> of <span class="heatmap-page-{dim}-count">1</span></label>
+                    </div>
+                </div>
+            """
         html += f"""
-            <div class="heatmap-filters-{ID}">
-                <div><label>filter x <input class="filter-x" type="text" value="{filter_x or ""}"></label></div>
-                <div><label>filter y <input class="filter-y" type="text" value="{filter_y or ""}"></label></div>
-                <label class="hm-dimensions"></label>
+            <div class="heatmap-filters">
+                {render_axis_params("x", filter_x, True, 0)}
+                {render_axis_params("y", filter_y, True, 0)}
+                <label class="heatmap-dimensions"></label>    
             </div>
         """
 
-    html += f"""<div class="heatmap-{ID}"></div>"""
+    html += f"""<div class="heatmap-grid"></div></div>"""
 
     script_context = {
         "id": ID,
@@ -134,10 +165,14 @@ def html_heatmap(
         "filters": json.dumps({
             "x": filter_x,
             "y": filter_y,
-            "hide_empty_y": True,
+            "empty_x": True,
+            "empty_y": True,
+            "page_x": 0,
+            "page_y": 0,
         }),
         "min_cells_x": min_cells_x,
-        "max_cells_y": max_cells_y or 0,
+        "max_cells_x": max_cells_x,
+        "max_cells_y": max_cells_y,
         "data": json.dumps({
             "matrix": matrix.values.tolist(),
             "labels_x": [str(l) for l in labels_x],
@@ -160,6 +195,7 @@ def html_heatmap(
 
 if __name__ == "__main__":
     import random
+    import numpy as np
 
     if 1:
         def random_name():
@@ -172,13 +208,13 @@ if __name__ == "__main__":
         value = 0
         for y in range(1000):
             row = []
-            for x in range(10):
-                row.append(value if random.randint(0, 2) else "-")
+            for x in range(200):
+                row.append(value if random.randint(0, 1) else np.nan)
                 value += 1
             rows.append(row)
 
-        labels_x = [random_name() for _ in rows[0]]
-        labels_y = [random_name() for _ in rows]
+        labels_x = [f"{i}-{random_name()}" for i in range(len(rows[0]))]
+        labels_y = [f"{i}-{random_name()}" for i in range(len(rows))]
 
         html = html_heatmap(
             rows,
@@ -203,7 +239,7 @@ if __name__ == "__main__":
     <html>
     <head>
         <meta charset="UTF-8">
-    <head>
+    </head>
     <body>
         <h3>heatmap test</h3>
         {html}
