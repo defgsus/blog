@@ -1,7 +1,9 @@
 (function() {
 
-    const heatmap_data___id__ = __data__;
-    const min_cells_x = __min_cells_x__;
+    const
+        heatmap_data___id__ = __data__,
+        min_cells_x = __min_cells_x__,
+        max_cells_y = __max_cells_y__;
 
     let heatmap_filters = __filters__;
     let render_timeout = null;
@@ -42,22 +44,30 @@
             });
         }
 
+        let need_extra_space = false;
         if (is_x) {
             if (index.length < min_cells_x)
-                index.push(labels.length);
-            /*for (let i=index.length; i < min_cells_x; ++i)
-                index.push(i + labels.length);*/
+                need_extra_space = true;
+        } else {
+            if (max_cells_y && index.length > max_cells_y) {
+                index = index.slice(0, max_cells_y);
+            }
         }
 
-        return index;
+        return [index, need_extra_space];
     }
 
     function render_heatmap() {
         const data = heatmap_data___id__;
         const num_colors = __num_colors__;
 
-        let index_x = filter_labels_to_index(data.labels_x, heatmap_filters.x, true),
-            index_y = filter_labels_to_index(data.labels_y, heatmap_filters.y);
+        let index_x, index_y, need_extra_space;
+        [index_y, need_extra_space] = filter_labels_to_index(data.labels_y, heatmap_filters.y);
+        [index_x, need_extra_space] = filter_labels_to_index(data.labels_x, heatmap_filters.x, true);
+
+        const render_index_x = need_extra_space
+            ? index_x.concat([data.labels_x.length])
+            : index_x;
 
         let min_val = 0., max_val = 0.;
         for (const y of index_y) {
@@ -76,7 +86,7 @@
 
         function render_x_labels(class_name) {
             html += `<div class="${class_name}"></div>`;
-            for (const x of index_x) {
+            for (const x of render_index_x) {
                 const label = data.labels_x[x];
                 if (label)
                     html += `<div class="${class_name}" title="${label}">${label}</div>`;
@@ -92,7 +102,7 @@
             const label = data.labels_y[y];
             html += `<div class="hmlabel" title="${label}">${label}</div>`;
 
-            for (const x of index_x) {
+            for (const x of render_index_x) {
                 if (x < data.labels_x.length) {
                     const
                         value = row[x],
@@ -112,10 +122,14 @@
 
         render_x_labels("hmlabelvb");
 
-        const elem = document.querySelector(".heatmap-__id__");
-        const need_extra_space = (index_x[index_x.length-1] >= data.labels_x.length);
-        const num_cells = need_extra_space ? index_x.length - 1 : index_x.length;
-        let columns = `__label_width__ repeat(${num_cells}, 1fr)`;
+        let elem = document.querySelector(".heatmap-filters-__id__ .hm-dimensions");
+        let text = `dimensions: ${data.labels_x.length} x ${data.labels_y.length}`;
+        if (index_x.length !== data.labels_x.length || index_y.length !== data.labels_y.length)
+            text += ` (display: ${index_x.length} x ${index_y.length})`;
+        elem.textContent = text;
+
+        elem = document.querySelector(".heatmap-__id__");
+        let columns = `__label_width__ repeat(${index_x.length}, 1fr)`;
         if (need_extra_space)
             columns += ` ${min_cells_x - index_x.length + 1}fr`;
         elem.style = `grid-template-columns: ${columns}`;

@@ -22,6 +22,7 @@ def html_heatmap(
         colors: Union[str, List[str]] = "GnBu",
         label_width: str = "10rem",
         min_cells_x: int = 20,
+        max_cells_y: Optional[int] = None,
 ):
     if display:
         from IPython.display import display, HTML
@@ -120,6 +121,7 @@ def html_heatmap(
             <div class="heatmap-filters-{ID}">
                 <div><label>filter x <input class="filter-x" type="text" value="{filter_x or ""}"></label></div>
                 <div><label>filter y <input class="filter-y" type="text" value="{filter_y or ""}"></label></div>
+                <label class="hm-dimensions"></label>
             </div>
         """
 
@@ -132,8 +134,10 @@ def html_heatmap(
         "filters": json.dumps({
             "x": filter_x,
             "y": filter_y,
+            "hide_empty_y": True,
         }),
         "min_cells_x": min_cells_x,
+        "max_cells_y": max_cells_y or 0,
         "data": json.dumps({
             "matrix": matrix.values.tolist(),
             "labels_x": [str(l) for l in labels_x],
@@ -157,7 +161,7 @@ def html_heatmap(
 if __name__ == "__main__":
     import random
 
-    if 0:
+    if 1:
         def random_name():
             return "".join(
                 random.choice(["ku", "ka", "bo", "ba", "su", "la", "to", "mi", "no", "ha"])
@@ -166,10 +170,10 @@ if __name__ == "__main__":
 
         rows = []
         value = 0
-        for y in range(20):
+        for y in range(1000):
             row = []
-            for x in range(60):
-                row.append(value)
+            for x in range(10):
+                row.append(value if random.randint(0, 2) else "-")
                 value += 1
             rows.append(row)
 
@@ -181,6 +185,8 @@ if __name__ == "__main__":
             labels_x=labels_x,
             labels_y=labels_y,
             display=False,
+            min_cells_x=40,
+            #max_cells_y=100,
             #colors=["red", "green", "blue"],
         )
     else:
@@ -195,6 +201,9 @@ if __name__ == "__main__":
     html = f"""
     <!DOCTYPE html>
     <html>
+    <head>
+        <meta charset="UTF-8">
+    <head>
     <body>
         <h3>heatmap test</h3>
         {html}
