@@ -9,6 +9,8 @@ import pandas as pd
 
 _JS_SOURCE = pathlib.Path(__file__).resolve().parent.joinpath("heatmap.js").read_text()
 
+assert "//" not in _JS_SOURCE, f"Replace // ... with /* ... */ to make it one-line-able."
+
 
 def html_heatmap(
         matrix: Union[List[List], pd.DataFrame],
@@ -203,7 +205,7 @@ def html_heatmap(
 
     html += f"""<script type="text/javascript">{script}</script>"""
 
-    html = "\n".join(line.strip() for line in html.splitlines())
+    html = " ".join(line.strip() for line in html.splitlines())
 
     if display:
         display(HTML(html))
