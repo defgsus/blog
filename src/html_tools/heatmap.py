@@ -1,6 +1,7 @@
 import pathlib
 import json
 import secrets
+import html as html_lib
 from typing import Union, Optional, List
 
 import pandas as pd
@@ -192,8 +193,8 @@ def html_heatmap(
         "max_cells_y": max_cells_y,
         "data": json.dumps({
             "matrix": matrix.values.tolist(),
-            "labels_x": [str(l) for l in labels_x],
-            "labels_y": [str(l) for l in labels_y],
+            "labels_x": [html_lib.escape(str(l)) for l in labels_x],
+            "labels_y": [html_lib.escape(str(l)) for l in labels_y],
         }),
     }
     script = _JS_SOURCE
@@ -217,7 +218,7 @@ if __name__ == "__main__":
     if 1:
         def random_name():
             return "".join(
-                random.choice(["ku", "ka", "bo", "ba", "su", "la", "to", "mi", "no", "ha"])
+                random.choice(["ku", "ka", "bo", "ba", "su", "la", "to", "mi", "no", "ha", '\"', ">", "<"])
                 for _ in range(random.randrange(3, 15))
             )
 
