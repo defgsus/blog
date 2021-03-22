@@ -6,6 +6,10 @@ pre, code { background: #f0f0f0; }
 
 .highlighter-rouge .highlight { background: #f0f0f0; }
 
+hr { margin: .5rem; }
+
+h1, h2, h3, h4, h5 { margin-top: 1rem; }
+
 table th, table td { padding: .2rem .2rem; }
 
 .table-description { color: #a0a0a0; }
