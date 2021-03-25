@@ -1,5 +1,6 @@
 import os
 import hashlib
+from typing import Union, List
 
 import pandas as pd
 import numpy as np
@@ -8,17 +9,33 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 
+CACHE_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "cache",
+)
+
+
+def dataframe_hash(df: Union[List, np.ndarray, pd.DataFrame]) -> str:
+    if isinstance(df, np.ndarray):
+        data = df.tobytes()
+    elif isinstance(df, pd.DataFrame):
+        data = df.values.tobytes()
+    else:
+        data = pd.DataFrame(df).values.tobytes()
+    return hashlib.md5(data).hexdigest()
+
+
 def get_embedding_positions(
-        embeddings,
+        embeddings: Union[List[List[float]], np.ndarray, pd.DataFrame],
         pca_size: int = 100,
         read_cache: bool = True,
         write_cache: bool = True,
 ):
     if read_cache or write_cache:
-        filename = hashlib.md5(pd.DataFrame(embeddings).to_string().encode("utf-8")).hexdigest()
+        filename = dataframe_hash(embeddings)
         filename = f"{filename}-{pca_size}.csv"
         filename = os.path.join(
-            "cache", "df", filename,
+            CACHE_DIR, "df", filename,
         )
         if read_cache and os.path.exists(filename):
             df = pd.read_csv(filename, index_col=0)
@@ -37,8 +54,9 @@ def get_embedding_positions(
     # ---
 
     if write_cache:
-        if not os.path.exists("cache/df"):
-            os.makedirs("cache/df")
+        cache_dir = os.path.join(CACHE_DIR, "df")
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
         df.to_csv(filename)
 
     return df
