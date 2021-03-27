@@ -1,7 +1,6 @@
 from .heatmap import html_heatmap
 from .datatables import datatable
+from ._display import html_display
+from .plotly import html_plotly
 
 
-def html_display(content: str):
-    from IPython.display import display, HTML
-    display(HTML(content))
