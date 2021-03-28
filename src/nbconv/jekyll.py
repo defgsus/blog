@@ -10,9 +10,9 @@ from nbformat.notebooknode import NotebookNode
 class JekyllExporter(MarkdownExporter):
 
     # hide cell source and output
-    RE_HIDE = re.compile(r"^# hide[^\-]")
+    RE_HIDE = re.compile(r"^(#|//) hide\s*$", re.MULTILINE)
     # hide cell source but display output
-    RE_HIDE_CODE = re.compile(r"^# hide-code")
+    RE_HIDE_CODE = re.compile(r"^(#|//) hide-code", re.MULTILINE)
 
     # 'enable: xxx' in front-matter will include special requisites in the page
     ENABLE = {
