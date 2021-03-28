@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, "..")
 
 import numpy as np
-
+from scipy import stats
 
 from har import *
 
@@ -32,7 +32,7 @@ def iter_image_entries(
         min_size: int = 0,
         max_size: int = 1e10,
 ) -> Generator[Tuple[dict, PIL.Image.Image], None, None]:
-    for filename, first_entry, e in tqdm(iter_har_entries(glob_pattern)):
+    for filename, first_entry, e in tqdm(iter_har_entries(glob_pattern), total=900000):
         mime = e["response"]["content"].get("mimeType")
         if mime and "image" in mime and "svg" not in mime:
             text = e["response"]["content"].get("text")
@@ -50,9 +50,18 @@ def iter_image_entries(
 
 def image_to_numpy(image: PIL.Image) -> Optional[np.ndarray]:
     try:
-        return np.asarray(image, dtype=np.float)
+        pixels = np.asarray(image, dtype=np.float)
+        if pixels.max() > 255:
+            pixels //= 256
+        return pixels
     except TypeError:
         return None
+
+
+def get_image_entropy(image: np.ndarray):
+    pixels = image.flatten()
+    hist, _ = np.histogram(pixels.flatten(), bins=256)
+    return stats.entropy(hist)
 
 
 def build_size_histograms(glob_pattern: str):
@@ -68,6 +77,7 @@ def build_size_histograms(glob_pattern: str):
                 histograms[key] = {
                     "count": 0,
                     "error_count": 0,
+                    "entropy": 0.,
                     "paths": set(),
                     "width": dict(),
                     "height": dict(),
@@ -83,6 +93,7 @@ def build_size_histograms(glob_pattern: str):
                 continue
 
             histograms[key]["count"] += 1
+            histograms[key]["entropy"] += get_image_entropy(pixels)
 
             if len(histograms[key]["paths"]) < 10:
                 path = e["request"]["path"]
@@ -123,17 +134,18 @@ def build_size_histograms(glob_pattern: str):
 
     for h in histograms.values():
         h["paths"] = sorted(h["paths"])
+        if h["count"]:
+            h["entropy"] /= h["count"]
 
     return histograms
-
 
 
 if __name__ == "__main__":
 
     histograms_per_key = build_size_histograms("automatic/recordings/*/*.json")
 
-    #with open("image-histograms.json", "w") as fp:
-    #    json.dump(histograms_per_key, fp)
+    with open("image-histograms.json", "w") as fp:
+        json.dump(histograms_per_key, fp)
 
     for key, histograms in histograms_per_key.items():
         print(key)

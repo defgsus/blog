@@ -66,7 +66,11 @@ def get_distance_matrix(
         h1 = histograms[labels[i]][field]
         for j in range(i+1, len(labels)):
             h2 = histograms[labels[j]][field]
-            distances[i][j] = distances[j][i] = bergi_value_histogram_distance(h1, h2)
+            if isinstance(h1, dict):
+                dist = bergi_value_histogram_distance(h1, h2)
+            else:
+                dist = abs(h1 - h2)
+            distances[i][j] = distances[j][i] = dist
 
     if write_cache:
         log("writing", FileCache.filename(cache_name))
@@ -90,7 +94,7 @@ if __name__ == "__main__":
     histograms = filter_histograms(histograms_raw, min_count=5)
     log(len(histograms), "hosts after filter")
 
-    fields = ["width", "height", "mean_r", "mean_g", "mean_b", "mean_a", "channels"]
+    fields = ["width", "height", "mean_r", "mean_g", "mean_b", "mean_a", "channels", "entropy"]
 
     def _get_distance_matrix(field: str) -> np.ndarray:
         return get_distance_matrix(histograms, sorted(histograms), field, cache_suffix="-5")
