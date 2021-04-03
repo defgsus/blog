@@ -237,6 +237,7 @@ function render_kali(element_id, parameters) {
             return ctx;
         }
     }
+
     const bb = element.getBoundingClientRect();
 
     element.innerHTML = `<canvas width="${bb.width}" height="${bb.height}"></canvas>`;
@@ -253,16 +254,45 @@ function render_kali(element_id, parameters) {
         draw(this);
     }.bind(context);
 
+    context._move_timeout = null;
+    context.move_to = function(new_position, new_scale, length=1.) {
+        const
+            old_pos_x = context.parameters.position[0],
+            old_pos_y = context.parameters.position[1],
+            old_scale = context.parameters.scale,
+            startTime = new Date().getTime();
+
+        function update() {
+            let curTime = new Date().getTime(),
+                t = Math.min(1, (curTime - startTime) / length / 1000.);
+                t = t*t*(3-2*t);
+            //console.log(t, startTime, curTime);
+            context.parameters.position[0] = old_pos_x * (1. - t) + t * new_position[0];
+            context.parameters.position[1] = old_pos_y * (1. - t) + t * new_position[1];
+            context.parameters.scale = old_scale * (1. - t) + t * new_scale;
+
+            draw(context);
+            if (t < 1) {
+                if (context._move_timeout)
+                    clearTimeout(context._move_timeout);
+                context._move_timeout = setTimeout(update, 1. / 30.);
+            }
+        }
+        update();
+    };
 
     canvas.addEventListener("click", function(e) {
         const bb = canvas.getBoundingClientRect(),
             pixel_x = Math.round(e.clientX - bb.left),
-            pixel_y = Math.round(e.clientY - bb.top),
+            pixel_y = bb.height - 1 - Math.round(e.clientY - bb.top),
             space_x = (pixel_x - bb.width * .5) / bb.height * 2. * context.parameters.scale + context.parameters.position[0],
             space_y = (pixel_y - bb.height * .5) / bb.height * 2. * context.parameters.scale + context.parameters.position[1];
 
-        console.log(pixel_x, pixel_y, space_x, space_y);
+        //console.log(pixel_x, pixel_y, space_x, space_y);
+        context.move_to([space_x, space_y], context.parameters.scale * .9);
     });
+
+
 
     return context;
 }
@@ -285,7 +315,7 @@ function render_kali(element_id, parameters) {
                 kali_param: [.5, .5],
                 position: [0.5, 0.5],
                 scale: .5,
-                iterations: 3,
+                iterations: 11,
                 antialiasing: 2,
             });
 
