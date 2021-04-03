@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background: #444;
+        }
+    </style>
+
+    <script type="application/x-vertex" id="vertex-code">
+
+attribute vec3 aVertexPosition;
+varying vec3 vVertexPosition;
+
+void main() {
+    vVertexPosition = aVertexPosition;
+    gl_Position = vec4(aVertexPosition, 1.0);
+}
+    </script>
+
+    <script type="application/x-fragment" id="fragment-code">
+#line 21
+precision mediump float;
+varying vec3 vVertexPosition;
+uniform vec2 uResolution;
+uniform vec2 uKaliParam;
+uniform vec2 uKaliPosition;
+uniform float uKaliScale;
+
+
+// AntiAliasing 0=turn off, n=use n by n sub-pixels
+#define AA {AA}
+#define ITERATIONS {ITERATIONS}
+
+
+vec3 kali(in vec2 p) {
+    for (int i=0; i<ITERATIONS; ++i) {
+        p = abs(p) / dot(p, p);
+        if (i+1 < ITERATIONS)
+            p -= uKaliParam;
+    }
+    return vec3(p, 0);
+}
+
+
+vec3 frag_to_color(in vec2 fragCoord) {
+    vec2 uv = (fragCoord - uResolution * .5) / uResolution.y * 2.;
+
+    uv = uv * uKaliScale + uKaliPosition;
+
+    vec3 col = kali(uv);
+
+    return col;
+}
+
+void main() {
+    vec2 fragCoord = (vVertexPosition.xy * .5 + .5) * uResolution;
+
+    #if AA == 0
+        vec3 col = frag_to_color(fragCoord, mouse_uv);
+    #else
+        vec3 col = vec3(0);
+        for (int y=0; y<AA; ++y) {
+            for (int x=0; x<AA; ++x) {
+                vec2 ofs = vec2(x, y) / float(AA);
+                col += frag_to_color(fragCoord + ofs);
+            }
+        }
+        col /= float(AA * AA);
+    #endif
+
+    gl_FragColor = vec4(col, 1.0);
+}
+
+    </script>
+
+    <script>
+
+/*
+    element_id must be id of a DIV with a certain size
+
+    parameters: {
+        kali_param: [float, float],
+        position: [float, float],
+        scale: float,
+        iterations: int,
+        antialiasing: int,
+    }
+ */
+function render_kali(element_id, parameters) {
+
+    const kaliShaderVert = document.getElementById("vertex-code").innerText;
+    const kaliShaderFrag = document.getElementById("fragment-code").innerText;
+    const element = document.getElementById(element_id);
+
+    function log_error() {
+        console.log(arguments);
+        for (const a of arguments) {
+            element.innerText += ` Error: ${a}`;
+        }
+    }
+
+    function createGLContext(canvas) {
+        let names = ["webgl", "experimental-webgl"];
+        let context = null;
+        for (let i = 0; i < names.length; i++) {
+            try {
+                context = canvas.getContext(names[i]);
+            } catch (e) {
+                log_error(e);
+            }
+            if (context) {
+                break;
+            }
+        }
+        if (context) {
+            context.viewportWidth = canvas.width;
+            context.viewportHeight = canvas.height;
+        } else {
+            log_error("Failed to create WebGL context!");
+            return null;
+        }
+        return context;
+    }
+
+    function compileShader(ctx, shaderType, shaderSource) {
+        const glShaderType = shaderType === "VERTEX"
+            ? ctx.gl.VERTEX_SHADER
+            : ctx.gl.FRAGMENT_SHADER;
+        let shader = ctx.gl.createShader(glShaderType);
+
+        ctx.gl.shaderSource(shader, shaderSource);
+        ctx.gl.compileShader(shader);
+
+        if (!ctx.gl.getShaderParameter(shader, ctx.gl.COMPILE_STATUS)) {
+            log_error("shader compilation failed", shaderType, ctx.gl.getShaderInfoLog(shader));
+            // console.log(shaderSource);
+            return null;
+        }
+        return shader;
+    }
+
+    function setupShaders(ctx) {
+        if (ctx.shaderProgram)
+            ctx.gl.deleteProgram(ctx.shaderProgram);
+        if (ctx.vertexShader)
+            ctx.gl.deleteShader(ctx.vertexShader);
+        if (ctx.fragmentShader)
+            ctx.gl.deleteShader(ctx.fragmentShader);
+
+        const shader_code = kaliShaderFrag
+            .replace("{ITERATIONS}", `${ctx.parameters.iterations}`)
+            .replace("{AA}", `${ctx.parameters.antialiasing}`)
+        ;
+        ctx.vertexShader = compileShader(ctx, "VERTEX", kaliShaderVert);
+        ctx.fragmentShader = compileShader(ctx, "FRAGMENT", shader_code);
+        if (!ctx.vertexShader || !ctx.fragmentShader)
+            return;
+
+        ctx.shaderProgram = ctx.gl.createProgram();
+        ctx.gl.attachShader(ctx.shaderProgram, ctx.vertexShader);
+        ctx.gl.attachShader(ctx.shaderProgram, ctx.fragmentShader);
+        ctx.gl.linkProgram(ctx.shaderProgram);
+        if (!ctx.gl.getProgramParameter(ctx.shaderProgram, ctx.gl.LINK_STATUS)) {
+            log_error("Failed to setup shaders");
+            return;
+        }
+        ctx.gl.useProgram(ctx.shaderProgram);
+
+        ctx.uniformLocation = {
+            resolution: ctx.gl.getUniformLocation(ctx.shaderProgram, "uResolution"),
+            kali_param: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliParam"),
+            position: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliPosition"),
+            scale: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliScale"),
+        };
+
+        ctx.shaderProgram.vertexPositionAttribute = ctx.gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
+
+        ctx.shadersReady = true;
+    }
+
+    function setupBuffers(ctx) {
+        ctx.vertexBuffer = ctx.gl.createBuffer();
+        ctx.gl.bindBuffer(ctx.gl.ARRAY_BUFFER, ctx.vertexBuffer);
+        let triangleVertices = [
+            -1., -1., 0.0,
+            1., -1., 0.0,
+            1., 1., 0.0,
+
+            -1., -1., 0.0,
+            1., 1., 0.0,
+            -1., 1., 0.0,
+        ];
+        ctx.gl.bufferData(ctx.gl.ARRAY_BUFFER, new Float32Array(triangleVertices), ctx.gl.STATIC_DRAW);
+        ctx.vertexBuffer.itemSize = 3;
+        ctx.vertexBuffer.numberOfItems = 6;
+    }
+
+    function draw(ctx) {
+        let gl = ctx.gl;
+
+        let bb = ctx.canvas.getBoundingClientRect();
+        //gl.uniform2f(ctx.uniformLocation.resolution, ctx.canvas.width, ctx.canvas.height);
+        gl.uniform2f(ctx.uniformLocation.resolution, bb.width, bb.height);
+        gl.uniform2fv(ctx.uniformLocation.kali_param, ctx.parameters.kali_param);
+        gl.uniform2fv(ctx.uniformLocation.position, ctx.parameters.position);
+        gl.uniform1f(ctx.uniformLocation.scale, ctx.parameters.scale);
+
+        gl.viewport(0, 0, ctx.canvas.width, ctx.canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.vertexAttribPointer(ctx.shaderProgram.vertexPositionAttribute,
+            ctx.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(ctx.shaderProgram.vertexPositionAttribute);
+
+        gl.drawArrays(gl.TRIANGLES, 0, ctx.vertexBuffer.numberOfItems);
+
+        /*setTimeout(function () {
+            draw(ctx)
+        }, 1. / 30.);
+         */
+    }
+
+    function start_context(canvas, parameters) {
+        let ctx = {};
+        ctx.canvas = canvas;
+        ctx.parameters = parameters;
+        ctx.gl = createGLContext(ctx.canvas);
+        if (ctx.gl) {
+            setupShaders(ctx);
+            if (ctx.shadersReady) {
+                setupBuffers(ctx);
+                ctx.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+                draw(ctx);
+            }
+            return ctx;
+        }
+    }
+    const bb = element.getBoundingClientRect();
+
+    element.innerHTML = `<canvas width="${bb.width}" height="${bb.height}"></canvas>`;
+    const canvas = element.querySelector("canvas");
+
+    const context = start_context(canvas, parameters);
+
+    context.update_parameters = function(params) {
+        const old_iterations = this.parameters.iterations;
+        const old_antialiasing = this.parameters.antialiasing;
+        this.parameters = {...this.parameters, ...params};
+        if (old_iterations !== this.parameters.iterations || old_antialiasing !== this.parameters.antialiasing)
+            setupShaders(this);
+        draw(this);
+    }.bind(context);
+
+
+    canvas.addEventListener("click", function(e) {
+        const bb = canvas.getBoundingClientRect(),
+            pixel_x = Math.round(e.clientX - bb.left),
+            pixel_y = Math.round(e.clientY - bb.top),
+            space_x = (pixel_x - bb.width * .5) / bb.height * 2. * context.parameters.scale + context.parameters.position[0],
+            space_y = (pixel_y - bb.height * .5) / bb.height * 2. * context.parameters.scale + context.parameters.position[1];
+
+        console.log(pixel_x, pixel_y, space_x, space_y);
+    });
+
+    return context;
+}
+
+    </script>
+</head>
+<body>
+    <h3>kali set</h3>
+
+    <label>x <input id="param-x" type="number" value="0.5" step="0.01"></label>
+    <label>y <input id="param-y" type="number" value="0.5" step="0.01"></label>
+    <label>iter <input id="param-iter" type="number" value="3" step="1" min="0"></label>
+    <label>aa <input id="param-aa" type="number" value="2" step="1" min="0"></label>
+
+    <div id="kaliset-id" style="width: 512px; height: 512px">
+    </div>
+    <script>
+        (function() {
+            const ctx = render_kali("kaliset-id", {
+                kali_param: [.5, .5],
+                position: [0.5, 0.5],
+                scale: .5,
+                iterations: 3,
+                antialiasing: 2,
+            });
+
+            document.getElementById("param-x").addEventListener("input", function(e) {
+                ctx.update_parameters({
+                    kali_param: [parseFloat(e.target.value), ctx.parameters.kali_param[1]],
+                });
+            });
+            document.getElementById("param-y").addEventListener("input", function(e) {
+                ctx.update_parameters({
+                    kali_param: [ctx.parameters.kali_param[0], parseFloat(e.target.value)],
+                });
+            });
+            document.getElementById("param-iter").addEventListener("input", function(e) {
+                ctx.update_parameters({
+                    iterations: parseInt(e.target.value),
+                });
+            });
+            document.getElementById("param-aa").addEventListener("input", function(e) {
+                ctx.update_parameters({
+                    antialiasing: parseInt(e.target.value),
+                });
+            });
+
+        })();
+    </script>
+</body>
+</html>
+    
