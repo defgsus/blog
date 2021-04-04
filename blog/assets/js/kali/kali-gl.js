@@ -6,16 +6,16 @@
 function render_kali(element_id, control_element_id, parameters) {
 
     const controls = [
-        {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 1, default: 2, recompile: true},
+        {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 2, max: 4, default: 2, recompile: true},
         {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true},
         {id: "kali_param_x", name: "param x", type: "float", step: 0.01, default: .5},
         {id: "kali_param_y", name: "param y", type: "float", step: 0.01, default: .5},
-        {id: "kali_param_z", name: "param z", type: "float", step: 0.01, default: .5},
-        {id: "kali_param_w", name: "param w", type: "float", step: 0.01, default: .5},
+        {id: "kali_param_z", name: "param z", type: "float", step: 0.01, default: .5, dimensions: 3},
+        {id: "kali_param_w", name: "param w", type: "float", step: 0.01, default: .5, dimensions: 4},
         {id: "position_x", name: "pos x", type: "float", step: 0.01, default: .0},
         {id: "position_y", name: "pos y", type: "float", step: 0.01, default: .0},
-        {id: "position_z", name: "pos z", type: "float", step: 0.01, default: .0},
-        {id: "position_w", name: "pos w", type: "float", step: 0.01, default: .0},
+        {id: "position_z", name: "pos z", type: "float", step: 0.01, default: .0, dimensions: 3},
+        {id: "position_w", name: "pos w", type: "float", step: 0.01, default: .0, dimensions: 4},
         {id: "scale", name: "scale", type: "float", step: 0.01, default: 1.},
         {id: "antialiasing", name: "antialiasing", type: "int", step: 1, min: 1, default: 2, recompile: true},
     ];
@@ -88,6 +88,7 @@ function render_kali(element_id, control_element_id, parameters) {
 
         const shader_code = kaliShaderFrag
             .replace("{ITERATIONS}", `${ctx.parameters.iterations}`)
+            .replace("{DIMENSIONS}", `${ctx.parameters.dimensions}`)
             .replace("{AA}", `${ctx.parameters.antialiasing}`)
         ;
         ctx.vertexShader = compileShader(ctx, "VERTEX", kaliShaderVert);
@@ -187,6 +188,7 @@ function render_kali(element_id, control_element_id, parameters) {
 
     const bb = element.getBoundingClientRect();
 
+    element.classList.add("kali-gl");
     element.innerHTML = `<canvas width="${bb.width}" height="${bb.height}"></canvas>`;
     const canvas = element.querySelector("canvas");
 
@@ -197,6 +199,19 @@ function render_kali(element_id, control_element_id, parameters) {
         const old_iterations = this.parameters.iterations;
         const old_antialiasing = this.parameters.antialiasing;
         this.parameters = {...this.parameters, ...params};
+        for (const c of controls) {
+            const elem = document.querySelector(`#${control_element_id}-${c.id}`);
+            if (!elem)
+                continue;
+            elem.value = this.parameters[c.id];
+            if (c.dimensions) {
+                const label = elem.parentElement;
+                if (c.dimensions > this.parameters.dimensions)
+                    label.classList.add("hidden");
+                else
+                    label.classList.remove("hidden");
+            }
+        }
         if (old_iterations !== this.parameters.iterations
             || old_antialiasing !== this.parameters.antialiasing
             || old_dimensions !== this.parameters.dimensions)
@@ -216,12 +231,13 @@ function render_kali(element_id, control_element_id, parameters) {
             let curTime = new Date().getTime(),
                 t = Math.min(1, (curTime - startTime) / length / 1000.);
             t = t*t*(3-2*t);
-            //console.log(t, startTime, curTime);
-            context.parameters.position_x = old_pos_x * (1. - t) + t * new_position[0];
-            context.parameters.position_y = old_pos_y * (1. - t) + t * new_position[1];
-            context.parameters.scale = old_scale * (1. - t) + t * new_scale;
 
-            draw(context);
+            context.update_parameters({
+                position_x: old_pos_x * (1. - t) + t * new_position[0],
+                position_y: old_pos_y * (1. - t) + t * new_position[1],
+                scale: old_scale * (1. - t) + t * new_scale,
+            });
+
             if (t < 1) {
                 if (context._move_timeout)
                     clearTimeout(context._move_timeout);
@@ -233,18 +249,22 @@ function render_kali(element_id, control_element_id, parameters) {
 
     function create_control_elements(parameters) {
         const html = controls.map(function(c) {
-            let html = `<label style="white-space: nowrap">${c.name} `;
+            let html = `<label>${c.name} `;
             let type = c.type === "int" || c.type === "float" ? "number" : type;
             html += `<input id="${control_element_id}-${c.id}" type="${type}" value="${parameters[c.id]}"`;
             if (c.step)
                 html += ` step="${c.step}"`;
             if (c.min)
                 html += ` min="${c.min}"`;
+            if (c.max)
+                html += ` max="${c.max}"`;
             html += `></input></label>`;
             return html;
         }).join(" ");
 
-        document.getElementById(control_element_id).innerHTML = html;
+        const elem = document.getElementById(control_element_id);
+        elem.classList.add("kali-gl")
+        elem.innerHTML = html;
 
         for (const c of controls) {
             document.querySelector(`#${control_element_id}-${c.id}`).addEventListener("input", function(e) {
@@ -260,6 +280,7 @@ function render_kali(element_id, control_element_id, parameters) {
 
     if (control_element_id) {
         create_control_elements(parameters);
+        context.update_parameters();
     }
 
     canvas.addEventListener("click", function(e) {

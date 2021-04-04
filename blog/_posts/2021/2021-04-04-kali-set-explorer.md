@@ -3,6 +3,8 @@ layout: post
 title: kali-set explorer
 custom_js: 
   - kali/kali-gl.js
+custom_css: 
+  - kali/kali-gl.css
 ---
 
 <!-- Actually i'd like to place them somewhere else.. -->
@@ -32,45 +34,59 @@ uniform float uKaliScale;
 // AntiAliasing 0=turn off, n=use n by n sub-pixels
 #define AA {AA}
 #define ITERATIONS {ITERATIONS}
+#define DIMENSIONS {DIMENSIONS}
+#define KALI kali_final
 
-
-vec3 kali(in vec2 p) {
+vec4 kali_final(in vec2 p) {
     for (int i=0; i<ITERATIONS-1; ++i) {
         p = abs(p) / dot(p, p);
         p -= uKaliParam.xy;
     }
     p = abs(p) / dot(p, p);
-    return vec3(p, 0);
+    return vec4(p, 0, 1);
 }
 
-vec3 kali_3d(in vec2 p) {
-    vec3 v = vec3(p, 0.);
+vec4 kali_final(in vec3 p) {
     for (int i=0; i<ITERATIONS-1; ++i) {
-        v = abs(v) / dot(v, v);
-        v -= uKaliParam.xyz;
+        p = abs(p) / dot(p, p);
+        p -= uKaliParam.xyz;
     }
-    v = abs(v) / dot(v, v);
-    return v;
+    p = abs(p) / dot(p, p);
+    return vec4(p, 1);
 }
 
-vec3 kali_4d(in vec2 p) {
-    vec4 v = vec4(p, p);
+vec4 kali_final(in vec4 p) {
     for (int i=0; i<ITERATIONS-1; ++i) {
-        v = abs(v) / dot(v, v);
-        v -= uKaliParam;
+        p = abs(p) / dot(p, p);
+        p -= uKaliParam;
     }
-    v = abs(v) / dot(v, v);
-    return v.xyz;
+    p = abs(p) / dot(p, p);
+    return p;
 }
 
 
-vec3 frag_to_color(in vec2 fragCoord) {
+vec4 frag_to_color(in vec2 fragCoord) {
     vec2 uv = (fragCoord - uResolution * .5) / uResolution.y * 2.;
-
-    uv = uv * uKaliScale + uKaliPosition.xy;
-
-    vec3 col = kali(uv);
-
+    uv *= uKaliScale;
+    
+    #if DIMENSIONS <= 2
+        vec4 col = KALI(
+            uv * uKaliScale + uKaliPosition.xy
+        );
+    #endif
+    
+    #if DIMENSIONS == 3
+        vec4 col = KALI(
+            vec3(uv, 0) * uKaliScale + uKaliPosition.xyz
+        );
+    #endif
+    
+    #if DIMENSIONS == 4
+        vec4 col = KALI(
+            vec4(uv, 0, 0) * uKaliScale + uKaliPosition
+        );
+    #endif
+    
     return col;
 }
 
@@ -78,9 +94,9 @@ void main() {
     vec2 fragCoord = (vVertexPosition.xy * .5 + .5) * uResolution;
 
     #if AA <= 1
-        vec3 col = frag_to_color(fragCoord);
+        vec4 col = frag_to_color(fragCoord);
     #else
-        vec3 col = vec3(0);
+        vec4 col = vec4(0);
         for (int y=0; y<AA; ++y) {
             for (int x=0; x<AA; ++x) {
                 vec2 ofs = vec2(x, y) / float(AA);
@@ -89,8 +105,10 @@ void main() {
         }
         col /= float(AA * AA);
     #endif
+    
+    col = mix(vec4(0,0,0,1), vec4(col.xyz,1), col.a);
 
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = col;
 }
 
 </script>
