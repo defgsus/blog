@@ -10,9 +10,11 @@ function render_kali(element_id, control_element_id, parameters) {
         {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true},
         {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true,
             options: ["final", "average", "min", "max",
-                "distance_x", "distance_y", "distance_z", "distance_w",
+                "distance_plane", "distance_cylinder", "distance_sphere", "distance_cube",
             ],
         },
+        {id: "object_distance", name: "object location (x)", type: "float", step: 0.01, default: .0},
+        {id: "object_radius", name: "object radius", type: "float", step: 0.01, default: .1},
         {id: "eiffie_mod", name: "eiffie mod", type: "checkbox", default: false, recompile: true},
         {id: "amplitude", name: "amplitude", type: "float", step: .1, default: 1.},
         {id: "kali_param_x", name: "param x", type: "float", step: 0.01, default: .5},
@@ -121,6 +123,8 @@ function render_kali(element_id, control_element_id, parameters) {
             position: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliPosition"),
             scale: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliScale"),
             amplitude: ctx.gl.getUniformLocation(ctx.shaderProgram, "uAmplitude"),
+            object_distance: ctx.gl.getUniformLocation(ctx.shaderProgram, "uObjectDistance"),
+            object_radius: ctx.gl.getUniformLocation(ctx.shaderProgram, "uObjectRadius"),
         };
 
         ctx.shaderProgram.vertexPositionAttribute = ctx.gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
@@ -165,6 +169,8 @@ function render_kali(element_id, control_element_id, parameters) {
         );
         gl.uniform1f(ctx.uniformLocation.scale, ctx.parameters.scale);
         gl.uniform1f(ctx.uniformLocation.amplitude, ctx.parameters.amplitude);
+        gl.uniform1f(ctx.uniformLocation.object_distance, ctx.parameters.object_distance);
+        gl.uniform1f(ctx.uniformLocation.object_radius, ctx.parameters.object_radius);
 
         gl.viewport(0, 0, ctx.canvas.width, ctx.canvas.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -174,11 +180,6 @@ function render_kali(element_id, control_element_id, parameters) {
         gl.enableVertexAttribArray(ctx.shaderProgram.vertexPositionAttribute);
 
         gl.drawArrays(gl.TRIANGLES, 0, ctx.vertexBuffer.numberOfItems);
-
-        /*setTimeout(function () {
-            draw(ctx)
-        }, 1. / 30.);
-         */
     }
 
     function start_context(canvas, parameters) {
@@ -205,35 +206,49 @@ function render_kali(element_id, control_element_id, parameters) {
 
     const context = start_context(canvas, parameters);
 
+    context._update_params_timeout = null;
     context.update_parameters = function(params) {
         //console.log(params);
-        const old_params = JSON.parse(JSON.stringify(this.parameters));
-        this.parameters = {...this.parameters, ...params};
+        const old_params = JSON.parse(JSON.stringify(context.parameters));
+        context.parameters = {...context.parameters, ...params};
         for (const c of controls) {
             const elem = document.querySelector(`#${control_element_id}-${c.id}`);
             if (!elem)
                 continue;
             if (c.type == "checkbox")
-                elem.checked = this.parameters[c.id];
+                elem.checked = context.parameters[c.id];
             else
-                elem.value = this.parameters[c.id];
+                elem.value = context.parameters[c.id];
+
+            let hidden = false;
             if (c.dimensions) {
                 const label = elem.parentElement;
-                if (c.dimensions > this.parameters.dimensions)
-                    label.classList.add("hidden");
-                else
-                    label.classList.remove("hidden");
+                hidden = (c.dimensions > context.parameters.dimensions);
             }
+            if (c.id === "eiffie_mod" || c.id === "object_distance") {
+                hidden = !context.parameters.accumulator.startsWith("distance_");
+            }
+            if (hidden)
+                elem.parentElement.classList.add("hidden");
+            else
+                elem.parentElement.classList.remove("hidden");
         }
 
-        for (const c of controls) {
-            if (c.recompile && this.parameters[c.id] !== old_params[c.id]) {
-                setupShaders(this);
-                break;
+        function render() {
+            for (const c of controls) {
+                if (c.recompile && context.parameters[c.id] !== old_params[c.id]) {
+                    setupShaders(context);
+                    break;
+                }
             }
+            draw(context);
         }
-        draw(this);
-    }.bind(context);
+
+        if (context._update_param_timeout)
+            clearTimeout(context._update_param_timeout);
+        context._update_param_timeout = setTimeout(render, 1. / 30.);
+
+    };
 
     context._move_timeout = null;
     context.move_to = function(new_position, new_scale, length=1.) {
