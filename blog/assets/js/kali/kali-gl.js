@@ -8,6 +8,13 @@ function render_kali(element_id, control_element_id, parameters) {
     const controls = [
         {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 2, max: 4, default: 2, recompile: true},
         {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true},
+        {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true,
+            options: ["final", "average", "min", "max",
+                "distance_x", "distance_y", "distance_z", "distance_w",
+            ],
+        },
+        {id: "eiffie_mod", name: "eiffie mod", type: "checkbox", default: false, recompile: true},
+        {id: "amplitude", name: "amplitude", type: "float", step: .1, default: 1.},
         {id: "kali_param_x", name: "param x", type: "float", step: 0.01, default: .5},
         {id: "kali_param_y", name: "param y", type: "float", step: 0.01, default: .5},
         {id: "kali_param_z", name: "param z", type: "float", step: 0.01, default: .5, dimensions: 3},
@@ -90,6 +97,8 @@ function render_kali(element_id, control_element_id, parameters) {
             .replace("{ITERATIONS}", `${ctx.parameters.iterations}`)
             .replace("{DIMENSIONS}", `${ctx.parameters.dimensions}`)
             .replace("{AA}", `${ctx.parameters.antialiasing}`)
+            .replace("{ACCUMULATOR}", ctx.parameters.accumulator)
+            .replace("{EIFFIE_MOD}", ctx.parameters.eiffie_mod ? "1": "0")
         ;
         ctx.vertexShader = compileShader(ctx, "VERTEX", kaliShaderVert);
         ctx.fragmentShader = compileShader(ctx, "FRAGMENT", shader_code);
@@ -111,6 +120,7 @@ function render_kali(element_id, control_element_id, parameters) {
             kali_param: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliParam"),
             position: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliPosition"),
             scale: ctx.gl.getUniformLocation(ctx.shaderProgram, "uKaliScale"),
+            amplitude: ctx.gl.getUniformLocation(ctx.shaderProgram, "uAmplitude"),
         };
 
         ctx.shaderProgram.vertexPositionAttribute = ctx.gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
@@ -154,6 +164,7 @@ function render_kali(element_id, control_element_id, parameters) {
             ctx.parameters.position_w,
         );
         gl.uniform1f(ctx.uniformLocation.scale, ctx.parameters.scale);
+        gl.uniform1f(ctx.uniformLocation.amplitude, ctx.parameters.amplitude);
 
         gl.viewport(0, 0, ctx.canvas.width, ctx.canvas.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -195,15 +206,17 @@ function render_kali(element_id, control_element_id, parameters) {
     const context = start_context(canvas, parameters);
 
     context.update_parameters = function(params) {
-        const old_dimensions = this.parameters.dimensions;
-        const old_iterations = this.parameters.iterations;
-        const old_antialiasing = this.parameters.antialiasing;
+        //console.log(params);
+        const old_params = JSON.parse(JSON.stringify(this.parameters));
         this.parameters = {...this.parameters, ...params};
         for (const c of controls) {
             const elem = document.querySelector(`#${control_element_id}-${c.id}`);
             if (!elem)
                 continue;
-            elem.value = this.parameters[c.id];
+            if (c.type == "checkbox")
+                elem.checked = this.parameters[c.id];
+            else
+                elem.value = this.parameters[c.id];
             if (c.dimensions) {
                 const label = elem.parentElement;
                 if (c.dimensions > this.parameters.dimensions)
@@ -212,10 +225,13 @@ function render_kali(element_id, control_element_id, parameters) {
                     label.classList.remove("hidden");
             }
         }
-        if (old_iterations !== this.parameters.iterations
-            || old_antialiasing !== this.parameters.antialiasing
-            || old_dimensions !== this.parameters.dimensions)
-            setupShaders(this);
+
+        for (const c of controls) {
+            if (c.recompile && this.parameters[c.id] !== old_params[c.id]) {
+                setupShaders(this);
+                break;
+            }
+        }
         draw(this);
     }.bind(context);
 
@@ -250,15 +266,28 @@ function render_kali(element_id, control_element_id, parameters) {
     function create_control_elements(parameters) {
         const html = controls.map(function(c) {
             let html = `<label>${c.name} `;
-            let type = c.type === "int" || c.type === "float" ? "number" : type;
-            html += `<input id="${control_element_id}-${c.id}" type="${type}" value="${parameters[c.id]}"`;
+            let type = c.type === "int" || c.type === "float" ? "number" : c.type;
+            let elem_tag = c.type === "select" ? "select" : "input";
+            html += `<${elem_tag} id="${control_element_id}-${c.id}" type="${type}"`;
+            if (type === "checkbox" && parameters[c.id])
+                html += ` checked`;
+            else
+                html += ` value="${parameters[c.id]}"`;
             if (c.step)
                 html += ` step="${c.step}"`;
             if (c.min)
                 html += ` min="${c.min}"`;
             if (c.max)
                 html += ` max="${c.max}"`;
-            html += `></input></label>`;
+            html += `>`;
+            if (c.options) {
+                for (const o of c.options) {
+                    html += `<option value="${o}">${o}</option>`;
+                }
+            }
+            html += `</${elem_tag}>`;
+            html += `<button id="${control_element_id}-${c.id}-reset">R</button>`;
+            html += `</label>`;
             return html;
         }).join(" ");
 
@@ -273,7 +302,12 @@ function render_kali(element_id, control_element_id, parameters) {
                     v = parseInt(v)
                 else if (c.type === "float")
                     v = parseFloat(v);
+                else if (c.type === "checkbox")
+                    v = e.target.checked;
                 context.update_parameters({[c.id]: v});
+            });
+            document.querySelector(`#${control_element_id}-${c.id}-reset`).addEventListener("click", function(e) {
+                context.update_parameters({[c.id]: c.default});
             });
         }
     }
@@ -291,7 +325,7 @@ function render_kali(element_id, control_element_id, parameters) {
             space_y = (pixel_y - bb.height * .5) / bb.height * 2. * context.parameters.scale + context.parameters.position_y;
 
         //console.log(pixel_x, pixel_y, space_x, space_y);
-        context.move_to([space_x, space_y], context.parameters.scale * .7);
+        context.move_to([space_x, space_y], context.parameters.scale * .66);
     });
 
 

@@ -29,66 +29,123 @@ uniform vec2 uResolution;
 uniform vec4 uKaliParam;
 uniform vec4 uKaliPosition;
 uniform float uKaliScale;
+uniform float uAmplitude;
 
 
 // AntiAliasing 0=turn off, n=use n by n sub-pixels
 #define AA {AA}
 #define ITERATIONS {ITERATIONS}
 #define DIMENSIONS {DIMENSIONS}
-#define KALI kali_final
+#define KALI kali_{ACCUMULATOR}
+#define EIFFIE_MOD {EIFFIE_MOD}
 
-vec4 kali_final(in vec2 p) {
+
+vec4 kali_final(in vec4 p, in vec4 param) {
     for (int i=0; i<ITERATIONS-1; ++i) {
         p = abs(p) / dot(p, p);
-        p -= uKaliParam.xy;
-    }
-    p = abs(p) / dot(p, p);
-    return vec4(p, 0, 1);
-}
-
-vec4 kali_final(in vec3 p) {
-    for (int i=0; i<ITERATIONS-1; ++i) {
-        p = abs(p) / dot(p, p);
-        p -= uKaliParam.xyz;
-    }
-    p = abs(p) / dot(p, p);
-    return vec4(p, 1);
-}
-
-vec4 kali_final(in vec4 p) {
-    for (int i=0; i<ITERATIONS-1; ++i) {
-        p = abs(p) / dot(p, p);
-        p -= uKaliParam;
+        p -= param;
     }
     p = abs(p) / dot(p, p);
     return p;
 }
 
 
+vec4 kali_average(in vec4 p, in vec4 param) {
+    vec4 acc = vec4(0);
+    for (int i=0; i<ITERATIONS; ++i) {
+        p = abs(p) / dot(p, p);
+        acc += p;
+        p -= param;
+    }
+    return acc / float(ITERATIONS);
+}
+
+
+vec4 kali_min(in vec4 p, in vec4 param) {
+    vec4 acc = vec4(1e8);
+    for (int i=0; i<ITERATIONS; ++i) {
+        p = abs(p) / dot(p, p);
+        acc = min(acc, p);
+        p -= param;
+    }
+    return acc;
+}
+
+
+vec4 kali_max(in vec4 p, in vec4 param) {
+    vec4 acc = vec4(0);
+    for (int i=0; i<ITERATIONS; ++i) {
+        p = abs(p) / dot(p, p);
+        acc = max(acc, p);
+        p -= param;
+    }
+    return acc;
+}
+
+
+vec4 kali_distance_axis(in vec4 p, in vec4 param, in vec4 axis) {
+    float min_dist = 1e8;
+    float scale = 1.;
+    for (int i=0; i<ITERATIONS; ++i) {
+        scale /= dot(p, p);
+        p = abs(p) / dot(p, p);
+        float dist = dot(p, axis);
+        #if EIFFIE_MOD == 1
+            dist *= scale;
+        #endif
+        min_dist = min(dist, min_dist);
+        p -= param;
+    }
+    return vec4(min_dist);
+}
+
+vec4 kali_distance_x(in vec4 p, in vec4 param) {
+    return kali_distance_axis(p, param, vec4(1, 0, 0, 0));
+}
+
+vec4 kali_distance_y(in vec4 p, in vec4 param) {
+    return kali_distance_axis(p, param, vec4(0, 1, 0, 0));
+}
+
+vec4 kali_distance_z(in vec4 p, in vec4 param) {
+    return kali_distance_axis(p, param, vec4(0, 0, 1, 0));
+}
+
+vec4 kali_distance_w(in vec4 p, in vec4 param) {
+    return kali_distance_axis(p, param, vec4(0, 0, 0, 1));
+}
+
+
 vec4 frag_to_color(in vec2 fragCoord) {
-    vec2 uv = (fragCoord - uResolution * .5) / uResolution.y * 2.;
+    vec4 uv = vec4((fragCoord - uResolution * .5) / uResolution.y * 2., 0., 0.);
     uv *= uKaliScale;
     
     #if DIMENSIONS <= 2
         vec4 col = KALI(
-            uv * uKaliScale + uKaliPosition.xy
+            (uv * uKaliScale + uKaliPosition) * vec4(1, 1, 0, 0),
+            uKaliParam * vec4(1, 1, 0, 0)
         );
+        col.zw = vec2(0, 1);
     #endif
     
     #if DIMENSIONS == 3
         vec4 col = KALI(
-            vec3(uv, 0) * uKaliScale + uKaliPosition.xyz
+            (uv * uKaliScale + uKaliPosition) * vec4(1, 1, 1, 0),
+            uKaliParam * vec4(1, 1, 1, 0)
         );
+        col.w = 1.;
     #endif
     
     #if DIMENSIONS == 4
         vec4 col = KALI(
-            vec4(uv, 0, 0) * uKaliScale + uKaliPosition
+            (uv * uKaliScale + uKaliPosition),
+            uKaliParam
         );
     #endif
     
     return col;
 }
+
 
 void main() {
     vec2 fragCoord = (vVertexPosition.xy * .5 + .5) * uResolution;
@@ -106,6 +163,7 @@ void main() {
         col /= float(AA * AA);
     #endif
     
+    col = clamp(col * uAmplitude, 0., 1.);
     col = mix(vec4(0,0,0,1), vec4(col.xyz,1), col.a);
 
     gl_FragColor = col;
@@ -113,9 +171,6 @@ void main() {
 
 </script>
 
-
-Yeah, i know, *explorer* sounds so 90ies but that's what this post is about.
-Exploring the amazing **kali set**.
 
 
 <div id="kali-01" style="width: 512px; height: 512px;"></div>
