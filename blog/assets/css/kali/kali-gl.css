@@ -1,9 +1,17 @@
 .kali-gl label {
     padding: .2rem;
     white-space: nowrap;
-    display: block;
+    display: inline-block;
 }
 
 .kali-gl label.hidden {
     display: none;
+}
+
+.kali-gl input.int {
+    width: 3rem;
+}
+
+.kali-gl input.float {
+    width: 6rem;
 }

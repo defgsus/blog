@@ -6,27 +6,33 @@
 function render_kali(element_id, control_element_id, parameters) {
 
     const controls = [
-        {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 2, max: 4, default: 2, recompile: true},
-        {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true},
-        {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true,
-            options: ["final", "average", "min", "max",
-                "distance_plane", "distance_cylinder", "distance_sphere", "distance_cube",
+        {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 2, max: 4, default: 2, recompile: true, group: 1},
+        {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true, group: 1},
+        {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true, options: [
+                ["final", "final"],
+                ["average", "average"],
+                ["min", "min"],
+                ["max", "max"],
+                ["distance_plane", "plane X"],
+                ["distance_cylinder", "cylinder XY"],
+                ["distance_sphere", "sphere XYZ"],
+                ["distance_cube", "cube XYZW"],
             ],
         },
-        {id: "object_distance", name: "object location (x)", type: "float", step: 0.01, default: .0},
-        {id: "object_radius", name: "object radius", type: "float", step: 0.01, default: .1},
-        {id: "eiffie_mod", name: "eiffie mod", type: "checkbox", default: false, recompile: true},
-        {id: "amplitude", name: "amplitude", type: "float", step: .1, default: 1.},
-        {id: "kali_param_x", name: "param x", type: "float", step: 0.01, default: .5},
-        {id: "kali_param_y", name: "param y", type: "float", step: 0.01, default: .5},
-        {id: "kali_param_z", name: "param z", type: "float", step: 0.01, default: .5, dimensions: 3},
-        {id: "kali_param_w", name: "param w", type: "float", step: 0.01, default: .5, dimensions: 4},
-        {id: "position_x", name: "pos x", type: "float", step: 0.01, default: .0},
-        {id: "position_y", name: "pos y", type: "float", step: 0.01, default: .0},
-        {id: "position_z", name: "pos z", type: "float", step: 0.01, default: .0, dimensions: 3},
-        {id: "position_w", name: "pos w", type: "float", step: 0.01, default: .0, dimensions: 4},
+        {id: "object_distance", name: "object location (x)", type: "float", step: 0.01, default: .0, group: 5, distance_acc: true},
+        {id: "object_radius", name: "object radius", type: "float", step: 0.01, default: .1, group: 5, distance_acc: true},
+        {id: "eiffie_mod", name: "eiffie mod", type: "checkbox", default: false, recompile: true, group: 5, distance_acc: true},
+        {id: "amplitude", name: "brightness", type: "float", step: .1, default: 1., group: 6},
+        {id: "antialiasing", name: "antialiasing", type: "int", step: 1, min: 1, default: 2, recompile: true, group: 6},
+        {id: "kali_param_x", name: "parameter x", type: "float", step: 0.01, default: .5, group: 10},
+        {id: "kali_param_y", name: "y", type: "float", step: 0.01, default: .5, group: 10},
+        {id: "kali_param_z", name: "z", type: "float", step: 0.01, default: .5, dimensions: 3, group: 10},
+        {id: "kali_param_w", name: "w", type: "float", step: 0.01, default: .5, dimensions: 4, group: 10},
+        {id: "position_x", name: "position x", type: "float", step: 0.01, default: .0, group: 11},
+        {id: "position_y", name: "y", type: "float", step: 0.01, default: .0, group: 11},
+        {id: "position_z", name: "z", type: "float", step: 0.01, default: .0, dimensions: 3, group: 11},
+        {id: "position_w", name: "w", type: "float", step: 0.01, default: .0, dimensions: 4, group: 11},
         {id: "scale", name: "scale", type: "float", step: 0.01, default: 1.},
-        {id: "antialiasing", name: "antialiasing", type: "int", step: 1, min: 1, default: 2, recompile: true},
     ];
 
     const default_params = {};
@@ -217,15 +223,19 @@ function render_kali(element_id, control_element_id, parameters) {
                 continue;
             if (c.type == "checkbox")
                 elem.checked = context.parameters[c.id];
-            else
-                elem.value = context.parameters[c.id];
+            else {
+                let v = context.parameters[c.id];
+                if (c.type === "float")
+                    v = Math.round(v * 100000.) / 100000.;
+                elem.value = v;
+            }
 
             let hidden = false;
             if (c.dimensions) {
                 const label = elem.parentElement;
                 hidden = (c.dimensions > context.parameters.dimensions);
             }
-            if (c.id === "eiffie_mod" || c.id === "object_distance") {
+            if (c.distance_acc) {
                 hidden = !context.parameters.accumulator.startsWith("distance_");
             }
             if (hidden)
@@ -279,11 +289,20 @@ function render_kali(element_id, control_element_id, parameters) {
     };
 
     function create_control_elements(parameters) {
-        const html = controls.map(function(c) {
-            let html = `<label>${c.name} `;
+        let prev_group = 0;
+        const html = controls.map(function(c, i) {
+            const new_group = (c.group !== prev_group) || c.group === undefined;
+            prev_group = c.group;
+            let html = ``;
+            if (new_group) {
+                if (i > 0)
+                    html += `</div>`;
+                html += `<div class="param-group">`;
+            }
+            html += `<label><b>${c.name}</b> `;
             let type = c.type === "int" || c.type === "float" ? "number" : c.type;
             let elem_tag = c.type === "select" ? "select" : "input";
-            html += `<${elem_tag} id="${control_element_id}-${c.id}" type="${type}"`;
+            html += `<${elem_tag} id="${control_element_id}-${c.id}" class="${c.type}" type="${type}"`;
             if (type === "checkbox" && parameters[c.id])
                 html += ` checked`;
             else
@@ -297,12 +316,14 @@ function render_kali(element_id, control_element_id, parameters) {
             html += `>`;
             if (c.options) {
                 for (const o of c.options) {
-                    html += `<option value="${o}">${o}</option>`;
+                    html += `<option value="${o[0]}">${o[1]}</option>`;
                 }
             }
             html += `</${elem_tag}>`;
             html += `<button id="${control_element_id}-${c.id}-reset">R</button>`;
             html += `</label>`;
+            if (i+1 == controls.length)
+                html += `</div>`;
             return html;
         }).join(" ");
 
