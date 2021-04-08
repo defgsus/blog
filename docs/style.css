@@ -10,10 +10,14 @@ hr { margin: .5rem; }
 
 h1, h2, h3, h4, h5 { margin-top: 1rem; }
 
+table { width: unset; }
+
 table th, table td { padding: .2rem .2rem; }
 
 .table-description { color: #a0a0a0; }
 
 .table-description b { color: #808080; }
+
+.plotly-graph-div { padding-bottom: 1rem; }
 
 /*# sourceMappingURL=style.css.map */
