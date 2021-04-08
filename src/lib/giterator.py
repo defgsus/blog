@@ -225,13 +225,11 @@ class Giterator:
 
         additions, deletions, name = change_match.groups()
 
-        # TODO: additions/deletions should be integer converted
-        #   but might be "-" in case of binary files
         commit["changes"].append({
             "name": name,
             "type": "change",
-            "additions": additions,
-            "deletions": deletions,
+            "additions": _to_int(additions, 0),
+            "deletions": _to_int(deletions, 0),
         })
 
         rename = get_git_renaming(name)
@@ -361,3 +359,10 @@ def get_git_renaming(name: str) -> Optional[Tuple[str, str]]:
     name1 = name[:idx_start] + middle[0] + name[idx_end+1:]
     name2 = name[:idx_start] + middle[1] + name[idx_end+1:]
     return RE_MULTI_SLASH.sub("/", name1), RE_MULTI_SLASH.sub("/", name2)
+
+
+def _to_int(x, default=None):
+    try:
+        return int(x)
+    except (TypeError, ValueError):
+        return default
