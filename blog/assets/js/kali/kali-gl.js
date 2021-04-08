@@ -8,17 +8,19 @@ function render_kali(element_id, control_element_id, parameters) {
     const controls = [
         {id: "dimensions", name: "dimensions", type: "int", step: 1, min: 2, max: 4, default: 2, recompile: true, group: 1},
         {id: "iterations", name: "iterations", type: "int", step: 1, min: 1, default: 11, recompile: true, group: 1},
-        {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true, options: [
+        {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true, group: 2, options: [
                 ["final", "final"],
                 ["average", "average"],
                 ["min", "min"],
                 ["max", "max"],
+                ["exp", "exp"],
                 ["distance_plane", "plane X"],
                 ["distance_cylinder", "cylinder XY"],
                 ["distance_sphere", "sphere XYZ"],
                 ["distance_cube", "cube XYZW"],
             ],
         },
+        {id: "exp_scale", name: "exp scale", type: "float", step: 1, default: 50., group: 2, exp_acc: true},
         {id: "object_distance", name: "object location (x)", type: "float", step: 0.01, default: .0, group: 5, distance_acc: true},
         {id: "object_radius", name: "object radius", type: "float", step: 0.01, default: .1, group: 5, distance_acc: true},
         {id: "eiffie_mod", name: "eiffie mod", type: "checkbox", default: false, recompile: true, group: 5, distance_acc: true},
@@ -131,6 +133,7 @@ function render_kali(element_id, control_element_id, parameters) {
             amplitude: ctx.gl.getUniformLocation(ctx.shaderProgram, "uAmplitude"),
             object_distance: ctx.gl.getUniformLocation(ctx.shaderProgram, "uObjectDistance"),
             object_radius: ctx.gl.getUniformLocation(ctx.shaderProgram, "uObjectRadius"),
+            exp_scale: ctx.gl.getUniformLocation(ctx.shaderProgram, "uExpScale"),
         };
 
         ctx.shaderProgram.vertexPositionAttribute = ctx.gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
@@ -177,6 +180,7 @@ function render_kali(element_id, control_element_id, parameters) {
         gl.uniform1f(ctx.uniformLocation.amplitude, ctx.parameters.amplitude);
         gl.uniform1f(ctx.uniformLocation.object_distance, ctx.parameters.object_distance);
         gl.uniform1f(ctx.uniformLocation.object_radius, ctx.parameters.object_radius);
+        gl.uniform1f(ctx.uniformLocation.exp_scale, ctx.parameters.exp_scale);
 
         gl.viewport(0, 0, ctx.canvas.width, ctx.canvas.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -237,6 +241,9 @@ function render_kali(element_id, control_element_id, parameters) {
             }
             if (c.distance_acc) {
                 hidden = !context.parameters.accumulator.startsWith("distance_");
+            }
+            if (c.exp_acc) {
+                hidden = context.parameters.accumulator !== "exp";
             }
             if (hidden)
                 elem.parentElement.classList.add("hidden");
