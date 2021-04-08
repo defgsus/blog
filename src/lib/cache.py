@@ -1,5 +1,6 @@
 import os
 import hashlib
+import json
 from typing import Callable, Any
 import sys
 
@@ -42,6 +43,31 @@ class FileCache:
             save(cls.filename(filename), result)
 
         return result
+
+    @classmethod
+    def execute_json(
+            cls,
+            filename: str,
+            execute: Callable[[], Any],
+            read_cache: bool = True,
+            write_cache: bool = True,
+    ) -> Any:
+        def _load(name):
+            with open(name) as fp:
+                return json.load(fp)
+
+        def _save(name, data):
+            with open(name, "w") as fp:
+                json.dump(data, fp)
+
+        return cls.execute(
+            filename=filename,
+            execute=execute,
+            load=_load,
+            save=_save,
+            read_cache=read_cache,
+            write_cache=write_cache,
+        )
 
     @classmethod
     def to_hash(cls, anything) -> str:
