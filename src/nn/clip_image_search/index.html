@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CLIP image search</title>
+</head>
+<body>
+
+<h2>CLIP image search</h2>
+<p>On %(num_images)s <e>web images</e>.</p>
+
+<form>
+    <div>
+        <label>search <input type="text" name="q" value="%(query)s" style="width: 40rem; margin: 1rem;"></label>
+    </div>
+    <div>
+        <label>don't search <input type="text" name="qnot" value="%(query_not)s" style="width: 40rem; margin: 1rem;"></label>
+    </div>
+    <div>
+        <button type="submit">search</button>
+        <label>reverse order <input type="checkbox" name="reverse" %(reverse_checked)s></label>
+    </div>
+</form>
+
+<hr>
+
+<div id="images">
+    %(image_markup)s
+</div>
+
+</body>
+
+</html>
