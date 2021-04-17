@@ -52,6 +52,7 @@ def store_har_image_features(
 
     image_batch = []
     info_batch = []
+    urls_set = set()
     num_exported = 0
     with open(f"{feature_filename}.ndjson", "w") as fp:
         for filename, e, image in iter_image_entries(glob_pattern):
@@ -59,6 +60,10 @@ def store_har_image_features(
                 continue
             if image.size[0] > 3 * image.size[1] or image.size[1] > 3 * image.size[0]:
                 continue
+
+            if e["request"]["url"] in urls_set:
+                continue
+            urls_set.add(e["request"]["url"])
 
             try:
                 image = preprocess(image)
