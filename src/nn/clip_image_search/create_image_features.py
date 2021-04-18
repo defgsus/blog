@@ -1,3 +1,4 @@
+import argparse
 import os
 import glob
 import json
@@ -14,6 +15,18 @@ import clip
 from PIL import Image
 
 from har_research.image_scan import iter_image_entries
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "mode", type=str,
+        help="Type of source 'har', or 'path'"
+    )
+
+    return parser.parse_args()
+
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
