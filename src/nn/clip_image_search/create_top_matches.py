@@ -8,9 +8,13 @@ from tqdm import tqdm
 
 
 # stuff that does not work when requesting images online
+# or which is just ad tracking stuff
 IGNORE_LIST = [
     "aclu.org",
     "styles.redditmedia.com",
+    "i.ebayimg.com",
+    "admixer.net",
+    "s0.2mdn.net",
 ]
 
 def load_image_features(filename: str):

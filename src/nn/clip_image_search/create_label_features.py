@@ -49,13 +49,13 @@ def store_label_features(labels: List[str], label_map: dict, feature_filename: s
 
 def generate_labels():
     things = sorted([
-        ("James Joyce", "James Joyces"),
-        ("Charles Manson", "Charles Mansons"),
-        ("John F. Kennedy", "John F. Kennedies"),
-        ("George Bush", "George Bushes"),
-        ("Barack Obama","Barack Obamas"),
-        ("Donald Trump", "Donald Trumps"),
-        ("Angela Merkel", "Angela Merkels"),
+        #("James Joyce", "James Joyces"),
+        #("Charles Manson", "Charles Mansons"),
+        #("John F. Kennedy", "John F. Kennedies"),
+        #("George Bush", "George Bushes"),
+        #("Barack Obama","Barack Obamas"),
+        #("Donald Trump", "Donald Trumps"),
+        #("Angela Merkel", "Angela Merkels"),
         ("cat", "cats"),
         ("dog", "dogs"),
         ("whale", "whales"),
@@ -78,7 +78,7 @@ def generate_labels():
     adjectives = sorted([
         "red", "green", "blue", "yellow",
         "serious", "happy", "sad",
-        "gigantic", "small",
+        "gigantic", "small and tiny",
         "warm", "cold", "wet",
         "psychedelic", "naked",
     ])
@@ -87,11 +87,11 @@ def generate_labels():
         ("two", 1),
     ])
     prefixes = sorted([
-        "photo of", "painting of", "drawing of", "3d-graphic of",
-        "statue of", "anatomy of", "factual description of",
-        "dream of", "surrealistic version of",
-        "close-up of", "rear-view of", "top-view of",
-        "sphere of",
+        "a photo of", "a painting of", "a sketch of", "a 3d-graphic of",
+        "a statue of", "the anatomy of", "a factual description of",
+        "a dream of", "a surrealistic version of",
+        "a close-up of", "the rear-view of", "the top-view of",
+        "a sphere of", "a rectangle of",
     ])#[:3]
 
     labels = []

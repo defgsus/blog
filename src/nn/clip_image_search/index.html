@@ -7,14 +7,17 @@
 <body>
 
 <h2>CLIP image search</h2>
-<p>On %(num_images)s <e>web images</e>.</p>
+<p>%(num_images)s images</p>
 
 <form>
     <div>
         <label>search <input type="text" name="q" value="%(query)s" style="width: 40rem; margin: 1rem;"></label>
     </div>
     <div>
-        <label>don't search <input type="text" name="qnot" value="%(query_not)s" style="width: 40rem; margin: 1rem;"></label>
+        <label>don't search
+            <input type="number" name="qna" value="%(query_not_amt)s" step="0.1" style="width: 5rem">
+            <input type="text" name="qn" value="%(query_not)s" style="width: 40rem; margin: 1rem;">
+        </label>
     </div>
     <div>
         <button type="submit">search</button>

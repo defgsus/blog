@@ -31,7 +31,7 @@ def load_image_features(filename: str):
                 features.append(line["features"])
                 urls.append((line["f"], line["url"]))
 
-            # if len(urls) > 10000: break
+            #if len(urls) > 10000: break
 
     features = np.asarray(features)
     features /= np.linalg.norm(features, axis=-1, keepdims=True)
@@ -44,9 +44,6 @@ class ImageSearch:
         # setup html stuff
         with open("index.html") as fp:
             self.index_html = fp.read()
-        self.query = ""
-        self.query_not = ""
-        self.reverse_order = False
 
         # load image-refs and features
         self.filename_keys, self.urls, self.image_features = \
@@ -58,20 +55,26 @@ class ImageSearch:
         self.model, self.preprocess = clip.load("ViT-B/32")
 
         # setup query
+        self.query = ""
+        self.query_not = ""
+        self.query_not_amt = .5
+        self.reverse_order = False
+
         self.query_features = None
         self.query_not_features = None
-        self.set_query("", "", False)
+        self.set_query(self.query, self.query_not, self.query_not_amt, self.reverse_order)
 
     def html(self):
         top_url_indices = self.get_top_url_indices()
 
         markup = "\n".join(
-            f"""<div>
-                <img src="img/{file_idx}/{url_idx}" style="max-width: 256px">
+            f"""<div style="display: inline-block;">
+                <img src="img/{file_idx}/{url_idx}" 
+                    style="max-width: 256px; background: #ccc; padding: 1px">
                 <p>
                     <b>{sim:.2f}</b>
                     <b>{self.filename_keys[file_idx].split("/")[-2]}</b>
-                    <code>{self.urls[url_idx][1]}</code>
+                    <!-- <code>{self.urls[url_idx][1]}</code> -->
                 </p>
             </div>"""
             for sim, (file_idx, url_idx) in top_url_indices
@@ -81,13 +84,15 @@ class ImageSearch:
             "num_images": len(self.urls),
             "query": self.query,
             "query_not": self.query_not,
+            "query_not_amt": self.query_not_amt,
             "image_markup": markup,
             "reverse_checked": "checked=\"\"" if self.reverse_order else "",
         }
 
-    def set_query(self, q: str, q_not: str, reverse: bool):
+    def set_query(self, q: str, q_not: str, q_not_amt: float, reverse: bool):
         self.query = q
         self.query_not = q_not
+        self.query_not_amt = q_not_amt
         self.reverse_order = reverse
 
         if self.query:
@@ -107,21 +112,21 @@ class ImageSearch:
 
         self.query_features /= np.linalg.norm(self.query_features, axis=-1, keepdims=True)
 
-    def get_top_url_indices(self):
+    def get_top_url_indices(self, count: int=100):
         sim = (100. * self.image_features @ self.query_features.T).T
 
         if self.query:
             if not self.query_not:
                 sim = sim[0]
             else:
-                sim = sim[0] - sim[1]
+                sim = sim[0] - sim[1] * self.query_not_amt
         else:
             if not self.query_not:
                 sim = sim[0]
             else:
-                sim = -sim[0]
+                sim = -sim[0] * self.query_not_amt
 
-        top_idxs = np.argsort(sim)[::1 if self.reverse_order else -1][:30]
+        top_idxs = np.argsort(sim)[::1 if self.reverse_order else -1][:count]
         top_urls = [(sim[idx], (self.urls[idx][0], idx)) for idx in top_idxs]
         return top_urls
 
@@ -145,10 +150,12 @@ image_search = ImageSearch()
 
 @app.route("/")
 def index():
-    params = urllib.parse.parse_qs(request.query_string)
-    query = (params.get(b"q") or [b""])[0].decode("utf-8")
-    query_not = (params.get(b"qnot") or [b""])[0].decode("utf-8")
-    image_search.set_query(query, query_not, reverse=b"reverse" in params)
+    image_search.set_query(
+        q=request.args.get("q", ""),
+        q_not=request.args.get("qn", ""),
+        q_not_amt=float(request.args.get("qna", image_search.query_not_amt)),
+        reverse="reverse" in request.args,
+    )
     return image_search.html()
 
 
