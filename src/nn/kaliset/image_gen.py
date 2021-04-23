@@ -123,14 +123,53 @@ def test_model1():
     SIZE = 128
     expected_image = get_expected_image(SIZE)
 
-    model = Model1(
-        resolution=SIZE,
-    ).to(device)
+    model = Model1().to(device)
 
-    train_image(model, expected_image, "model1")
+    optimizer = torch.optim.Adadelta(
+        model.parameters(),
+        lr=.5,
+        weight_decay=0.001,
+        #momentum=0.9,
+    )
+
+    try:
+        pos = get_uv(SIZE, 2).reshape(SIZE*SIZE, 2).to(device)
+        expected_output = expected_image.reshape(SIZE*SIZE, 3)
+        for epoch in tqdm(range(10000)):
+
+            #pos = torch.rand(2)
+            #pix_pos = torch.minimum(pos * SIZE, torch.Tensor([SIZE-1, SIZE-1])).to(torch.int)
+            #expected_pixel = expected_image[pix_pos[0], pix_pos[1]]
+
+            output = model(pos)
+
+            image_loss = torch.abs(expected_output - output).sum() / (SIZE * SIZE * 3)
+
+            loss = image_loss
+
+            model.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            if epoch % 150 == 0:
+                print(
+                    "loss", round(float(loss), 3),
+                    "weights", model.weight_info(),
+                    #f"(img {round(float(image_loss), 3)}"
+                    #f" param {round(float(parameter_loss), 3)})"
+                )
+
+    except KeyboardInterrupt:
+        pass
+
+    with torch.no_grad():
+        uv = get_uv(SIZE, 2).to(device)
+        output = model(uv)
+
+    to_image(output).save(f"./model1.png")
 
 
 if __name__ == "__main__":
 
-    test_kaliset()
-    #test_model1()
+    #test_kaliset()
+    test_model1()
