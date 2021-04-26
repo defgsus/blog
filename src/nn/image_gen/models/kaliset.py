@@ -4,20 +4,18 @@ import numpy as np
 import torch
 import torch.nn
 
-import PIL.Image
-
-from tqdm import tqdm
-
-device = "cuda"
+from .base import ImageGenBase
 
 
-class Kaliset(torch.nn.Module):
-
+class Kaliset(ImageGenBase):
+    """
+    The infamous kaliset fractal
+    """
     def __init__(
             self,
-            num_iterations: int = 11,
+            num_iterations: int = 17,
             dimensions: int = 8,
-            zoom: float = .1,
+            zoom: float = .02,
             position: Sequence[float] = (0.5, 0.5, 0.5),
             learn_parameters: bool = True,
             learn_zoom: bool = True,
@@ -33,12 +31,12 @@ class Kaliset(torch.nn.Module):
         self.accum = accum
 
         self.kali_parameters = torch.nn.Parameter(
-            torch.randn((self.num_iterations, self.dimensions)) * .01 + .5,
+            torch.randn((self.num_iterations, self.dimensions)) * .1 + .5,
             requires_grad=learn_parameters,
         )
 
         self.position_parameters = torch.nn.Parameter(
-            self._expand_dims(torch.Tensor(position)),
+            self._expand_dims(torch.Tensor(position)) + torch.randn(dimensions) * 0.01,
             requires_grad=learn_position,
         )
 
@@ -67,7 +65,7 @@ class Kaliset(torch.nn.Module):
         space = position * self.zoom_parameter + self.position_parameters
 
         if self.accum == "avg":
-            accum = torch.zeros(space.shape).to(device)
+            accum = torch.zeros(space.shape).to(self.device)
             for i in range(self.num_iterations):
                 dot_p = torch.sum(space * space, dim=-1, keepdim=True)
                 space = torch.abs(space) / (.00001 + dot_p)

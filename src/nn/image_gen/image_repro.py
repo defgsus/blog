@@ -1,5 +1,6 @@
 import argparse
 import importlib
+import time
 from typing import Union, Sequence
 
 import numpy as np
@@ -9,49 +10,21 @@ import torch.nn
 import PIL.Image
 from tqdm import tqdm
 
-
-def get_uv(shape: Sequence[int], dimensions: int) -> torch.Tensor:
-    """
-    Create a 2d matrix of vectors of size `dimensions`,
-    where first 2 dims are filled with numbers in the range [-1, 1]
-    according to their positions.
-    """
-    space = torch.zeros((shape[0], shape[1], dimensions))
-    for x in range(shape[1]):
-        for y in range(shape[0]):
-            space[y, x] = torch.Tensor(
-                [x / (shape[1]-1), y / (shape[0]-1)] + [.5] * (dimensions - 2)
-            )
-
-    return (space - .5) * 2.
+try:
+    from .models.base import ImageGenBase, FixedBase, get_uv, to_image
+except ImportError:
+    from models.base import ImageGenBase, FixedBase, get_uv, to_image
 
 
 device = "cuda"
 
 
-def to_image(tensor: Union[np.ndarray, torch.Tensor]) -> PIL.Image:
-    """
-    Convert [H, W, RGB] matrix to Pillow Image.
-    Color-channels are clipped to the range [0, 1]
-    """
-    if hasattr(tensor, "detach"):
-        tensor = tensor.detach()
-    if hasattr(tensor, "cpu"):
-        tensor = tensor.cpu()
-    if hasattr(tensor, "numpy"):
-        tensor = tensor.numpy()
-
-    img = np.clip(tensor, 0, 1) * 255
-    img = img.astype(np.uint8)
-    return PIL.Image.fromarray(img)
-
-
 def get_expected_image(shape: Sequence[int]) -> torch.Tensor:
     image = PIL.Image.open(
-        "/home/bergi/Pictures/bob/Bobdobbs.png"
+        #"/home/bergi/Pictures/bob/Bobdobbs.png"
         #"/home/bergi/Pictures/__diverse/Annual-Sunflower.jpg"
         #"/home/bergi/Pictures/__diverse/Murdock.jpg"
-        #"/home/bergi/Pictures/__diverse/honecker.jpg"
+        "/home/bergi/Pictures/__diverse/honecker.jpg"
         #"/home/bergi/Pictures/__diverse/World_Wildlife_Fund_Logo.gif"
     )
     expected_image = PIL.Image.new("RGB", image.size)
@@ -62,20 +35,10 @@ def get_expected_image(shape: Sequence[int]) -> torch.Tensor:
     return expected_image
 
 
-def render_image(
-        model: torch.nn.Module,
-        shape: Sequence,
-) -> torch.Tensor:
-    with torch.no_grad():
-        uv = get_uv(shape, 2).reshape(-1, 2).to(device)
-        output = model(uv).reshape(shape[0], shape[1], 3)
-
-    return output
-
-
 def train_image_reproduce(
-        model: torch.nn.Module,
+        model: ImageGenBase,
         expected_image: torch.Tensor,
+        model_shape: Sequence[int] = (128, 128)
 ):
     """
     Trains the model to reproduce the image.
@@ -94,22 +57,25 @@ def train_image_reproduce(
     )
 
     try:
-        expected_output = expected_image.reshape(-1, 3)
-        input_positions = get_uv(expected_image.shape, 2).reshape(-1, 2).to(device)
-        print("training batch:")
-        print("  input:", input_positions.shape)
+        expected_output = expected_image#.reshape(-1, 3)
+        print("training:")
         print("  output:", expected_output.shape)
+        print("  trainable params:", sum(
+            sum(len(p) for p in g["params"])
+            for g in optimizer.param_groups
+        ))
 
         loss_function = (
             #torch.nn.L1Loss()
             torch.nn.MSELoss()
             #torch.nn.SmoothL1Loss()
         )
+        last_print_time = time.time()
         for epoch in tqdm(range(10000)):
             #for g in optimizer.param_groups:
             #    g['lr'] = epoch / 10000.
 
-            output = model(input_positions)
+            output = model.render_tensor(model_shape)
 
             image_loss = loss_function(output, expected_output)
 
@@ -119,7 +85,9 @@ def train_image_reproduce(
             loss.backward()
             optimizer.step()
 
-            if epoch % 150 == 0:
+            cur_time = time.time()
+            if epoch % 150 == 0 or cur_time - last_print_time > 3:
+                last_print_time = cur_time
                 print(
                     "loss", round(float(loss), 3),
                     "weights", model.weight_info() if hasattr(model, "weight_info") else "-",
@@ -132,7 +100,7 @@ def train_image_reproduce(
 
 
 def train_and_render(
-        model: torch.nn.Module,
+        model: ImageGenBase,
         expected_image: torch.Tensor,
         output_name: str,
 ):
@@ -142,8 +110,7 @@ def train_and_render(
 
     filename = f"./img/{output_name}.png"
     print(f"writing", filename)
-    image = render_image(model, (512, 512))
-    to_image(image).save(filename)
+    model.render_image((512, 512)).save(filename)
 
 
 def load_model(path: str) -> torch.nn.Module:
@@ -162,7 +129,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "model", type=str,
-        help="dotted path to torch.nn.Module, e.g 'file.Model'",
+        help="dotted path to torch.nn.Module, e.g 'package.file.Model'",
     )
 
     args = parser.parse_args()
@@ -177,5 +144,5 @@ if __name__ == "__main__":
     train_and_render(
         model=model,
         expected_image=expected_image,
-        output_name=args.model.replace(".", "-"),
+        output_name=args.model.split(".")[-1],
     )
