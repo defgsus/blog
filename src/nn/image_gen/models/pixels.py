@@ -32,8 +32,8 @@ class FixedPixels(FixedBase):
             #load_image("/home/bergi/Pictures/__diverse/Annual-Sunflower.jpg", resolution)
             torch.rand((resolution[1], resolution[0], 3))
         )
-        self.amp = torch.nn.Parameter(torch.rand(3) * .2 + .5)
-        self.bias = torch.nn.Parameter(torch.rand(3) * .1)
+        self.amp = torch.nn.Parameter(torch.rand(3) * .01 + .99)
+        self.bias = torch.nn.Parameter(torch.rand(3) * .01)
         self.gauss_blur = GaussianBlur(3, .35)
 
     def blur(self):

@@ -13,9 +13,9 @@ import PIL.Image
 from tqdm import tqdm
 
 try:
-    from .models.base import ImageGenBase, get_uv, to_image
+    from .models.base import ImageGenBase, FixedBase, get_uv, to_image
 except ImportError:
-    from models.base import ImageGenBase, get_uv, to_image
+    from models.base import ImageGenBase, FixedBase, get_uv, to_image
 
 
 device = "cuda"
@@ -54,15 +54,22 @@ def render_image_gen(
     """
     input_positions = get_uv((resolution[1], resolution[0]), 2).reshape(-1, 2).to(device)
 
+    model_kwargs = dict()
+    if issubclass(Model, FixedBase):
+        model_kwargs["resolution"] = resolution
+
     images = []
     for epoch in tqdm(range(number[0] * number[1])):
 
-        model = Model().to(device)
+        model = Model(**model_kwargs).to(device)
         if epoch == 0:
             print(Model.__name__, "params:", sum(len(p.flatten()) for p in model.parameters()))
 
         with torch.no_grad():
-            output = model(input_positions)
+            if issubclass(Model, FixedBase):
+                output = model()
+            else:
+                output = model(input_positions)
 
             # convert to torchvision-style [3, H, W]
             image = output.reshape((resolution[1], resolution[0], 3)).permute(2, 0, 1)
