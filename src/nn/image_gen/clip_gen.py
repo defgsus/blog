@@ -57,7 +57,7 @@ class Pixels(torch.nn.Module):
 def train_image_clip(
         clip_model: torch.nn.Module,
         text: str,
-        text_detail: Optional[str] = None,
+        text_detail: Optional[Sequence[str]] = None,
         learnrate_scale: float = 1.,
         learnrate_scale_details: float = 1.,
         resolution: Sequence = (512, 512),
@@ -68,10 +68,14 @@ def train_image_clip(
     # --- generate desired features ---
 
     if not text_detail:
-        text_detail = text
+        text_detail = []
+
+    text_detail_matches = {
+        i: 0 for i, t in enumerate(text_detail)
+    }
 
     with torch.no_grad():
-        text_tokens = clip.tokenize([text, text_detail]).to(device)
+        text_tokens = clip.tokenize([text] + list(text_detail)).to(device)
         expected_features = clip_model.encode_text(text_tokens)
 
     expected_features /= expected_features.norm(dim=-1, keepdim=True)
@@ -85,7 +89,10 @@ def train_image_clip(
     full_transform = torch.nn.Sequential(
         RandomAffine(
             degrees=0,
-            translate=(1. / resolution[0], 1. / resolution[1]),
+            translate=(
+                max(1, resolution[0] - clip_resolution[0]) / resolution[0],
+                max(1, resolution[1] - clip_resolution[1]) / resolution[1],
+            ),
         ),
         Resize(clip_resolution),
         RandomAffine(
@@ -137,7 +144,7 @@ def train_image_clip(
         for epoch in tqdm(range(num_epochs)):
 
             detail_mode = epoch % 2 == 1
-            final_phase = epoch >= num_epochs * 0.99
+            final_phase = epoch >= num_epochs * 0.97
 
             # --- update learnrate ---
 
@@ -165,10 +172,12 @@ def train_image_clip(
 
             similarity = 100. * expected_features @ image_features.T
 
-            if detail_mode:
-                expected_loss_features = expected_features[:1, :]
+            if not detail_mode:
+                expected_loss_features = expected_features[0].unsqueeze(0)
             else:
-                expected_loss_features = expected_features[1:, :]
+                best_match_idx = torch.argmax(similarity[1:])
+                expected_loss_features = expected_features[best_match_idx+1].unsqueeze(0)
+                text_detail_matches[int(best_match_idx)] += 1
 
             loss = 100. * loss_function(image_features, expected_loss_features)
 
@@ -194,7 +203,11 @@ def train_image_clip(
                 print(
                     "lr", round(actual_learnrate, 5),
                     "loss", round(float(loss), 3),
-                    "sim", [round(float(s), 3) for s in similarity],
+                    "sim", round(float(similarity[0]), 3),
+                )
+                for i, text in enumerate(text_detail):
+                    s = float(similarity[i+1])
+                    print(f"{text[:30]:30} sim {s:.3f} matches {text_detail_matches[i]:4}"
                 )
 
             if epoch == 30 or cur_time - last_snapshot_time > 20:
@@ -270,6 +283,10 @@ if __name__ == "__main__":
         "-lrd", "--learnrate-detail", type=float, default=None,
         help="Learnrate scaling factor for details, defaults to --learnrate",
     )
+    parser.add_argument(
+        "-e", "--epochs", type=int, default=1000,
+        help="Number of training steps, default = 1000",
+    )
 
     args = parser.parse_args()
 
@@ -279,6 +296,7 @@ if __name__ == "__main__":
         clip_model=clip_model,
         learnrate_scale=args.learnrate,
         learnrate_scale_details=args.learnrate_detail if args.learnrate_detail is not None else args.learnrate,
+        num_epochs=args.epochs,
         text=(
             #"a white wall"
             #"the face of a happy cat"
@@ -306,6 +324,12 @@ if __name__ == "__main__":
             #None
         ),
         text_detail=(
-            #"Sky and landscape"
+            "A photo of a wizard standing on a rock and casting a secret spell.",
+            #"sky",
+            "rocks",
+            "Some giant birds fly by in amazement.",
+            "rocky surface with a blue sky on top",
+            "a photo of a wizard",
+            "a photo of the face of a wizard",
         )
     )
