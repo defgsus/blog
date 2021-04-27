@@ -2,12 +2,12 @@ import traceback
 import argparse
 import importlib
 import time
-from typing import Union, Sequence
+from typing import Union, Sequence, Type
 
 import numpy as np
 import torch
 import torch.nn
-from torchvision.transforms import Resize
+from torchvision.transforms import Resize, RandomAffine
 import clip
 
 import PIL.Image
@@ -25,22 +25,30 @@ device = "cuda"
 
 
 def train_image_clip(
-        model: ImageGenBase,
+        Model: Type[ImageGenBase],
         clip_model: torch.nn.Module,
         expected_features: torch.Tensor,
         learnrate_scale: float = 1.,
-        model_shape: Sequence = (48, 48),
+        model_shape: Sequence = (224, 224),
+        randomize_transform: bool = True,
 ):
     """
     Trains the model to reproduce the image.
-    :param model:
-        torch.nn.Model that has
+    :param Model:
+        class of torch.nn.Model that has
             - 2 inputs: position [-1, 1]
             - 3 outputs: color channels [0, 1]
     :param expected_features:
         A 512 dim CLIP feature vector
     """
     expected_features /= expected_features.norm(dim=-1, keepdim=True)
+
+    print("loading model")
+    if issubclass(Model, FixedBase):
+        model = Model(resolution=model_shape).to(device)
+    else:
+        model = Model().to(device)
+    print("  params:", sum(len(p.flatten()) for p in model.parameters()))
 
     learnrate = 10.
     optimizer = torch.optim.Adadelta(
@@ -64,6 +72,13 @@ def train_image_clip(
     if model_shape is None:
         model_shape = clip_shape
 
+    if randomize_transform:
+        randomize_transform = RandomAffine(
+            degrees=10,
+            #translate=(.0, .1),
+            #scale=(0.9, 1.),
+        )
+
     try:
 
         print("training:")
@@ -84,16 +99,23 @@ def train_image_clip(
         last_snapshot_time = time.time()
         num_iter = 1000
         for epoch in tqdm(range(num_iter)):
-            actual_learnrate = learnrate * min(1, epoch / 30. + .01) * (1. - 0.7 * epoch / num_iter)
+            actual_learnrate = learnrate * min(1, epoch / 30. + .01) * (1. - 0.95 * epoch / num_iter)
             for g in optimizer.param_groups:
                 g['lr'] = actual_learnrate
 
             output = model.render_tensor(model_shape)
-            output = output + .1 * torch.randn(output.shape).to(device)
-
             output = output.permute(2, 0, 1)
+
+            #if randomize_transform:
+            #    output = randomize_transform(output)
+
             if model_shape != clip_shape:
                 output = Resize(clip_shape)(output)
+
+            output = output + .1 * torch.randn(output.shape).to(device)
+
+            if randomize_transform:
+                output = randomize_transform(output)
 
             image_features = clip_model.encode_image(output.unsqueeze(0))
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
@@ -109,6 +131,8 @@ def train_image_clip(
             loss.backward()
             optimizer.step()
 
+            model.train_step(epoch)
+
             cur_time = time.time()
             if epoch % 150 == 0 or cur_time - last_print_time > 3:
                 last_print_time = cur_time
@@ -122,19 +146,25 @@ def train_image_clip(
                     #f" param {round(float(parameter_loss), 3)})"
                 )
 
-            if epoch % 200 == 0 or cur_time - last_snapshot_time > 30:
+            if epoch % 100 == 0 or cur_time - last_snapshot_time > 30:
                 last_snapshot_time = cur_time
                 print("writing snapshot.png")
-                model.render_image(clip_shape).save("snapshot.png")
+                if model_shape[0] > clip_shape[0]:
+                    export_shape = model_shape
+                else:
+                    export_shape = clip_shape
+                model.render_image(export_shape).save("snapshot.png")
 
     except KeyboardInterrupt:
         pass
     except RuntimeError:
         traceback.print_exc()
 
+    return model
+
 
 def train_and_render(
-        model: ImageGenBase,
+        Model: Type[ImageGenBase],
         output_name: str,
         text: str = None,
         image_filename: str = None,
@@ -161,8 +191,8 @@ def train_and_render(
     print("searching for these CLIP-features",
           (clip_features * 100).round().to(np.int))
 
-    train_image_clip(
-        model=model,
+    model = train_image_clip(
+        Model=Model,
         clip_model=clip_model,
         expected_features=clip_features,
         learnrate_scale=learnrate_scale,
@@ -170,6 +200,7 @@ def train_and_render(
 
     filename = f"./img/{output_name}.png"
     print(f"writing", filename)
+
     model.render_image((512, 512)).save(filename)
 
 
@@ -181,7 +212,8 @@ def load_model(path: str) -> torch.nn.Module:
     module = importlib.import_module(module_name)
 
     Model = getattr(module, model_name)
-    return Model().to(device)
+    assert issubclass(Model, ImageGenBase)
+    return Model
 
 
 if __name__ == "__main__":
@@ -198,15 +230,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("loading model")
-    model = load_model(args.model)
-    print("  params:", sum(len(p.flatten()) for p in model.parameters()))
+    Model = load_model(args.model)
 
     output_name = args.model.split(".")[-1]
     output_name = f"clip-{output_name}"
 
     train_and_render(
-        model=model,
+        Model=Model,
         learnrate_scale=args.learnrate,
         text=(
             #"a white wall"
@@ -216,6 +246,7 @@ if __name__ == "__main__":
             #"a street full of cars"
             #"the american flag"
             #"a blue sky"
+            #"porn"
             #"a fish underwater"
             #"the word love written on a wall"
             #"the letter f"
@@ -223,16 +254,18 @@ if __name__ == "__main__":
             #"a drawing of Bob Dobbs"
             #"a photo of a sunflower"
             #"a photo of a rose"
+            "a photo of a v2 rocket standing besides a tree"
             #None
         ),
         image_filename=(
             #None
+            #"/home/bergi/Pictures/bob/Bobdobbs.png"
             #"/home/bergi/Pictures/__diverse/Annual-Sunflower.jpg"
             #"/home/bergi/Pictures/__diverse/MANSON14.JPG"
             #"/home/bergi/Pictures/__diverse/v2_at_peenemuende-usedom.jpg"
             #"/home/bergi/Pictures/__diverse/1139662681_f.jpg"  # Cartman
             #"/home/bergi/Pictures/__diverse/superman-superman-returns-1206769.jpg"
-            "/home/bergi/Pictures/__diverse/marxsE80728FED671E8226833AF91A8B67.jpg"
+            #"/home/bergi/Pictures/__diverse/marxsE80728FED671E8226833AF91A8B67.jpg"
         ),
         output_name=output_name,
     )

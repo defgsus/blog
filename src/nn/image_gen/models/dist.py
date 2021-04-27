@@ -64,8 +64,7 @@ class CircleGen(ShadertoyBase):
         # shape is now num_in x num_feat
 
         # convert distance to shaded circle
-        radii = torch.clamp(self.radii, self.min_radius, self.max_radius)
-        radii = radii.repeat(n_in, 1)
+        radii = torch.clamp(self.radii.repeat(n_in, 1), self.min_radius, self.max_radius)
         amt = (radii - dist) / radii
 
         gradients = torch.clamp_min(self.gradients.repeat(n_in, 1), self.min_gradient)

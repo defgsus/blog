@@ -1,4 +1,4 @@
-import random
+import math
 from typing import Union, Sequence
 
 import PIL.Image
@@ -6,9 +6,10 @@ import numpy as np
 import torch
 import torch.nn
 import torch.nn.functional as F
-from torchvision.transforms import Resize
+from torchvision.transforms import Resize, GaussianBlur
 
 from .base import FixedBase
+from .util import hsv_to_rgb
 
 
 def load_image(filename: str, resolution: Sequence):
@@ -24,34 +25,35 @@ class FixedPixels(FixedBase):
 
     def __init__(
             self,
-            resolution: Sequence[int] = (48, 48)
+            resolution: Sequence[int]
     ):
         super().__init__(resolution)
         self.pixels = torch.nn.Parameter(
             #load_image("/home/bergi/Pictures/__diverse/Annual-Sunflower.jpg", resolution)
-            torch.rand((resolution[1], resolution[0], 3)) * .1 + .4
+            torch.rand((resolution[1], resolution[0], 3))
         )
         self.amp = torch.nn.Parameter(torch.rand(3) * .2 + .5)
         self.bias = torch.nn.Parameter(torch.rand(3) * .1)
+        self.gauss_blur = GaussianBlur(5, .35)
+
+    def blur(self):
+        with torch.no_grad():
+            pixels = self.pixels.permute(2, 0, 1)
+            pixels = self.gauss_blur(pixels)
+            self.pixels[:, :, :] = pixels.permute(1, 2, 0)
 
     def forward(self):
         return torch.clamp(
             self.pixels * self.amp + self.bias, 0, 1
         )
 
-        pixels = self.pixels
+    def train_step(self, epoch: int):
+        self.blur()
 
-        if 1:  # shift offset randomly
-            off_x = random.randint(0, 100)
-            off_y = random.randint(0, 100)
-            #print(self.pixels.shape)
-            if off_x:
-                pixels = torch.cat((self.pixels[:,-off_x:,:], self.pixels[:,off_x:,:]), dim=1)
-            if off_y:
-                pixels = torch.cat((self.pixels[-off_y:,:,:], self.pixels[off_y:,:,:]), dim=0)
 
-            #pixels = pixels * .9 + .1 * self.pixels
+class FixedPixelsHSV(FixedPixels):
 
-        #print(pixels.shape)
-        pixels = pixels + torch.rand((self.resolution[1], self.resolution[0], 3)).to(pixels.device) * .2
-        return pixels * self.amp + self.offset
+    def forward(self):
+        hsv = super().forward().permute(2, 0, 1)
+        rgb = hsv_to_rgb(hsv)
+        return rgb.permute(1, 2, 0)

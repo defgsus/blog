@@ -4,10 +4,10 @@ import numpy as np
 import torch
 import torch.nn
 
-from .base import ImageGenBase
+from .base import ShadertoyBase
 
 
-class Kaliset(ImageGenBase):
+class Kaliset(ShadertoyBase):
     """
     The infamous kaliset fractal
     """

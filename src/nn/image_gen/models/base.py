@@ -29,6 +29,9 @@ class ImageGenBase(torch.nn.Module):
     def render_image(self, resolution: Sequence) -> PIL.Image.Image:
         return to_image(self.render_tensor(resolution))
 
+    def train_step(self, epoch: int):
+        pass
+
 
 class ShadertoyBase(torch.nn.Module):
     """
