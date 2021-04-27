@@ -7,7 +7,7 @@ from typing import Union, Sequence, Type
 import numpy as np
 import torch
 import torch.nn
-from torchvision.transforms import Resize, RandomAffine
+from torchvision.transforms import Resize, RandomAffine, GaussianBlur
 import clip
 
 import PIL.Image
@@ -41,6 +41,8 @@ def train_image_clip(
     :param expected_features:
         A 512 dim CLIP feature vector
     """
+    #expected_features = torch.ones((1, 512)).to(torch.float16).to(device)
+
     expected_features /= expected_features.norm(dim=-1, keepdim=True)
 
     print("loading model")
@@ -73,11 +75,15 @@ def train_image_clip(
         model_shape = clip_shape
 
     if randomize_transform:
-        randomize_transform = RandomAffine(
-            degrees=10,
-            #translate=(.0, .1),
-            #scale=(0.9, 1.),
+        randomize_transform = torch.nn.Sequential(
+            RandomAffine(
+                degrees=25,
+                #translate=(.0, 2. / clip_shape[0]),
+                #scale=(0.9, 1.),
+            ),
+            GaussianBlur(127, .8),
         )
+        #randomize_transform = None
 
     try:
 
@@ -97,25 +103,26 @@ def train_image_clip(
         )
         last_print_time = time.time()
         last_snapshot_time = time.time()
-        num_iter = 1000
+        num_iter = 1000 #+ int(learnrate_scale * 50)
         for epoch in tqdm(range(num_iter)):
-            actual_learnrate = learnrate * min(1, epoch / 30. + .01) * (1. - 0.95 * epoch / num_iter)
+            epoch_f = np.power(epoch / num_iter, .5)
+            actual_learnrate = learnrate * min(1, epoch / 30. + .01) * (1. - 0.98 * epoch_f)
             for g in optimizer.param_groups:
                 g['lr'] = actual_learnrate
 
             output = model.render_tensor(model_shape)
             output = output.permute(2, 0, 1)
 
-            #if randomize_transform:
-            #    output = randomize_transform(output)
+            if randomize_transform:
+                output = randomize_transform(output)
 
             if model_shape != clip_shape:
                 output = Resize(clip_shape)(output)
 
             output = output + .1 * torch.randn(output.shape).to(device)
 
-            if randomize_transform:
-                output = randomize_transform(output)
+            #if randomize_transform:
+            #    output = randomize_transform(output)
 
             image_features = clip_model.encode_image(output.unsqueeze(0))
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
@@ -200,8 +207,11 @@ def train_and_render(
 
     filename = f"./img/{output_name}.png"
     print(f"writing", filename)
-
-    model.render_image((512, 512)).save(filename)
+    if isinstance(model, FixedBase):
+        res = (224, 224)
+    else:
+        res = (512, 512)
+    model.render_image(res).save(filename)
 
 
 def load_model(path: str) -> torch.nn.Module:
@@ -254,7 +264,14 @@ if __name__ == "__main__":
             #"a drawing of Bob Dobbs"
             #"a photo of a sunflower"
             #"a photo of a rose"
-            "a photo of a v2 rocket standing besides a tree"
+            #"a photo of a v2 rocket standing on the ground on a meadow.
+            #"Trees are visible in the background. "
+            #"The rocket is on the edge of the photo"
+            #"A photo of a beautiful meadow. The sun is shining and two tentacles are passing by."
+            #" Skyscrapers are visible in the background."
+            #" The sky is blue and full of flying tentacles."
+            "A wizard standing on a rock and casting a secret spell."
+            " Some giant birds fly by in amazement."
             #None
         ),
         image_filename=(
@@ -263,9 +280,13 @@ if __name__ == "__main__":
             #"/home/bergi/Pictures/__diverse/Annual-Sunflower.jpg"
             #"/home/bergi/Pictures/__diverse/MANSON14.JPG"
             #"/home/bergi/Pictures/__diverse/v2_at_peenemuende-usedom.jpg"
+            #"/home/bergi/Pictures/__diverse/V2book_2005_html_m4158b2e2.jpg"
             #"/home/bergi/Pictures/__diverse/1139662681_f.jpg"  # Cartman
+            #"/home/bergi/Pictures/__diverse/young_tony_blair.jpg"
             #"/home/bergi/Pictures/__diverse/superman-superman-returns-1206769.jpg"
             #"/home/bergi/Pictures/__diverse/marxsE80728FED671E8226833AF91A8B67.jpg"
+            #"/home/bergi/Pictures/__diverse/EuropeAfricaNato.jpg" # map
+            #"/home/bergi/Pictures/__diverse/pope_bush_narrowweb__300x433,0.jpg"
         ),
         output_name=output_name,
     )

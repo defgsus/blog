@@ -34,7 +34,7 @@ class FixedPixels(FixedBase):
         )
         self.amp = torch.nn.Parameter(torch.rand(3) * .2 + .5)
         self.bias = torch.nn.Parameter(torch.rand(3) * .1)
-        self.gauss_blur = GaussianBlur(5, .35)
+        self.gauss_blur = GaussianBlur(3, .35)
 
     def blur(self):
         with torch.no_grad():
