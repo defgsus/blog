@@ -8,7 +8,7 @@ from typing import Union, Sequence, Type, Tuple, Optional
 import numpy as np
 import torch
 import torch.nn
-from torchvision.transforms import Resize, RandomAffine, GaussianBlur, RandomCrop
+from torchvision.transforms import Resize, RandomAffine, GaussianBlur, RandomCrop, RandomPerspective
 from torchvision.transforms.functional import gaussian_blur
 from torchvision.utils import save_image
 import clip
@@ -22,19 +22,76 @@ torch.autograd.set_detect_anomaly(True)
 device = "cuda"
 
 
-class Pixels(torch.nn.Module):
+class PixelsBase(torch.nn.Module):
 
     def __init__(
             self,
-            resolution: Sequence[int],
-            hsv: bool = True,
+            resolution: Sequence[int]
     ):
         super().__init__()
         self.resolution = resolution
-        self.hsv = hsv
+
+    def save_image(self, filename: str):
+        save_image(self.forward(), filename)
+
+    def info_str(self) -> str:
+        raise NotImplementedError
+
+
+class PixelsRGB(PixelsBase):
+
+    def __init__(
+            self,
+            resolution: Sequence[int]
+    ):
+        super().__init__(resolution)
         self.pixels = torch.nn.Parameter(
             torch.rand((3, resolution[1], resolution[0])) * .05 + .475
         )
+        self.saturation = torch.nn.Parameter(
+            torch.rand((1, resolution[1], resolution[0])) * .05 + .475
+        )
+
+    def info_str(self) -> str:
+        return f"mean rgbs " \
+               f"{float(self.pixels[0].mean()):.3f}, " \
+               f"{float(self.pixels[1].mean()):.3f}, " \
+               f"{float(self.pixels[2].mean()):.3f}, " \
+               f"{float(self.saturation[0].mean()):.3f}"
+
+    def forward(self):
+        pixels = self.pixels
+        pixel_means = pixels.mean(0).repeat(3, 1, 1)
+        pixels = pixels * self.saturation + (1. - self.saturation) * pixel_means
+        return torch.clip(pixels, 0, 1)
+
+    def blur(
+            self,
+            kernel_size: int = 3,
+            sigma: Union[float, Tuple[float]] = 0.35,
+    ):
+        with torch.no_grad():
+            pixels = self.pixels
+            blurred_pixels = gaussian_blur(pixels, [kernel_size, kernel_size], [sigma, sigma])
+            self.pixels[...] = blurred_pixels
+
+
+class PixelsHSV(PixelsBase):
+
+    def __init__(
+            self,
+            resolution: Sequence[int]
+    ):
+        super().__init__(resolution)
+        self.pixels = torch.nn.Parameter(
+            torch.rand((3, resolution[1], resolution[0])) * .05 + .475
+        )
+
+    def info_str(self) -> str:
+        return f"mean hsv " \
+               f"{float(self.pixels[0].mean()):.3f}, " \
+               f"{float(self.pixels[1].mean()):.3f}, " \
+               f"{float(self.pixels[2].mean()):.3f}, "
 
     def forward(self):
         pixels = self.pixels
@@ -49,17 +106,12 @@ class Pixels(torch.nn.Module):
     ):
         with torch.no_grad():
             pixels = self.pixels
-            if self.hsv:
-                pixels = hsv_to_rgb(pixels)
+            #    pixels = hsv_to_rgb(pixels)
             blurred_pixels = gaussian_blur(pixels, [kernel_size, kernel_size], [sigma, sigma])
-            blurred_pixels[:1, ...] = gaussian_blur(pixels[:1, ...], [kernel_size, kernel_size], [.2, .2])
-            if self.hsv:
-                blurred_pixels = rgb_to_hsv(blurred_pixels)
-                # blurred_pixels = torch.nan_to_num(blurred_pixels)
+            blurred_pixels[:1, ...] = gaussian_blur(pixels[:1, ...], [kernel_size, kernel_size], [.1, .1])
+            #blurred_pixels = rgb_to_hsv(torch.clamp(blurred_pixels, 0, 1))
+            # blurred_pixels = torch.nan_to_num(blurred_pixels)
             self.pixels[...] = blurred_pixels
-
-    def save_image(self, filename: str):
-        save_image(self.forward(), filename)
 
 
 def train_image_clip(
@@ -91,34 +143,37 @@ def train_image_clip(
 
     # --- setup pixel area ---
 
-    pixel_model = Pixels(resolution).to(device)
+    pixel_model = PixelsRGB(resolution).to(device)
 
     # --- setup transformations ---
 
     full_transform = torch.nn.Sequential(
         RandomAffine(
-            degrees=0,
+            degrees=20,
+            #scale=[.25, 1.],
             translate=(
                 resolution[0] / clip_resolution[0] / resolution[0],
                 resolution[1] / clip_resolution[1] / resolution[1],
             ),
         ),
+        #RandomPerspective(distortion_scale=1., p=1.),
         Resize(clip_resolution),
-        RandomAffine(
-            degrees=25,
-        ),
-        GaussianBlur(127, .8),
+        RandomCrop(size=clip_resolution),
+        #RandomAffine(
+        #    degrees=25,
+        #),
+        GaussianBlur(33, .8),
     )
 
     detail_transform = torch.nn.Sequential(
         RandomAffine(
-            degrees=25,
-            scale=[.5, 1.],
+            degrees=20.,
+            scale=[.25, 1.],
+            #shear=2.,
         ),
-        RandomCrop(
-            size=clip_resolution,
-        ),
-        #GaussianBlur(127, .8),
+        #RandomPerspective(distortion_scale=1., p=1.),
+        RandomCrop(size=clip_resolution),
+        #GaussianBlur(101, .8),
     )
 
     # --- setup optimizer ---
@@ -155,7 +210,12 @@ def train_image_clip(
         last_snapshot_time = time.time()
         for epoch in tqdm(range(num_epochs)):
 
-            detail_mode = detail_batch_size and epoch % 2 == 1
+            allow_detail_mode = True#detail_batch_size > 0 and epoch > num_epochs * .2
+            detail_mode = epoch % 2 == 1 and allow_detail_mode
+            #XXX
+            if epoch > num_epochs * .0:
+                detail_mode = True
+
             if detail_mode:
                 num_detail_frames += 1
 
@@ -200,38 +260,56 @@ def train_image_clip(
                 loss = 100. * loss_function(image_features, loss_features)
                 main_similarity = float(similarity[0][0])
             else:
-                loss_features = []
-                for i in range(detail_batch_size):
+                if 1:
+                    loss_features = []
+                    loss_feature_weights = []
+                    for i in range(detail_batch_size):
 
-                    if len(text_detail) > 1:
-                        # choose detail-feature randomly by probability of match
-                        if random.uniform(0, 1) >= .6:
-                            best_match_indices = torch.argsort(similarity[i][1:], descending=True)
-                            best_match_idx = len(best_match_indices) - 1
-                            for j in range(2):
-                                if not best_match_idx:
-                                    break
-                                best_match_idx = random.randint(0, best_match_idx)
-                            best_match_idx = best_match_indices[best_match_idx]
+                        if len(text_detail) > 1:
+                            # choose detail-feature randomly by probability of match
+                            if random.uniform(0, 1) >= .6:
+                                best_match_indices = torch.argsort(similarity[i][1:], descending=True)
+                                best_match_idx = len(best_match_indices) - 1
+                                for j in range(2):
+                                    if not best_match_idx:
+                                        break
+                                    best_match_idx = random.randint(0, best_match_idx)
+                                best_match_idx = best_match_indices[best_match_idx]
 
-                        # or choose best match
+                            # or choose best match
+                            else:
+                                best_match_idx = torch.argmax(similarity[i][1:])
                         else:
-                            best_match_idx = torch.argmax(similarity[i][1:])
-                    else:
-                        best_match_idx = 0
+                            best_match_idx = 0
 
-                    text_detail_matches[int(best_match_idx)] += 1
+                        text_detail_matches[int(best_match_idx)] += 1
 
-                    loss_features.append(
-                        expected_features[best_match_idx+1].unsqueeze(0)
+                        loss_features.append(
+                            expected_features[best_match_idx+1].unsqueeze(0)
+                        )
+                        max_used = max(text_detail_matches.values())
+                        loss_feature_weights.append(
+                            max_used - text_detail_matches[int(best_match_idx)]
+                        )
+
+                    loss_features = torch.cat(loss_features, dim=0)
+                    # raise impact by lower overall use
+                    loss_feature_weights = torch.Tensor(loss_feature_weights).to(device)
+                    loss_feature_weights = 1. + .1 * loss_feature_weights / (.0001 + loss_feature_weights.max())
+                    loss_feature_weights = loss_feature_weights.reshape(-1, 1)
+
+                    loss = 100. * loss_function(
+                        image_features * loss_feature_weights,
+                        loss_features * loss_feature_weights,
                     )
-                loss_features = torch.cat(loss_features, dim=0)
 
-                loss = 100. * loss_function(image_features, loss_features)
+                    #if len(text_detail) > 1:
+                    #    std_of_similarity = similarity[:, 1:].mean(0).std()
+                    #    loss = loss + std_of_similarity
 
-                #if len(text_detail) > 1:
-                #    std_of_similarity = similarity[:, 1:].mean(0).std()
-                #    loss = loss + std_of_similarity
+            # reduce mean saturation
+            if isinstance(pixel_model, PixelsRGB):
+                loss = loss + .01 * torch.abs(pixel_model.saturation[0].mean() - .2)
 
             # compress batch
             similarity = similarity.mean(0)
@@ -242,8 +320,9 @@ def train_image_clip(
 
             # --- post-proc image --
 
-            blur_amount = .3 + .1 * learnrate_factor
-            pixel_model.blur(sigma=blur_amount)
+            blur_amount = .28 + .07 * learnrate_factor
+            if epoch % 3 == 0:
+                pixel_model.blur(sigma=blur_amount)
 
             # --- print info ---
 
@@ -254,17 +333,18 @@ def train_image_clip(
                     "lr", round(actual_learnrate, 5),
                     "loss", round(float(loss), 3),
                     "blur", round(blur_amount, 3),
-                    "mean", [round(float(m), 3) for m in current_pixels.reshape(3, -1).mean(1)],
+                    "img", pixel_model.info_str(),
                 )
                 print(f"{('main: ' + text_main)[:40]:40} : sim {main_similarity:.3f}")
-                for i, text in enumerate(text_detail):
-                    s = float(similarity[i+1])
-                    count = text_detail_matches[i]
-                    count_p = count / max(1, num_detail_frames * detail_batch_size) * 100.
-                    print(f"{('detail: ' + text)[:40]:40} : sim {s:.3f} matches {count:4} ({count_p:.2f}%)"
-                )
+                if allow_detail_mode:
+                    for i, text in enumerate(text_detail):
+                        s = float(similarity[i+1])
+                        count = text_detail_matches[i]
+                        count_p = count / max(1, num_detail_frames * detail_batch_size) * 100.
+                        print(f"{('detail: ' + text)[:40]:40} : sim {s:.3f} matches {count:4} ({count_p:.2f}%)"
+                    )
 
-            if epoch == 30 or cur_time - last_snapshot_time > 20:
+            if epoch == 30 or cur_time - last_snapshot_time > 15:
                 last_snapshot_time = cur_time
 
                 print("writing snapshot.png")
@@ -407,6 +487,10 @@ if __name__ == "__main__":
         "-r", "--resolution", type=int, default=[512], nargs="+",
         help="Resolution in pixels, can be one or two numbers, defaults to 512",
     )
+    parser.add_argument(
+        "-bsd", "--batch-size-detail", type=int, default=5,
+        help="Number of detail optimizations per epoch",
+    )
 
     args = parser.parse_args()
 
@@ -427,6 +511,7 @@ if __name__ == "__main__":
         learnrate_scale_details=args.learnrate_detail if args.learnrate_detail is not None else args.learnrate,
         num_epochs=args.epochs,
         resolution=resolution,
+        detail_batch_size=args.batch_size_detail,
         text_main=(
             #"a white wall"
             #"the face of a happy cat"
@@ -449,36 +534,94 @@ if __name__ == "__main__":
             #"A photo of a beautiful meadow. The sun is shining and two tentacles are passing by."
             #" Skyscrapers are visible in the background."
             #" The sky is blue and full of flying tentacles."
-            "A photo of a wizard standing on a rock and casting a secret spell."
-            " Some giant birds fly by in amazement."
+            #"A photo of a wizard standing on a rock and casting a secret spell."
+            #" Some giant birds fly by in amazement."
             #"a static background"
             #"a screw"
+            #"a photo of two androids walking through a futuristic machine city. Some sky is visible."
+            #"a low ceiling"
+            #"front of abandoned building"
+            #"front of abandoned building",
+            #"cables and wires"
+            #"forest landscape"
+            #"a photo of a wooden table with little spiders crawling everywhere"
+            #"malazan landscape"
+            #"cthulhu"
+            "x"
         ),
         text_detail=(
-            #"various computer parts",
+            "bob howard", "the laundry files",
+            "cthulhu",
+            #"malazan", #"lord of the rings",
+            #"malazan landscape",
+            #"cthulhu", #"stairs in a dungeon",
+            #"rocks",
+            #"leather armour", "metal armour",
+            #"mountains",
+            #"warrior", "sword"
+            #"sky",
+            #"sunflower leaves",
+            #"close-up of sunflower leaves",
+            #"forest",
+            #"pine trees",
+            #"garbage",
+            #"litter",
+            #"close-up of two androids looking up",
+            #"close-up of various machinery parts",
+            #"old store front",
+            #"close-up of a spider on a wooden table",
+            #"macro photography of a spider on a wooden table",
+            #"macro photography a spider leg",
+            #"macro photography of a spider head",
+            #"close-up of wood furniture",
+            #"macro photography of wood furniture",
+            #"close-up of cables and wires",
+            #"cables and wires",
+            #"enlarged cables and wires",
+            #"transistor between cables and wires",
+            #"resistor between cables and wires",
+            #"close-up of resistor",
+            #"close-up of transistor",
+            #"pipelines",
+            #"tubings",
+            # "thick wire",
+            #"front of abandoned building",
+            #"metallic wall",
+            #"close-up of a sad robot",
+            #"smoke and steam",
+            #"splintered glass",
+            #"skyscraper skyline",
+            #"Drones are flying in the sky!",
+            #"a cloudy sky",
+            #"clouds",
+            #"dystopian sky",
             #"underwater",
             #"fish scales",
             #"algae",
             #"a fish swarm",
             #"evil eyes",
-            "A close-up photo of a wizard standing on a rock and casting a secret spell.",
-            "a magical sky",
-            "a doomsday sky behind gigantic mountains",
-            "a big mushroom",
-            "rocks and grass",
+            #"A close-up photo of a wizard standing on a rock and casting a secret spell.",
+            #"a magical sky",
+            #"a doomsday sky behind gigantic mountains",
+            #"big mushrooms",
+            #"rocks and grass",
             #"rocks",
-            "macro-photography of rocky surface",
+            #"macro-photography of rocky surface",
             #"Some giant birds fly by in amazement.",
             #"rocky surface with a blue sky",
-            "a photo of a wizard",
-            "a photo of a wizard face",
-            "a magical face",
+            #"a photo of a wizard",
+            #"a photo of a wizard face",
+            #"a magical face",
             # "close-up of a face",
-            "a huge nose",
-            "a huge mustache",
-            "a long wizard beard",
-            "a long flowing purple coat",
-            "a golden bell",
-            "a brightly glowing sphere",
+            #"a huge nose",
+            #"a huge mustache",
+            #"a long wizard beard",
+            #"a long flowing purple coat",
+            #"a golden bell",
+            #"a brightly glowing sphere",
+            #"magic sparks",
+            #"a red ball",
+            #"a green ball",
+            #"a blue ball",
         )
     )
