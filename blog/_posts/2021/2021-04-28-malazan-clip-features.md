@@ -4,13 +4,13 @@ title: Malazan CLIP features
 ---
 
 This is starting to consume a serious amount of my work time, not to 
-mention the rest of the day. I need to talk about it. 
+mention the rest of the day. I need to talk about it. And show off, of course. 
 
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan6.png)
 
 This is what drives CLIP's image encoder to match with the features of 
-the text encoder, given the word *Malazan*. You can read about OpenAI's
-CLIP network and feature visualization in general all over the web and
+the text encoder, given the word *Malazan*. You can read about **OpenAI's
+CLIP network** and **feature visualization** in general all over the web and
 i'm too lazy to put links right now, except for images.
 
 CLIP's image encoder has an input window of 224x224 pixels. To render
@@ -39,8 +39,14 @@ randomly before feeding to CLIP, it looks like this:
 
 The section with the people at the bottom looks really cool. It's much larger 
 than the CLIP input so the scaling seems to help. Think of it as resizing a small
-resolution image and then fine-tuning the details. I'm completely amazed since
-a couple of days now by what is possible. 
+resolution image and then fine-tuning the details. Since a couple of days now, i'm 
+completely and utterly amazed by what CLIP is capable of.
+
+By the way, it's even more amazing what libraries like **pytorch** are able to do.
+Do you remember the old times when one had to manually derive the back-propagation
+gradients? Today we just stack a couple of networks, insert a couple of 
+transformations in between, add a gaussian blur, randomize stuff in each training step
+and pytorch calculates the gradient in no-time.
 
 And another ten minutes later...
 
@@ -52,8 +58,8 @@ more where it was tried. The perspective book pages are also kind of nice.
 
 There is probably a way to get rid of the text. It's a quite interesting topic too.
 Via *linear probing* of the output features tied to some classic image recognition 
-data-set, one can find determine specific weight surfaces for text, texture and 
-possibly a lot of other things. Once determined, those weights can be used to 
+data-set, one can determine specific weight surfaces for text, texture and 
+a lot of other things. Once determined, those weights can be used to 
 raise or lower the training loss during image rendering.
 
 Let's keep the random zoom feature and add some variation. For example, we can test a 
@@ -68,7 +74,7 @@ Okay, it tried to smirch it into the book title but apart there is not much diff
 This also highlights the fact that the *Malazan Book of the Fallen* is much more
 complex and absorbing than *Lord of the Rings*. 
 
-Let's try a few other things:
+Let's try a few other texts:
 
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan9-cthulhu.png)
 
@@ -86,12 +92,12 @@ warrior               :  69  (2.31%)
 
 Amazing! These 10 minutes where really worth the time! *Cthulhu* seems to be known
 well to the CLIP. I'll add the perspective randomization to the *Malazan* target
-to remove the titles a bit and rerun the experiment. 
+to remove the titles a bit and rerun the experiment: 
 
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan10-cthulhu.png)
 
-Some rendering artifacts have triggered the *stairs in a dungeon* and they got
-a large amount of representation.  
+Some rendering artifacts have triggered the *stairs in a dungeon* a lot and they 
+got a large amount of representation.  
 
 Here's a Cthulhu-only image:
   
@@ -99,15 +105,16 @@ Here's a Cthulhu-only image:
 
 There's a guy with a suit in there? Must be *Bob Howard* from *The Laundry Files*?
 
-Back to the idea of composition.
+### Back to the idea of composition
 
 In the following images, those detail training steps
 are combined with training a resized CLIP window that fits the whole image. 
 Of course this is quite blurry but we can turn it off at some point 
 during training and let the detail training handle the rest.
 
-Here's a full-scale training step for *Malazan landscape*, by which CLIP does not seem 
-to understand *views of nature* but rather characteristic fantasy book maps. 
+Here's one such blurry full-frame image for the text *Malazan landscape*, 
+by which CLIP does not seem to understand *views of nature* but rather 
+characteristic fantasy book maps. 
     
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan-landscape-training.png)
 
@@ -124,10 +131,12 @@ rational but that's okay with my fantasy image generation desires. Note that it 
 not find good detailed matches for the mountains and the bigger letters. Also there's
 a bit too much swords in there and a bit too much crayon drawing for my taste. 
 
-Here i kept *Malazan landscape* for the global composition but only allowed *Malazan*
-for the details:
+In the following run, i kept *Malazan landscape* for the global composition but 
+only allowed *Malazan* for the details:
 
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan-landscape3-training.png)
+
+Structurally it's already a nice snapshot. Now the details:
 
 ![CLIP generated visual]({../../../../../assets/images/clip/malazan-landscape3.png)
 
@@ -135,7 +144,7 @@ I really need to figure out how to remove text if i want to go further in the Ma
 universe!
 
 Here's an example from a different universe where the big-blurred composition vs. 
-uncomposed details worked quite well. It's a combination of 
+unrelated details worked quite well. It's a combination of 
 *a photo of two androids walking through a futuristic city* and stuff like 
 *close-up of a sad robot*, *close-up of various machinery parts* and so on.
 
