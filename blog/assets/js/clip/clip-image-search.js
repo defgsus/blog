@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selected_labels = {
         prefixes: 5,
         numbers: 0,
-        adjectives: 9,
+        adjectives: 10,
         things: 13,
     }
     let selected_label_idx = 0;
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const url of top_urls) {
             html += `<div>`;
             if (show_images) {
-                html += `<img src="${url[2]}" style="max-height: 512px">`;
+                html += `<img src="${url[2]}" style="max-height: 512px; background: #aaa;">`;
             }
             html += `<p><b style="width: 3rem; display: inline-block">${Math.round(url[0] * 100) / 100}</b> `;
             html += `<a href="${url[2]}" title="${url[2]}" rel="noreferrer">${url[1]}</a>`;

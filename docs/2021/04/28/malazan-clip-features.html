@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Malazan CLIP features | def.gsus-</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Malazan CLIP features" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This is starting to consume a serious amount of my work time, not to mention the rest of the day. I need to talk about it. And show off, of course." />
+<meta property="og:description" content="This is starting to consume a serious amount of my work time, not to mention the rest of the day. I need to talk about it. And show off, of course." />
+<link rel="canonical" href="https://defgsus.github.io/blog/2021/04/28/malazan-clip-features.html" />
+<meta property="og:url" content="https://defgsus.github.io/blog/2021/04/28/malazan-clip-features.html" />
+<meta property="og:site_name" content="def.gsus-" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-04-28T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Malazan CLIP features" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"Malazan CLIP features","dateModified":"2021-04-28T00:00:00+02:00","datePublished":"2021-04-28T00:00:00+02:00","url":"https://defgsus.github.io/blog/2021/04/28/malazan-clip-features.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://defgsus.github.io/blog/2021/04/28/malazan-clip-features.html"},"description":"This is starting to consume a serious amount of my work time, not to mention the rest of the day. I need to talk about it. And show off, of course.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://defgsus.github.io/blog/feed.xml" title="def.gsus-" /></head>
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+
+    <link rel="stylesheet" href="/blog/style.css">
+
+    
+
+    
+
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">def.gsus-</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Malazan CLIP features</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-04-28T00:00:00+02:00" itemprop="datePublished">Apr 28, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>This is starting to consume a serious amount of my work time, not to 
+mention the rest of the day. I need to talk about it. And show off, of course.</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan6.png" alt="CLIP generated visual" /></p>
+
+<p>This is what drives CLIP’s image encoder to match with the features of 
+the text encoder, given the word <em>Malazan</em>. You can read about <strong>OpenAI’s
+CLIP network</strong> and <strong>feature visualization</strong> in general all over the web and
+i’m too lazy to put links right now, except for images.</p>
+
+<p>CLIP’s image encoder has an input window of 224x224 pixels. To render
+high resolution images the input window is placed randomly all over the place.</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan6-rot.png" alt="CLIP generated visual" /></p>
+
+<p>In the image above, the <strong>rotation</strong> is also randomized a lot. Obviously, CLIP associates
+<em>Malazan</em> with fantasy book covers. Maybe even specific ones. From the 
+rotation it gets inspired to draw those magical mandala things. They might be
+from any fantasy book but i think it’s from the Malazan series. Although CLIP
+never spells it right. Let’s say, it’s enough for fan.</p>
+
+<p>The rotation also seems to make those soldiers more of the fighting sort.</p>
+
+<p>And the minutes pass by and i think, just one more picture! Then i should really
+do something else. And more minutes pass by.</p>
+
+<p>So now i can fill billions of pixels with the malazan pattern in some way
+but i find it desirable to let CLIP also control the whole composition, not
+only little input windows. These images are 1024² pixels so CLIP’s 224² input
+window really just sees a small section at once. If we scale down the image 
+randomly before feeding to CLIP, it looks like this:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan6-scale.png" alt="CLIP generated visual" /></p>
+
+<p>The section with the people at the bottom looks really cool. It’s much larger 
+than the CLIP input so the scaling seems to help. Think of it as resizing a small
+resolution image and then fine-tuning the details. Since a couple of days now, i’m 
+completely and utterly amazed by what CLIP is capable of.</p>
+
+<p>By the way, it’s even more amazing what libraries like <strong>pytorch</strong> are able to do.
+Do you remember the old times when one had to manually derive the back-propagation
+gradients? Today we just stack a couple of networks, insert a couple of 
+transformations in between, add a gaussian blur, randomize stuff in each training step
+and pytorch calculates the gradient in no-time.</p>
+
+<p>And another ten minutes later…</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan6-perspective.png" alt="CLIP generated visual" /></p>
+
+<p>Here, each input window has been transformed by a random perspective projection. 
+Note that not so much <em>Malazan</em> has been tried to write down. And it failed even
+more where it was tried. The perspective book pages are also kind of nice.</p>
+
+<p>There is probably a way to get rid of the text. It’s a quite interesting topic too.
+Via <em>linear probing</em> of the output features tied to some classic image recognition 
+data-set, one can determine specific weight surfaces for text, texture and 
+a lot of other things. Once determined, those weights can be used to 
+raise or lower the training loss during image rendering.</p>
+
+<p>Let’s keep the random zoom feature and add some variation. For example, we can test a 
+chosen CLIP window for multiple features at the same time and apply the one 
+that matches best.</p>
+
+<p>Trying <strong>Malazan</strong> and <strong>Lord of the Rings</strong>:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan7-lotr.png" alt="CLIP generated visual" /></p>
+
+<p>Okay, it tried to smirch it into the book title but apart there is not much difference.
+This also highlights the fact that the <em>Malazan Book of the Fallen</em> is much more
+complex and absorbing than <em>Lord of the Rings</em>.</p>
+
+<p>Let’s try a few other texts:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan9-cthulhu.png" alt="CLIP generated visual" /></p>
+
+<p>Here are the number of training frames that each text feature received:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>malazan               : 879 (29.46%)
+sword                 : 665 (22.29%)
+cthulhu               : 435 (14.58%)
+metal armour          : 575 (19.27%)
+stairs in a dungeon   : 217  (7.27%)
+leather armour        : 144  (4.83%)
+warrior               :  69  (2.31%)
+</code></pre></div></div>
+
+<p>Amazing! These 10 minutes where really worth the time! <em>Cthulhu</em> seems to be known
+well to the CLIP. I’ll add the perspective randomization to the <em>Malazan</em> target
+to remove the titles a bit and rerun the experiment:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan10-cthulhu.png" alt="CLIP generated visual" /></p>
+
+<p>Some rendering artifacts have triggered the <em>stairs in a dungeon</em> a lot and they 
+got a large amount of representation.</p>
+
+<p>Here’s a Cthulhu-only image:</p>
+
+<p><img src="{../../../../../assets/images/clip/cthulhu1.png" alt="CLIP generated visual" /></p>
+
+<p>There’s a guy with a suit in there? Must be <em>Bob Howard</em> from <em>The Laundry Files</em>?</p>
+
+<h3 id="back-to-the-idea-of-composition">Back to the idea of composition</h3>
+
+<p>In the following images, those detail training steps
+are combined with training a resized CLIP window that fits the whole image. 
+Of course this is quite blurry but we can turn it off at some point 
+during training and let the detail training handle the rest.</p>
+
+<p>Here’s one such blurry full-frame image for the text <em>Malazan landscape</em>, 
+by which CLIP does not seem to understand <em>views of nature</em> but rather 
+characteristic fantasy book maps.</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan-landscape-training.png" alt="CLIP generated visual" /></p>
+
+<p>So the quality is terrible and there are a lot of artifacts and glitches that come
+from either the convolutional network layers in CLIP or from the methods trying to 
+minimize those artifacts. Mainly random translation and gaussian blurring.</p>
+
+<p>But the final image, just some 7 minutes later!</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan-landscape.png" alt="CLIP generated visual" /></p>
+
+<p>It has some global structure as well as a lot of tiny details. It’s not completely
+rational but that’s okay with my fantasy image generation desires. Note that it did
+not find good detailed matches for the mountains and the bigger letters. Also there’s
+a bit too much swords in there and a bit too much crayon drawing for my taste.</p>
+
+<p>In the following run, i kept <em>Malazan landscape</em> for the global composition but 
+only allowed <em>Malazan</em> for the details:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan-landscape3-training.png" alt="CLIP generated visual" /></p>
+
+<p>Structurally it’s already a nice snapshot. Now the details:</p>
+
+<p><img src="{../../../../../assets/images/clip/malazan-landscape3.png" alt="CLIP generated visual" /></p>
+
+<p>I really need to figure out how to remove text if i want to go further in the Malazan
+universe!</p>
+
+<p>Here’s an example from a different universe where the big-blurred composition vs. 
+unrelated details worked quite well. It’s a combination of 
+<em>a photo of two androids walking through a futuristic city</em> and stuff like 
+<em>close-up of a sad robot</em>, <em>close-up of various machinery parts</em> and so on.</p>
+
+<p><img src="{../../../../../assets/images/clip/androids5.png" alt="CLIP generated visual" /></p>
+
+<p>I will explore more. There’s a couple of technical and artistic problems that
+i want to fix. But, you know, it takes time..</p>
+
+  </div><a class="u-url" href="/blog/2021/04/28/malazan-clip-features.html" hidden></a>
+</article>
+
+    </div>
+</main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">def.gsus-</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">def.gsus-</li><li><a class="u-email" href="mailto:echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d">echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/defgsus"><svg class="svg-icon"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg> <span class="username">defgsus</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Programming stuff mainly</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
