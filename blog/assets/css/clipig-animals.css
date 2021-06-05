@@ -1,0 +1,13 @@
+.clipig-images {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.clipig-images .image-container {
+    padding-right: 1rem;
+}
+
+.clipig-images .image-text {
+    text-align: center;
+}

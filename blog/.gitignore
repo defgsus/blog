@@ -3,3 +3,8 @@ _site
 .jekyll-cache
 .jekyll-metadata
 vendor
+
+# Note! I do not want to included them twice in the repo
+# They are also in /docs/assets, once the blog is published
+assets/images/clip/
+assets/images/clipig/
