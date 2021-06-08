@@ -994,22 +994,61 @@ document.addEventListener( "DOMContentLoaded", function() {
     };
 
     function on_thing_changed() {
-        console.log("HERE");
         const thing = document.querySelector(".clipig-input .thing").value;
+        const method = document.querySelector(".clipig-input .method").value;
         const images = IMAGES[thing];
         for (const animal of Object.keys(images)) {
-            const filename = `../../../assets/images/clipig/dall-e-samples/${images[animal]}.png`;
+            const filename = `../../../assets/images/clipig/dall-e-samples/${method}/${images[animal]}.png`;
             const img_elem = document.querySelector(`.clipig-images .image-${animal}`);
             img_elem.src = filename;
         }
     }
 
-    function render_interface(root_elem) {
-        html = `<select class="thing">`
-        for (const thing of Object.keys(IMAGES)) {
-            html += `<option value="${thing}">${thing}</option>`;
+    function on_key(e) {
+        const
+            thing_elem = document.querySelector(".clipig-input .thing"),
+            thing_keys = Object.keys(IMAGES);
+        let idx;
+        switch (e.key) {
+            case "1":
+                document.querySelector(".clipig-input .method").value = "1";
+                break;
+            case "2":
+                document.querySelector(".clipig-input .method").value = "2";
+                break;
+            case "ArrowUp":
+                idx = thing_keys.indexOf(thing_elem.value);
+                if (idx > 0)
+                    thing_elem.value = thing_keys[idx-1];
+                break;
+            case "ArrowDown":
+                idx = thing_keys.indexOf(thing_elem.value);
+                if (idx >= 0 && idx < thing_keys.length - 1)
+                    thing_elem.value = thing_keys[idx+1];
+                break;
+
+            default:
+                return;
         }
-        html += `</select><hr>`;
+        e.preventDefault();
+        e.stopPropagation();
+        on_thing_changed();
+    }
+    document.onkeydown = on_key;
+
+    function render_interface(root_elem) {
+        html = `<span class="prompt">An <cite>animal</cite> made of <select class="thing">`
+        for (const thing of Object.keys(IMAGES)) {
+            html += `<option value="${thing}" ${thing === "harp" ? "selected" : ""}>${thing}</option>`;
+        }
+        html += `</select>.</span>`;
+
+        html += ` <select class="method">`
+        html += `<option value="1">method 1</option>`;
+        html += `<option value="2" selected>method 2</option>`;
+        html += `</select>`;
+
+        html = `<div class="clipig-interface">${html}</div>`;
 
         html += `<div class="clipig-images">`;
         for (const animal of Object.keys(IMAGES["salami"])) {
@@ -1019,8 +1058,9 @@ document.addEventListener( "DOMContentLoaded", function() {
         }
         html += `</div>`;
 
-        root_elem.innerHTML = html;
+        root_elem.innerHTML = html
         root_elem.querySelector(".thing").onchange = on_thing_changed;
+        root_elem.querySelector(".method").onchange = on_thing_changed;
     }
 
     render_interface(document.querySelector(".clipig-input"));
