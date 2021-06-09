@@ -1,0 +1,46 @@
+.clipig-images-wrapper {
+    background: #222;
+    padding: .5rem;
+    border-radius: .5rem;
+}
+
+.clipig-images {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-width: 720px;
+}
+
+.clipig-images-wrapper .image-container {
+    padding-right: 1rem;
+}
+
+.clipig-images-wrapper .image-text {
+    text-align: center;
+    color: #7e7e7e;
+    padding-bottom: .2rem;
+}
+
+.clipig-interface {
+    background: #e8e8e8;
+    padding: .5rem;
+    margin-bottom: .5rem;
+}
+
+.clipig-input .prompt {
+    font-weight: bold;
+    padding-left: 1rem;
+}
+
+.clipig-ranking .desc {
+    display: flex;
+}
+
+.clipig-ranking .desc .right {
+    text-align: right;
+    flex-grow: 1;
+}
+
+.clipig-ranking .image-wrapper {
+    max-width: 224px;
+}
