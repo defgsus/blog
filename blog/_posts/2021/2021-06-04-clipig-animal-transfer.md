@@ -7,10 +7,11 @@ custom_css: clipig-animals.css
 
 Once the astonishment and the feeling of complete personal incompetence 
 has diminished after reading the amazing article about 
-[DALL-E](https://openai.com/dall-e???), i gathered some courage back and
+[DALL-E](https://openai.com/blog/dall-e/), i gathered some courage back and
 investigated the methods that OpenAI used to create those images.
 
-DALL-E is based on the [GPT3](???) transformer. The [paper](???) is 
+DALL-E is based on the [GPT3](https://arxiv.org/abs/2005.14165) transformer. 
+The [paper](https://arxiv.org/abs/2102.12092) is 
 overwhelmingly complex, not only in terms of the algorithms but also 
 with regard to reducing and distributing computation across hundreds of
 expensive GPUs to allow training convergence within *only* weeks 
@@ -27,8 +28,11 @@ the [CLIP Image Generator](https://github.com/defgsus/clipig/),
 a little framework for creating images out of the blue, using CLIP
 as an art critique.
 
-Below is a reproduction of the *animal concept transfer* experiment
-in the DALL-E article using only the CLIP network. You can use the 
+Below is a reproduction of the 
+[*animal concept transfer*](https://openai.com/blog/dall-e/#animal-concept-transfer) 
+experiment in the DALL-E article using only the CLIP network. 
+
+You can use the 
 **up** and **down** cursor keys to select a thing and the **1** and
 **2** key respectively to select the rendering method.
 
@@ -218,246 +222,99 @@ after the final run on the right.
         <td>best of 512 (<a href="../../../assets/data/clipig/penguin-of-piano.csv">csv</a>)</td>
         <td>best of 149 (<a href="../../../assets/data/clipig/penguin-of-piano-reso.csv">csv</a>)</td>
     </tr>
-
 <tr>
-<td>
-            <div id="img-snail-of-harp-487" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-487.png">
-                <div class="desc">
-                    <div class="left">#487</div> 
-                    <div class="right">sim: <b>36.81</b> ⭢ <b>45.49</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-344" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-344.png">
-                <div class="desc">
-                    <div class="left">#344</div> 
-                    <div class="right">sim: <b>35.30</b> ⭢ <b>48.65</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-108" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-108.png">
-                <div class="desc">
-                    <div class="left">#108</div> 
-                    <div class="right">sim: <b>21.86</b> ⭢ <b>46.65</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-487" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-487.png">                 <div class="desc">                     <div class="left">#487</div>                      <div class="right">sim: <b>36.81</b> ⭢ <b>45.49</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-344" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-344.png">                 <div class="desc">                     <div class="left">#344</div>                      <div class="right">sim: <b>35.30</b> ⭢ <b>48.65</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-108" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-108.png">                 <div class="desc">                     <div class="left">#108</div>                      <div class="right">sim: <b>21.86</b> ⭢ <b>46.65</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-134" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-134.png">
-                <div class="desc">
-                    <div class="left">#134</div> 
-                    <div class="right">sim: <b>36.77</b> ⭢ <b>45.77</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-43" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-43.png">
-                <div class="desc">
-                    <div class="left">#43</div> 
-                    <div class="right">sim: <b>35.23</b> ⭢ <b>47.54</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-80" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-80.png">
-                <div class="desc">
-                    <div class="left">#80</div> 
-                    <div class="right">sim: <b>21.56</b> ⭢ <b>47.80</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-134" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-134.png">                 <div class="desc">                     <div class="left">#134</div>                      <div class="right">sim: <b>36.77</b> ⭢ <b>45.77</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-43" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-43.png">                 <div class="desc">                     <div class="left">#43</div>                      <div class="right">sim: <b>35.23</b> ⭢ <b>47.54</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-80" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-80.png">                 <div class="desc">                     <div class="left">#80</div>                      <div class="right">sim: <b>21.56</b> ⭢ <b>47.80</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-326" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-326.png">
-                <div class="desc">
-                    <div class="left">#326</div> 
-                    <div class="right">sim: <b>36.60</b> ⭢ <b>45.48</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-260" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-260.png">
-                <div class="desc">
-                    <div class="left">#260</div> 
-                    <div class="right">sim: <b>34.38</b> ⭢ <b>48.01</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-137" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-137.png">
-                <div class="desc">
-                    <div class="left">#137</div> 
-                    <div class="right">sim: <b>21.39</b> ⭢ <b>49.67</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-326" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-326.png">                 <div class="desc">                     <div class="left">#326</div>                      <div class="right">sim: <b>36.60</b> ⭢ <b>45.48</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-260" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-260.png">                 <div class="desc">                     <div class="left">#260</div>                      <div class="right">sim: <b>34.38</b> ⭢ <b>48.01</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-137" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-137.png">                 <div class="desc">                     <div class="left">#137</div>                      <div class="right">sim: <b>21.39</b> ⭢ <b>49.67</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-268" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-268.png">
-                <div class="desc">
-                    <div class="left">#268</div> 
-                    <div class="right">sim: <b>36.50</b> ⭢ <b>45.07</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-40" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-40.png">
-                <div class="desc">
-                    <div class="left">#40</div> 
-                    <div class="right">sim: <b>34.11</b> ⭢ <b>49.50</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-42" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-42.png">
-                <div class="desc">
-                    <div class="left">#42</div> 
-                    <div class="right">sim: <b>21.29</b> ⭢ <b>50.49</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-268" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-268.png">                 <div class="desc">                     <div class="left">#268</div>                      <div class="right">sim: <b>36.50</b> ⭢ <b>45.07</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-40" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-40.png">                 <div class="desc">                     <div class="left">#40</div>                      <div class="right">sim: <b>34.11</b> ⭢ <b>49.50</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-42" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-42.png">                 <div class="desc">                     <div class="left">#42</div>                      <div class="right">sim: <b>21.29</b> ⭢ <b>50.49</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-471" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-471.png">
-                <div class="desc">
-                    <div class="left">#471</div> 
-                    <div class="right">sim: <b>36.45</b> ⭢ <b>45.77</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-221" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-221.png">
-                <div class="desc">
-                    <div class="left">#221</div> 
-                    <div class="right">sim: <b>33.00</b> ⭢ <b>49.65</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-21" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-21.png">
-                <div class="desc">
-                    <div class="left">#21</div> 
-                    <div class="right">sim: <b>21.28</b> ⭢ <b>49.92</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-471" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-471.png">                 <div class="desc">                     <div class="left">#471</div>                      <div class="right">sim: <b>36.45</b> ⭢ <b>45.77</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-221" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-221.png">                 <div class="desc">                     <div class="left">#221</div>                      <div class="right">sim: <b>33.00</b> ⭢ <b>49.65</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-21" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-21.png">                 <div class="desc">                     <div class="left">#21</div>                      <div class="right">sim: <b>21.28</b> ⭢ <b>49.92</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-38" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-38.png">
-                <div class="desc">
-                    <div class="left">#38</div> 
-                    <div class="right">sim: <b>36.35</b> ⭢ <b>45.61</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-244" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-244.png">
-                <div class="desc">
-                    <div class="left">#244</div> 
-                    <div class="right">sim: <b>31.69</b> ⭢ <b>38.75</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-24" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-24.png">
-                <div class="desc">
-                    <div class="left">#24</div> 
-                    <div class="right">sim: <b>21.24</b> ⭢ <b>47.43</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-38" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-38.png">                 <div class="desc">                     <div class="left">#38</div>                      <div class="right">sim: <b>36.35</b> ⭢ <b>45.61</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-244" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-244.png">                 <div class="desc">                     <div class="left">#244</div>                      <div class="right">sim: <b>31.69</b> ⭢ <b>38.75</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-24" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-24.png">                 <div class="desc">                     <div class="left">#24</div>                      <div class="right">sim: <b>21.24</b> ⭢ <b>47.43</b></div>                 </div>             </div>         </td>
 </tr>
-
-    <tr><td><h4>worst of 512</h4></td> <td><h4>worst of 512</h4></td> <td><h4>worst of 149</h4></td></tr>                    
-    
+<tr><td><h4>worst of 512</h4></td> <td><h4>worst of 512</h4></td> <td><h4>worst of 149</h4></td></tr>                    
 <tr>
-<td>
-            <div id="img-snail-of-harp-214" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-214.png">
-                <div class="desc">
-                    <div class="left">#214</div> 
-                    <div class="right">sim: <b>28.86</b> ⭢ <b>45.38</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-57" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-57.png">
-                <div class="desc">
-                    <div class="left">#57</div> 
-                    <div class="right">sim: <b>20.22</b> ⭢ <b>46.67</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-6" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-6.png">
-                <div class="desc">
-                    <div class="left">#6</div> 
-                    <div class="right">sim: <b>17.80</b> ⭢ <b>48.58</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-214" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-214.png">                 <div class="desc">                     <div class="left">#214</div>                      <div class="right">sim: <b>28.86</b> ⭢ <b>45.38</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-57" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-57.png">                 <div class="desc">                     <div class="left">#57</div>                      <div class="right">sim: <b>20.22</b> ⭢ <b>46.67</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-6" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-6.png">                 <div class="desc">                     <div class="left">#6</div>                      <div class="right">sim: <b>17.80</b> ⭢ <b>48.58</b></div>                 </div>             </div>         </td>
 </tr>
 <tr>
-<td>
-            <div id="img-snail-of-harp-171" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-171.png">
-                <div class="desc">
-                    <div class="left">#171</div> 
-                    <div class="right">sim: <b>29.40</b> ⭢ <b>46.18</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-390" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-390.png">
-                <div class="desc">
-                    <div class="left">#390</div> 
-                    <div class="right">sim: <b>20.82</b> ⭢ <b>47.87</b></div>
-                </div>
-            </div>
-        </td>
-<td>
-            <div id="img-penguin-of-piano-106" class="image-wrapper">
-                <img src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-106.png">
-                <div class="desc">
-                    <div class="left">#106</div> 
-                    <div class="right">sim: <b>18.48</b> ⭢ <b>48.61</b></div>
-                </div>
-            </div>
-        </td>
+<td>             <div id="img-snail-of-harp-171" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/snail-of-harp-from-171.png">                 <div class="desc">                     <div class="left">#171</div>                      <div class="right">sim: <b>29.40</b> ⭢ <b>46.18</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-390" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-390.png">                 <div class="desc">                     <div class="left">#390</div>                      <div class="right">sim: <b>20.82</b> ⭢ <b>47.87</b></div>                 </div>             </div>         </td>
+<td>             <div id="img-penguin-of-piano-106" class="image-wrapper">                 <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/penguin-of-piano-from-106.png">                 <div class="desc">                     <div class="left">#106</div>                      <div class="right">sim: <b>18.48</b> ⭢ <b>48.61</b></div>                 </div>             </div>         </td>
 </tr>
-
-
 </table>
 </div>
+
+
+For comparison, the ratings of the respective DALL-E images are displayed
+below.
+
+
+<table class="clipig-ranking">
+    <tr>
+        <td><cite>snail of harp</cite> (DALL-E)</td>
+        <td><cite>penguin of piano</cite> (DALL-E)</td>
+    </tr>
+    <tr>
+        <td>best of 30 (<a href="../../../assets/data/clipig/dall-e-rating.csv">csv</a>)</td>
+        <td>best of 30 (<a href="../../../assets/data/clipig/dall-e-rating.csv">csv</a>)</td>
+    </tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_5.png">                 <div class="desc">                     <div class="left">#55</div>                      <div class="right">sim: <b>37.97</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_20.png">                 <div class="desc">                     <div class="left">#13</div>                      <div class="right">sim: <b>37.86</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_8.png">                 <div class="desc">                     <div class="left">#58</div>                      <div class="right">sim: <b>37.43</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_1.png">                 <div class="desc">                     <div class="left">#1</div>                      <div class="right">sim: <b>36.30</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_22.png">                 <div class="desc">                     <div class="left">#45</div>                      <div class="right">sim: <b>36.24</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_5.png">                 <div class="desc">                     <div class="left">#25</div>                      <div class="right">sim: <b>36.28</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_14.png">                 <div class="desc">                     <div class="left">#36</div>                      <div class="right">sim: <b>35.31</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_11.png">                 <div class="desc">                     <div class="left">#3</div>                      <div class="right">sim: <b>35.96</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_1.png">                 <div class="desc">                     <div class="left">#31</div>                      <div class="right">sim: <b>35.20</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_2.png">                 <div class="desc">                     <div class="left">#12</div>                      <div class="right">sim: <b>35.92</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_24.png">                 <div class="desc">                     <div class="left">#47</div>                      <div class="right">sim: <b>35.16</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_4.png">                 <div class="desc">                     <div class="left">#24</div>                      <div class="right">sim: <b>35.78</b></div>                 </div>             </div>         </td>
+</tr>
+<tr><td><h4>worst of 30</h4></td> <td></td></tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_3.png">                 <div class="desc">                     <div class="left">#53</div>                      <div class="right">sim: <b>25.50</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_0.png">                 <div class="desc">                     <div class="left">#30</div>                      <div class="right">sim: <b>21.12</b></div>                 </div>             </div>         </td>
+</tr>
+<tr>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBzbmFpbCBtYWRlIG9mIGhhcnAuIGEgc25haWwgd2l0aCB0aGUgdGV4dHVyZSBvZiBhIGhhcnAu_25.png">                 <div class="desc">                     <div class="left">#48</div>                      <div class="right">sim: <b>26.05</b></div>                 </div>             </div>         </td>
+<td>             <div class="image-wrapper">                 <img loading="lazy" src="https://cdn.openai.com/dall-e/v2/samples/animal_concept_transfer/YSBwZW5ndWluIG1hZGUgb2YgcGlhbm8uIGEgcGVuZ3VpbiB3aXRoIHRoZSB0ZXh0dXJlIG9mIGEgcGlhbm8u_16.png">                 <div class="desc">                     <div class="left">#8</div>                      <div class="right">sim: <b>26.68</b></div>                 </div>             </div>         </td>
+</tr>
+</table>
+
 
 
 ### Conclusion
@@ -495,58 +352,58 @@ collected in less than 2 hours
 
 <div class="clipig-images-wrapper">
 <div class="clipig-images">
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-burger.png">     <div class="image-text">hedgehog of burger</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-cabbage.png">     <div class="image-text">peacock of cabbage</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-calamari.png">     <div class="image-text">pig of calamari</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-coral-reef.png">     <div class="image-text">hedgehog of coral-reef</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-cuckoo-clock.png">     <div class="image-text">hedgehog of cuckoo-clock</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-faucet.png">     <div class="image-text">penguin of faucet</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-fried-chicken.png">     <div class="image-text">snail of fried-chicken</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-gourd.png">     <div class="image-text">pig of gourd</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-grater.png">     <div class="image-text">hedgehog of grater</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-harmonica.png">     <div class="image-text">penguin of harmonica</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-lotus-root.png">     <div class="image-text">hedgehog of lotus-root</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-motorcycle.png">     <div class="image-text">penguin of motorcycle</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/kangaroo-of-peace.png">     <div class="image-text">kangaroo of peace</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-polygons.png">     <div class="image-text">peacock of polygons</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-rosemary.png">     <div class="image-text">snail of rosemary</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-salami.png">     <div class="image-text">snail of salami</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/cat-of-taco.png">     <div class="image-text">cat of taco</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-toaster.png">     <div class="image-text">penguin of toaster</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-waffle.png">     <div class="image-text">hedgehog of waffle</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-accordion.png">     <div class="image-text">tapir of accordion</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-basil.png">     <div class="image-text">snail of basil</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-beetroot.png">     <div class="image-text">snail of beetroot</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-burger.png">     <div class="image-text">pig of burger</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-cake.png">     <div class="image-text">kangaroo of cake</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-carrot.png">     <div class="image-text">peacock of carrot</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-coral-reef.png">     <div class="image-text">cat of coral-reef</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-corkscrew.png">     <div class="image-text">cat of corkscrew</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-corkscrew.png">     <div class="image-text">pig of corkscrew</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-cuckoo-clock.png">     <div class="image-text">peacock of cuckoo-clock</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-eraser.png">     <div class="image-text">penguin of eraser</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-eraser.png">     <div class="image-text">snail of eraser</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-faucet.png">     <div class="image-text">pig of faucet</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-fried-chicken.png">     <div class="image-text">penguin of fried-chicken</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-gourd.png">     <div class="image-text">penguin of gourd</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-harmonica.png">     <div class="image-text">snail of harmonica</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-hospital.png">     <div class="image-text">snail of hospital</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-lychee.png">     <div class="image-text">pig of lychee</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-maple-leaf.png">     <div class="image-text">hedgehog of maple-leaf</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-meatloaf.png">     <div class="image-text">peacock of meatloaf</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-motorcycle.png">     <div class="image-text">pig of motorcycle</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/elephant-of-mushroom.png">     <div class="image-text">elephant of mushroom</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-piano.png">     <div class="image-text">tapir of piano</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pickle.png">     <div class="image-text">penguin of pickle</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pizza.png">     <div class="image-text">penguin of pizza</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-raspberry.png">     <div class="image-text">cat of raspberry</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-rosemary.png">     <div class="image-text">penguin of rosemary</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-russian-doll.png">     <div class="image-text">kangaroo of russian-doll</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-salami.png">     <div class="image-text">penguin of salami</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-taco.png">     <div class="image-text">hedgehog of taco</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-violin.png">     <div class="image-text">cat of violin</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-violin.png">     <div class="image-text">snail of violin</div> </div>     
- <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-watermelon.png">     <div class="image-text">pig of watermelon</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-burger.png">     <div class="image-text">hedgehog of burger</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-cabbage.png">     <div class="image-text">peacock of cabbage</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/pig-of-calamari.png">     <div class="image-text">pig of calamari</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-coral-reef.png">     <div class="image-text">hedgehog of coral-reef</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-cuckoo-clock.png">     <div class="image-text">hedgehog of cuckoo-clock</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-faucet.png">     <div class="image-text">penguin of faucet</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/snail-of-fried-chicken.png">     <div class="image-text">snail of fried-chicken</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/pig-of-gourd.png">     <div class="image-text">pig of gourd</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-grater.png">     <div class="image-text">hedgehog of grater</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-harmonica.png">     <div class="image-text">penguin of harmonica</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-lotus-root.png">     <div class="image-text">hedgehog of lotus-root</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-motorcycle.png">     <div class="image-text">penguin of motorcycle</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/kangaroo-of-peace.png">     <div class="image-text">kangaroo of peace</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-polygons.png">     <div class="image-text">peacock of polygons</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/snail-of-rosemary.png">     <div class="image-text">snail of rosemary</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/snail-of-salami.png">     <div class="image-text">snail of salami</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/cat-of-taco.png">     <div class="image-text">cat of taco</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-toaster.png">     <div class="image-text">penguin of toaster</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-waffle.png">     <div class="image-text">hedgehog of waffle</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-accordion.png">     <div class="image-text">tapir of accordion</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-basil.png">     <div class="image-text">snail of basil</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-beetroot.png">     <div class="image-text">snail of beetroot</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-burger.png">     <div class="image-text">pig of burger</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-cake.png">     <div class="image-text">kangaroo of cake</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-carrot.png">     <div class="image-text">peacock of carrot</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/cat-of-coral-reef.png">     <div class="image-text">cat of coral-reef</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/cat-of-corkscrew.png">     <div class="image-text">cat of corkscrew</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-corkscrew.png">     <div class="image-text">pig of corkscrew</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-cuckoo-clock.png">     <div class="image-text">peacock of cuckoo-clock</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-eraser.png">     <div class="image-text">penguin of eraser</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-eraser.png">     <div class="image-text">snail of eraser</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-faucet.png">     <div class="image-text">pig of faucet</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-fried-chicken.png">     <div class="image-text">penguin of fried-chicken</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-gourd.png">     <div class="image-text">penguin of gourd</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-harmonica.png">     <div class="image-text">snail of harmonica</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-hospital.png">     <div class="image-text">snail of hospital</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-lychee.png">     <div class="image-text">pig of lychee</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-maple-leaf.png">     <div class="image-text">hedgehog of maple-leaf</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-meatloaf.png">     <div class="image-text">peacock of meatloaf</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-motorcycle.png">     <div class="image-text">pig of motorcycle</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/elephant-of-mushroom.png">     <div class="image-text">elephant of mushroom</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-piano.png">     <div class="image-text">tapir of piano</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pickle.png">     <div class="image-text">penguin of pickle</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pizza.png">     <div class="image-text">penguin of pizza</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/cat-of-raspberry.png">     <div class="image-text">cat of raspberry</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-rosemary.png">     <div class="image-text">penguin of rosemary</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-russian-doll.png">     <div class="image-text">kangaroo of russian-doll</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-salami.png">     <div class="image-text">penguin of salami</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-taco.png">     <div class="image-text">hedgehog of taco</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/cat-of-violin.png">     <div class="image-text">cat of violin</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/snail-of-violin.png">     <div class="image-text">snail of violin</div> </div>     
+ <div class="image-container">     <img loading="lazy" src="../../../assets/images/clipig/dall-e-samples/2/pig-of-watermelon.png">     <div class="image-text">pig of watermelon</div> </div>     
 </div></div>
