@@ -32,7 +32,7 @@ in the DALL-E article using only the CLIP network. You can use the
 **up** and **down** cursor keys to select a thing and the **1** and
 **2** key respectively to select the rendering method.
 
-<div class="clipig-input"></div>
+<div class="clipig-input clipig-images-wrapper"></div>
 
 
 ## Details
@@ -460,10 +460,10 @@ after the final run on the right.
 </div>
 
 
-## Conclusion
+### Conclusion
 
 The CLIPig images are not nearly as good as the DALL-E samples, 
-both in terms of quality and *freshness* of the composition idea.
+both in terms of quality and diversity of the composition idea.
 
 The ranking experiment shows that it's quite hard to create
 convincing shapes and forms just from noisy training on pixel
@@ -478,3 +478,75 @@ state of the image. The one exception being
 where the penguin is actually nicely coalescing with the
 piano but the fine boundaries and details could not be worked
 out.
+
+The *worst* snails [#214](#img-snail-of-harp-214) and [#171](#img-snail-of-harp-171)
+have actually turned out quite interesting in the final training.
+The method 2 penguins [#6](#img-penguin-of-piano-6) and 
+[#106](#img-penguin-of-piano-106) seem to raise the final similarity
+just by piano-ish background patterns. 
+
+Honestly, the amount of compute currently required for creating
+*interesting* images with a high probability is not worth the
+resources. So, without years of computation, here's my:
+
+## personal hand-picked favorites 
+
+collected in less than 2 hours
+
+<div class="clipig-images-wrapper">
+<div class="clipig-images">
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-burger.png">     <div class="image-text">hedgehog of burger</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-cabbage.png">     <div class="image-text">peacock of cabbage</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-calamari.png">     <div class="image-text">pig of calamari</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-coral-reef.png">     <div class="image-text">hedgehog of coral-reef</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-cuckoo-clock.png">     <div class="image-text">hedgehog of cuckoo-clock</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-faucet.png">     <div class="image-text">penguin of faucet</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-fried-chicken.png">     <div class="image-text">snail of fried-chicken</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-gourd.png">     <div class="image-text">pig of gourd</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-grater.png">     <div class="image-text">hedgehog of grater</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-harmonica.png">     <div class="image-text">penguin of harmonica</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-lotus-root.png">     <div class="image-text">hedgehog of lotus-root</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-motorcycle.png">     <div class="image-text">penguin of motorcycle</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/kangaroo-of-peace.png">     <div class="image-text">kangaroo of peace</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/peacock-of-polygons.png">     <div class="image-text">peacock of polygons</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-rosemary.png">     <div class="image-text">snail of rosemary</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/snail-of-salami.png">     <div class="image-text">snail of salami</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/cat-of-taco.png">     <div class="image-text">cat of taco</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/penguin-of-toaster.png">     <div class="image-text">penguin of toaster</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/1/hedgehog-of-waffle.png">     <div class="image-text">hedgehog of waffle</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-accordion.png">     <div class="image-text">tapir of accordion</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-basil.png">     <div class="image-text">snail of basil</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-beetroot.png">     <div class="image-text">snail of beetroot</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-burger.png">     <div class="image-text">pig of burger</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-cake.png">     <div class="image-text">kangaroo of cake</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-carrot.png">     <div class="image-text">peacock of carrot</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-coral-reef.png">     <div class="image-text">cat of coral-reef</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-corkscrew.png">     <div class="image-text">cat of corkscrew</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-corkscrew.png">     <div class="image-text">pig of corkscrew</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-cuckoo-clock.png">     <div class="image-text">peacock of cuckoo-clock</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-eraser.png">     <div class="image-text">penguin of eraser</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-eraser.png">     <div class="image-text">snail of eraser</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-faucet.png">     <div class="image-text">pig of faucet</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-fried-chicken.png">     <div class="image-text">penguin of fried-chicken</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-gourd.png">     <div class="image-text">penguin of gourd</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-harmonica.png">     <div class="image-text">snail of harmonica</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-hospital.png">     <div class="image-text">snail of hospital</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-lychee.png">     <div class="image-text">pig of lychee</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-maple-leaf.png">     <div class="image-text">hedgehog of maple-leaf</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/peacock-of-meatloaf.png">     <div class="image-text">peacock of meatloaf</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-motorcycle.png">     <div class="image-text">pig of motorcycle</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/elephant-of-mushroom.png">     <div class="image-text">elephant of mushroom</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/tapir-of-piano.png">     <div class="image-text">tapir of piano</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pickle.png">     <div class="image-text">penguin of pickle</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-pizza.png">     <div class="image-text">penguin of pizza</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-raspberry.png">     <div class="image-text">cat of raspberry</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-rosemary.png">     <div class="image-text">penguin of rosemary</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/kangaroo-of-russian-doll.png">     <div class="image-text">kangaroo of russian-doll</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/penguin-of-salami.png">     <div class="image-text">penguin of salami</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/hedgehog-of-taco.png">     <div class="image-text">hedgehog of taco</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-tank.png">     <div class="image-text">pig of tank</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/cat-of-violin.png">     <div class="image-text">cat of violin</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/snail-of-violin.png">     <div class="image-text">snail of violin</div> </div>     
+ <div class="image-container">     <img src="../../../assets/images/clipig/dall-e-samples/2/pig-of-watermelon.png">     <div class="image-text">pig of watermelon</div> </div>     
+</div></div>
