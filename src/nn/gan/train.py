@@ -19,108 +19,136 @@ from tqdm import tqdm
 from generator import Generator, Discriminator
 
 
-def train(data: VisionDataset, device: str = "cuda"):
-    width, height = data.data.shape[-1], data.data.shape[-2]
-    n_generator_in = 8
-    batch_size = 50
+class Trainer:
 
-    generator = Generator(n_generator_in, width * height).to(device)
-    discriminator = Discriminator(width * height).to(device)
+    def __init__(
+            self,
+            data: VisionDataset,
+            device: str = "cuda"
+    ):
+        self.data = data
+        self.device = device
+        self.width, self.height = data.data.shape[-1], data.data.shape[-2]
+        self.n_generator_in = 8
+        self.batch_size = 20
 
-    generator_optimizer = torch.optim.Adam(
-        generator.parameters(),
-        lr=0.001,
-        weight_decay=0.001,
-    )
-    discriminator_optimizer = torch.optim.Adam(
-        discriminator.parameters(),
-        lr=0.00005,
-        weight_decay=0.001,
-    )
+        self.generator = Generator(self.n_generator_in, self.width * self.height).to(self.device)
+        self.discriminator = Discriminator(self.width * self.height).to(self.device)
 
-    expected_discriminator_result_for_gen = torch.ones(batch_size).reshape(-1, 1).to(device)
-    expected_discriminator_result_for_dis = torch.Tensor(
-        [1] * batch_size + [0] * batch_size
-    ).reshape(-1, 1).to(device)
-
-    last_print_time = 0
-    last_snapshot_time = time.time()
-    for epoch in tqdm(range(50000)):
-
-        # -- generate batch of images --
-
-        generator_noise = torch.randn(batch_size, generator.n_in).to(device)
-        generator_image_batch = generator.forward(generator_noise)
-
-        # -- discriminate --
-        # print("G", generator_image_batch.shape)
-        discriminator_result = discriminator.forward(generator_image_batch)
-
-        # -- train generator on discriminator result --
-
-        generator_loss = F.mse_loss(
-            discriminator_result,
-            expected_discriminator_result_for_gen,
+        self.generator_optimizer = torch.optim.Adam(
+            self.generator.parameters(),
+            lr=0.001,
+            weight_decay=0.001,
+        )
+        self.discriminator_optimizer = torch.optim.Adam(
+            self.discriminator.parameters(),
+            lr=0.00005,
+            weight_decay=0.001,
         )
 
-        generator.zero_grad()
-        generator_loss.backward()
-        generator_optimizer.step()
+    def generate_images(self, count: int) -> torch.Tensor:
+        #generator_noise = torch.randn(count, self.n_generator_in)
+        generator_noise = torch.randn(count, self.n_generator_in) * .2
+        for row in generator_noise:
+            row[random.randrange(row.shape[0])] += 1.
 
-        # -- build image batch for discriminator --
+        generator_image_batch = self.generator.forward(generator_noise.to(self.device))
+        return generator_image_batch
 
-        generator_noise = torch.randn(batch_size, generator.n_in).to(device)
-        generator_image_batch = generator.forward(generator_noise)
+    def random_real_images(self, count: int) -> torch.Tensor:
+        return torch.cat([
+            self.data[random.randrange(len(self.data))][0].reshape(1, -1)
+            for i in range(count)
+        ]).to(self.device)
 
-        dis_image_batch = torch.cat([
-            torch.cat([
-                data[random.randrange(len(data))][0].reshape(1, -1)
-                for i in range(batch_size)
-            ]).to(device),
-            generator_image_batch
-        ])
+    def train(self):
+        expected_discriminator_result_for_gen = torch.ones(self.batch_size*2).reshape(-1, 1).to(self.device)
+        expected_discriminator_result_for_dis = torch.Tensor(
+            [1] * self.batch_size + [0] * self.batch_size
+        ).reshape(-1, 1).to(self.device)
 
-        # -- train discriminator --
+        mutual_inhibit = 5.
+        last_discriminator_loss = 0.
 
-        discriminator_result = discriminator.forward(dis_image_batch)
+        last_print_time = 0
+        last_snapshot_time = time.time()
+        for epoch in tqdm(range(50000)):
 
-        discriminator_loss = F.mse_loss(
-            discriminator_result,
-            expected_discriminator_result_for_dis,
-        )
+            # -- generate batch of images --
 
-        discriminator.zero_grad()
-        discriminator_loss.backward()
-        discriminator_optimizer.step()
+            generator_image_batch = self.generate_images(self.batch_size * 2)
 
-        cur_time = time.time()
-        if cur_time - last_print_time >= .5:
-            last_print_time = cur_time
+            # -- discriminate --
 
-            correct_all = (torch.abs(
-                discriminator_result - expected_discriminator_result_for_dis
-            ) < .5).type(torch.int8)
-            #print(correct_all)
-            correct_real = correct_all[:batch_size].sum()
-            correct_gen = correct_all[batch_size:].sum()
+            discriminator_result = self.discriminator.forward(generator_image_batch)
 
-            print(
-                f"loss"
-                f" G {generator_loss:.3f}"
-                f" D {discriminator_loss:.3f} correct real/gen {correct_real} / {correct_gen}"
-                #"generator", model.weight_info() if hasattr(model, "weight_info") else "-",
-                #f"(img {round(float(image_loss), 3)}"
-                #f" param {round(float(parameter_loss), 3)})"
+            # -- train generator on discriminator result --
+
+            generator_loss = F.mse_loss(
+                discriminator_result,
+                expected_discriminator_result_for_gen,
             )
+            last_generator_loss = float(generator_loss)
+            generator_loss = generator_loss / (1. + mutual_inhibit * last_discriminator_loss)
 
-        if cur_time - last_snapshot_time >= 3:
-            last_snapshot_time = cur_time
+            gen_image_diversity = generator_image_batch.std(dim=0).std()
+            # generator_loss += torch.pow(.5 - gen_image_diversity, 2)
 
-            image = torch.clamp(generator_image_batch[:6*6], 0, 1).reshape(-1, 1, height, width)
-            image = make_grid(image, nrow=6)
-            image = VF.resize(image, [image.shape[-2]*4, image.shape[-1]*4], PIL.Image.NEAREST)
-            image = VF.to_pil_image(image)
-            image.save("./snapshot.png")
+            self.generator.zero_grad()
+            generator_loss.backward()
+            self.generator_optimizer.step()
+
+            # -- build image batch for discriminator --
+
+            dis_image_batch = torch.cat([
+                self.random_real_images(self.batch_size),
+                self.generate_images(self.batch_size),
+            ])
+
+            # -- train discriminator --
+
+            discriminator_result = self.discriminator.forward(dis_image_batch)
+
+            discriminator_loss = F.mse_loss(
+                discriminator_result,
+                expected_discriminator_result_for_dis,
+            )
+            last_discriminator_loss = float(discriminator_loss)
+            discriminator_loss = discriminator_loss / (1. + mutual_inhibit * last_generator_loss)
+
+            self.discriminator.zero_grad()
+            discriminator_loss.backward()
+            self.discriminator_optimizer.step()
+
+            cur_time = time.time()
+            if cur_time - last_print_time >= .5:
+                last_print_time = cur_time
+
+                correct_all = (torch.abs(
+                    discriminator_result - expected_discriminator_result_for_dis
+                ) < .5).type(torch.int8)
+                #print(correct_all)
+                correct_real = correct_all[:self.batch_size].sum()
+                correct_gen = correct_all[self.batch_size:].sum()
+
+                print(
+                    f"loss"
+                    f" G {last_generator_loss:.3f}"
+                    f" D {last_discriminator_loss:.3f} correct real/gen {correct_real} / {correct_gen}"
+                    f" | diversity {gen_image_diversity:.3f}"
+                )
+
+            if cur_time - last_snapshot_time >= 3:
+                last_snapshot_time = cur_time
+
+                image = (
+                    torch.clamp(generator_image_batch[:6*6], 0, 1)
+                    .reshape(-1, 1, self.height, self.width)
+                )
+                image = make_grid(image, nrow=6)
+                image = VF.resize(image, [image.shape[-2]*4, image.shape[-1]*4], PIL.Image.NEAREST)
+                image = VF.to_pil_image(image)
+                image.save("./snapshot.png")
 
 
 
@@ -136,7 +164,8 @@ def main():
     print(data.data.shape)
     print(data.targets.shape)
 
-    train(data)
+    t = Trainer(data)
+    t.train()
 
 
 if __name__ == "__main__":

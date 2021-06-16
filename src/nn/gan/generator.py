@@ -39,9 +39,9 @@ class Generator(nn.Module):
         self.n_out = n_out
 
         self.layers = nn.Sequential(
-            LinearLayer(n_in, 512, F.relu),
-            LinearLayer(512, 512, F.relu),
-            LinearLayer(512, n_out, F.tanh),
+            LinearLayer(n_in, 512, F.leaky_relu),
+            LinearLayer(512, 1024, F.leaky_relu),
+            LinearLayer(1024, n_out, F.tanh),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
