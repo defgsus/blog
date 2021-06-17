@@ -52,6 +52,8 @@ class Trainer:
         for row in generator_noise:
             row[random.randrange(row.shape[0])] += 1.
 
+        generator_noise = generator_noise / generator_noise.norm(dim=-1, keepdim=True)
+
         generator_image_batch = self.generator.forward(generator_noise.to(self.device))
         return generator_image_batch
 
@@ -60,6 +62,12 @@ class Trainer:
             self.data[random.randrange(len(self.data))][0].reshape(1, -1)
             for i in range(count)
         ]).to(self.device)
+
+    def discriminate(self, image_batch: torch.Tensor) -> torch.Tensor:
+        d = self.discriminator.forward(image_batch)
+        # d = torch.round(d * 5) / 5
+        torch.nn.MaxPool1d
+        return d
 
     def train(self):
         expected_discriminator_result_for_gen = torch.ones(self.batch_size*2).reshape(-1, 1).to(self.device)
@@ -80,14 +88,15 @@ class Trainer:
 
             # -- discriminate --
 
-            discriminator_result = self.discriminator.forward(generator_image_batch)
+            discriminator_result = self.discriminate(generator_image_batch)
 
             # -- train generator on discriminator result --
 
-            generator_loss = F.mse_loss(
+            generator_loss = F.l1_loss(
                 discriminator_result,
                 expected_discriminator_result_for_gen,
             )
+
             last_generator_loss = float(generator_loss)
             generator_loss = generator_loss / (1. + mutual_inhibit * last_discriminator_loss)
 
@@ -107,7 +116,7 @@ class Trainer:
 
             # -- train discriminator --
 
-            discriminator_result = self.discriminator.forward(dis_image_batch)
+            discriminator_result = self.discriminate(dis_image_batch)
 
             discriminator_loss = F.mse_loss(
                 discriminator_result,

@@ -57,9 +57,10 @@ class Discriminator(nn.Module):
         self.n_in = n_in
 
         self.layers = nn.Sequential(
+            #            nn.BatchNorm1d(n_in),
             LinearLayer(n_in, 512, F.relu),
             LinearLayer(512, 256, F.relu),
-            LinearLayer(256, 1, F.tanh),
+            LinearLayer(256, 1, F.sigmoid),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
