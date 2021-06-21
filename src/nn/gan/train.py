@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim
 
-from torchvision.datasets import VisionDataset, FashionMNIST
+from torchvision import datasets
 import torchvision.transforms.functional as VF
 import torchvision.transforms as VT
 from torchvision.utils import make_grid
@@ -19,21 +19,62 @@ from tqdm import tqdm
 from generator import Generator, Discriminator
 
 
+class ImageDataset:
+
+    ROOT = str(Path("~").expanduser() / "prog" / "data" / "datasets")
+
+    def __init__(self, name: str):
+        self.name = name
+
+        transform = VF.to_tensor
+        #if self.name == "STL10":
+        #    transform = self._transform_cifar10
+
+        self.data = getattr(datasets, self.name)(
+            root=self.ROOT,
+            download=True,
+            transform=transform,
+        )
+        self.shape = self.data.data.shape
+        self.num = self.shape[0]
+        if self.name == "CIFAR10":
+            self.height, self.width = self.shape[-3:-1]
+            self.channels = self.shape[-1] if len(self.shape) == 4 else 1
+        else:
+            self.height, self.width = self.shape[-2:]
+            self.channels = self.shape[-3] if len(self.shape) == 4 else 1
+
+        print(f"dataset: {self.num} x {self.width}x{self.height}x{self.channels}")
+
+    def random_samples(self, count: int) -> torch.Tensor:
+        return torch.cat([
+            self.data[random.randrange(len(self.data))][0].reshape(1, -1)
+            for i in range(count)
+        ])
+
+    @classmethod
+    def _transform_cifar10(cls, image: PIL.Image.Image) -> torch.Tensor:
+        out = VF.to_tensor(image)
+        print(out.shape)
+        return out
+
+
 class Trainer:
 
     def __init__(
             self,
-            data: VisionDataset,
+            data: ImageDataset,
             device: str = "cuda"
     ):
         self.data = data
         self.device = device
-        self.width, self.height = data.data.shape[-1], data.data.shape[-2]
-        self.n_generator_in = 8
+        self.width, self.height = self.data.width, self.data.height
+        self.channels = self.data.channels
+        self.n_generator_in = 5
         self.batch_size = 20
 
-        self.generator = Generator(self.n_generator_in, self.width * self.height).to(self.device)
-        self.discriminator = Discriminator(self.width * self.height).to(self.device)
+        self.generator = Generator(self.n_generator_in, self.width * self.height * self.channels).to(self.device)
+        self.discriminator = Discriminator(self.width * self.height * self.channels).to(self.device)
 
         self.generator_optimizer = torch.optim.Adam(
             self.generator.parameters(),
@@ -47,26 +88,23 @@ class Trainer:
         )
 
     def generate_images(self, count: int) -> torch.Tensor:
-        #generator_noise = torch.randn(count, self.n_generator_in)
-        generator_noise = torch.randn(count, self.n_generator_in) * .2
-        for row in generator_noise:
-            row[random.randrange(row.shape[0])] += 1.
+        generator_noise = torch.randn(count, self.n_generator_in)
+        #generator_noise = torch.randn(count, self.n_generator_in) * .2
+        #for row in generator_noise:
+        #    row[random.randrange(row.shape[0])] += 1.
 
-        generator_noise = generator_noise / generator_noise.norm(dim=-1, keepdim=True)
+        # generator_noise = generator_noise / generator_noise.norm(dim=-1, keepdim=True)
 
         generator_image_batch = self.generator.forward(generator_noise.to(self.device))
         return generator_image_batch
 
     def random_real_images(self, count: int) -> torch.Tensor:
-        return torch.cat([
-            self.data[random.randrange(len(self.data))][0].reshape(1, -1)
-            for i in range(count)
-        ]).to(self.device)
+        batch = self.data.random_samples(count).to(self.device)
+        return batch
 
     def discriminate(self, image_batch: torch.Tensor) -> torch.Tensor:
         d = self.discriminator.forward(image_batch)
         # d = torch.round(d * 5) / 5
-        torch.nn.MaxPool1d
         return d
 
     def train(self):
@@ -92,7 +130,7 @@ class Trainer:
 
             # -- train generator on discriminator result --
 
-            generator_loss = F.l1_loss(
+            generator_loss = F.binary_cross_entropy(
                 discriminator_result,
                 expected_discriminator_result_for_gen,
             )
@@ -118,7 +156,7 @@ class Trainer:
 
             discriminator_result = self.discriminate(dis_image_batch)
 
-            discriminator_loss = F.mse_loss(
+            discriminator_loss = F.binary_cross_entropy(
                 discriminator_result,
                 expected_discriminator_result_for_dis,
             )
@@ -152,7 +190,7 @@ class Trainer:
 
                 image = (
                     torch.clamp(generator_image_batch[:6*6], 0, 1)
-                    .reshape(-1, 1, self.height, self.width)
+                    .reshape(-1, self.channels, self.height, self.width)
                 )
                 image = make_grid(image, nrow=6)
                 image = VF.resize(image, [image.shape[-2]*4, image.shape[-1]*4], PIL.Image.NEAREST)
@@ -163,15 +201,13 @@ class Trainer:
 
 def main():
 
-    data = FashionMNIST(
-        root=str(Path("~").expanduser() / "prog" / "data" / "datasets" / "fashion-mnist"),
-        train=True,
-        download=True,
-        transform=VF.to_tensor,
+    data = ImageDataset(
+        #"MNIST"
+        #"FashionMNIST"
+        "CIFAR10"
+        #"STL10"
     )
-
-    print(data.data.shape)
-    print(data.targets.shape)
+    # print(data.targets.shape)
 
     t = Trainer(data)
     t.train()
