@@ -74,7 +74,14 @@ class Trainer:
         self.batch_size = 20
 
         self.generator = Generator(self.n_generator_in, self.width * self.height * self.channels).to(self.device)
-        self.discriminator = Discriminator(self.width * self.height * self.channels).to(self.device)
+        self.discriminator = Discriminator(self.width, self.height, self.channels).to(self.device)
+
+        for key in ("generator", "discriminator"):
+            model = getattr(self, key)
+            num_params = 0
+            for p in model.parameters():
+                num_params += p.shape.numel()
+            print(key, "params:", num_params)
 
         self.generator_optimizer = torch.optim.Adam(
             self.generator.parameters(),
@@ -202,9 +209,9 @@ class Trainer:
 def main():
 
     data = ImageDataset(
-        #"MNIST"
+        "MNIST"
         #"FashionMNIST"
-        "CIFAR10"
+        #"CIFAR10"
         #"STL10"
     )
     # print(data.targets.shape)
