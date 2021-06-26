@@ -1,6 +1,7 @@
 import time
 import random
 from pathlib import Path
+from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -16,7 +17,9 @@ import PIL.Image
 
 from tqdm import tqdm
 
-from generator import Generator, Discriminator
+from generator import Discriminator
+#from generator import GeneratorLinear as Generator
+from generator_cppm import GeneratorCPPM2 as Generator
 
 
 class ImageDataset:
@@ -37,7 +40,7 @@ class ImageDataset:
         )
         self.shape = self.data.data.shape
         self.num = self.shape[0]
-        if self.name == "CIFAR10":
+        if self.name.startswith("CIFAR"):
             self.height, self.width = self.shape[-3:-1]
             self.channels = self.shape[-1] if len(self.shape) == 4 else 1
         else:
@@ -52,6 +55,16 @@ class ImageDataset:
             for i in range(count)
         ])
 
+    def random_samples_with_labels(self, count: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        samples = [
+            self.data[random.randrange(len(self.data))]
+            for i in range(count)
+        ]
+        return (
+            torch.cat([s[0].reshape(1, -1) for s in samples]),
+            torch.Tensor([s[1] for s in samples]),
+        )
+
     @classmethod
     def _transform_cifar10(cls, image: PIL.Image.Image) -> torch.Tensor:
         out = VF.to_tensor(image)
@@ -59,21 +72,84 @@ class ImageDataset:
         return out
 
 
-class Trainer:
+class ReproTestTrainer:
 
     def __init__(
             self,
             data: ImageDataset,
-            device: str = "cuda"
+            device: str = "cuda",
     ):
         self.data = data
         self.device = device
         self.width, self.height = self.data.width, self.data.height
         self.channels = self.data.channels
-        self.n_generator_in = 5
+        self.n_generator_in = 32
+        self.batch_size = 50
+        self.label_features = dict()
+
+        self.samples = self.data.random_samples(self.batch_size).to(self.device)
+        self.features = torch.randn(self.batch_size, self.n_generator_in).to(self.device)
+
+        self.generator = Generator(self.n_generator_in, self.width, self.height, self.channels).to(self.device)
+
+        self.generator_optimizer = torch.optim.Adam(
+            self.generator.parameters(),
+            lr=0.0001,
+            weight_decay=0.001,
+        )
+
+    def train(self, epochs: int = 10000):
+
+        last_print_time = 0
+        last_snapshot_time = 0
+
+        for epoch in tqdm(range(epochs)):
+
+            gen_images = self.generator.forward(self.features)
+            gen_images = gen_images.reshape(self.batch_size, -1)
+
+            loss = F.mse_loss(gen_images, self.samples)
+
+            self.generator.zero_grad()
+            loss.backward()
+            self.generator_optimizer.step()
+
+            cur_time = time.time()
+            if cur_time - last_print_time >= .5:
+                last_print_time = cur_time
+
+                print(
+                    f"loss {loss:.3f}"
+                )
+
+            if cur_time - last_snapshot_time >= 3:
+                last_snapshot_time = cur_time
+
+                image = (
+                    torch.clamp(gen_images[:6*6], 0, 1)
+                        .reshape(-1, self.channels, self.height, self.width)
+                )
+                image = make_grid(image, nrow=6)
+                image = VF.resize(image, [image.shape[-2]*4, image.shape[-1]*4], PIL.Image.NEAREST)
+                image = VF.to_pil_image(image)
+                image.save("./snapshot.png")
+
+
+class Trainer:
+
+    def __init__(
+            self,
+            data: ImageDataset,
+            device: str = "cuda",
+    ):
+        self.data = data
+        self.device = device
+        self.width, self.height = self.data.width, self.data.height
+        self.channels = self.data.channels
+        self.n_generator_in = 100
         self.batch_size = 20
 
-        self.generator = Generator(self.n_generator_in, self.width * self.height * self.channels).to(self.device)
+        self.generator = Generator(self.n_generator_in, self.width, self.height, self.channels).to(self.device)
         self.discriminator = Discriminator(self.width, self.height, self.channels).to(self.device)
 
         for key in ("generator", "discriminator"):
@@ -85,24 +161,42 @@ class Trainer:
 
         self.generator_optimizer = torch.optim.Adam(
             self.generator.parameters(),
-            lr=0.001,
+            lr=0.0001,
             weight_decay=0.001,
         )
         self.discriminator_optimizer = torch.optim.Adam(
             self.discriminator.parameters(),
-            lr=0.00005,
+            lr=0.0001,
             weight_decay=0.001,
         )
 
-    def generate_images(self, count: int) -> torch.Tensor:
-        generator_noise = torch.randn(count, self.n_generator_in)
-        #generator_noise = torch.randn(count, self.n_generator_in) * .2
-        #for row in generator_noise:
-        #    row[random.randrange(row.shape[0])] += 1.
+    def generate_images(self, count: int, random_transform: bool = False) -> torch.Tensor:
+        #generator_noise = torch.randn(count, self.n_generator_in)
+        generator_noise = torch.randn(count, self.n_generator_in) * .2
+        for row in generator_noise:
+            row[random.randrange(row.shape[0])] += 1.
 
         # generator_noise = generator_noise / generator_noise.norm(dim=-1, keepdim=True)
 
         generator_image_batch = self.generator.forward(generator_noise.to(self.device))
+        if generator_image_batch.ndim > 2:
+            generator_image_batch = generator_image_batch.reshape(count, -1)
+
+        if random_transform:
+            if not hasattr(self, "_random_transforms"):
+                self._random_transforms = VT.RandomRotation(7, center=[1./3, 2./3])
+
+            generator_image_batch = \
+                    generator_image_batch.reshape(-1, self.channels, self.height, self.width)
+
+            generator_image_batch = torch.cat([
+                self._random_transforms(generator_image_batch[i]).unsqueeze(0)
+                for i in range(generator_image_batch.shape[0])
+            ])
+
+            generator_image_batch = \
+                    generator_image_batch.reshape(-1, self.channels * self.height * self.width)
+
         return generator_image_batch
 
     def random_real_images(self, count: int) -> torch.Tensor:
@@ -145,8 +239,11 @@ class Trainer:
             last_generator_loss = float(generator_loss)
             generator_loss = generator_loss / (1. + mutual_inhibit * last_discriminator_loss)
 
-            gen_image_diversity = generator_image_batch.std(dim=0).std()
-            # generator_loss += torch.pow(.5 - gen_image_diversity, 2)
+            #gen_image_diversity = generator_image_batch.std(dim=0).std()
+            gen_image_diversity = (
+                generator_image_batch[:-1] - generator_image_batch[1:]
+            ).abs().mean()
+            # generator_loss += 10.*torch.pow(1. - gen_image_diversity, 2)
 
             self.generator.zero_grad()
             generator_loss.backward()
@@ -209,14 +306,16 @@ class Trainer:
 def main():
 
     data = ImageDataset(
-        "MNIST"
+        #"MNIST"
         #"FashionMNIST"
-        #"CIFAR10"
+        "CIFAR10"
+        #"CIFAR100"
         #"STL10"
     )
     # print(data.targets.shape)
 
     t = Trainer(data)
+    #t = ReproTestTrainer(data)
     t.train()
 
 
