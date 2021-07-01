@@ -1,8 +1,7 @@
 import time
 import random
 from pathlib import Path
-from typing import Tuple
-import importlib
+from typing import Tuple, Optional, List
 
 import torch
 import torch.nn as nn
@@ -19,10 +18,14 @@ class ImageDataset:
 
     ROOT = str(Path("~").expanduser() / "prog" / "data" / "datasets")
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, resize: Optional[List[int]] = [16, 16]):
         self.name = name
 
         transform = VF.to_tensor
+        if resize:
+            def _transform(p: PIL.Image.Image) -> torch.Tensor:
+                return VF.resize(VF.to_tensor(p), [resize[1], resize[0]])
+            transform = _transform
 
         self.data = getattr(datasets, self.name)(
             root=self.ROOT,
@@ -38,6 +41,9 @@ class ImageDataset:
         else:
             self.height, self.width = self.shape[-2:]
             self.channels = self.shape[-3] if len(self.shape) == 4 else 1
+
+        if resize:
+            self.width, self.height = resize
 
         print(f"dataset: {self.num} x {self.width}x{self.height}x{self.channels}")
 
