@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             let html = ``;
             if (cell.image) {
-                html += `<img src="${cell.image}?${cell.hash}">`;
+                html += `<img src="${cell.image}?${cell.hash}" width="${cell.width}px" height="${cell.height}px">`;
             }
             if (cell.text) {
                 html += `<p>${cell.text}</p>`;

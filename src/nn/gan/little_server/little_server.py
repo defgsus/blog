@@ -6,8 +6,10 @@ from multiprocessing import Process
 from threading import Thread
 from queue import Queue
 from io import BytesIO
+from typing import Union
 
 import PIL.Image
+import matplotlib.pyplot as plt
 
 from flask import Flask, request, render_template
 
@@ -73,13 +75,15 @@ class LittleServer:
 
         if cell.get("image"):
             image = cell["image"]
-            if isinstance(image, PIL.Image.Image):
+            if isinstance(image, (PIL.Image.Image, plt.Figure)):
                 self._set_image(name, image)
             cell["image"] = f"/img/{cell['name']}.png"
+            cell["width"] = self._images[cell["name"]]["width"]
+            cell["height"] = self._images[cell["name"]]["height"]
 
         hash_source = (
             json.dumps(cell).encode("ascii")
-            + (self._images.get(cell["name"]) or b"")
+            + (self._images.get(cell["name"], {}).get("data") or b"")
         )
         cell["hash"] = hashlib.md5(hash_source).hexdigest()
 
@@ -87,14 +91,29 @@ class LittleServer:
             self._cells[name] = cell
             #self._cells_update.add(name)
 
-    def _set_image(self, name: str, image: PIL.Image.Image):
+    def _set_image(self, name: str, image: Union[PIL.Image.Image, plt.Figure]):
         fp = BytesIO()
-        image.save(fp, "png")
+        if isinstance(image, PIL.Image.Image):
+            image.save(fp, "png")
+            width, height = image.width, image.height
+        elif isinstance(image, plt.Figure):
+            image.savefig(fp, format="png")
+            width, height = (
+                image.get_figwidth() * image.dpi,
+                image.get_figheight() * image.dpi,
+            )
+        else:
+            raise TypeError(f"Unhandled image type {type(image).__name__}")
+
         fp.seek(0)
-        self._images[name] = fp.read()
+        self._images[name] = {
+            "width": width,
+            "height": height,
+            "data": fp.read(),
+        }
 
     def _image_view(self, name):
-        return self._images.get(name)
+        return self._images.get(name, {}).get("data")
 
 
 if __name__ == "__main__":

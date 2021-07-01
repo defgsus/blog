@@ -80,7 +80,11 @@ class GeneratorCPPMBase(nn.Module):
                 dim=-1
             )
             self._coordinate_cache_size = (width, height)
-        return self._coordinate_cache + torch.randn(height, width, 2).to(self._coordinate_cache.device) / width
+
+        if self.training:
+            return self._coordinate_cache + torch.randn(height, width, 2).to(self._coordinate_cache.device) / width
+        else:
+            return self._coordinate_cache
 
 
 class GeneratorCPPM1(GeneratorCPPMBase):
