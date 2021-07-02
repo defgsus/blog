@@ -61,12 +61,14 @@ class Trainer:
             "dis_correct_gen": [],
         }
 
+        self.info_text = ""
         for key in ("generator", "discriminator"):
             model = getattr(self, key)
             num_params = 0
             for p in model.parameters():
                 num_params += p.shape.numel()
             print(key, "params:", num_params)
+            self.info_text += f"{key} params: {num_params}\n"
 
         self.generator_optimizer = torch.optim.Adam(
             self.generator.parameters(),
@@ -75,7 +77,7 @@ class Trainer:
         )
         self.discriminator_optimizer = torch.optim.Adam(
             self.discriminator.parameters(),
-            lr=0.0001,
+            lr=0.001,
             weight_decay=0.001,
         )
 
@@ -99,7 +101,7 @@ class Trainer:
             fig.clear()
 
             fig, ax = plt.subplots(figsize=(6, 2))
-            df.rolling(50).mean().plot(title="training loss (ma)", ax=ax)
+            df.rolling(10000 // self.batch_size).mean().clip(0, 1.5).plot(title="training loss (ma)", ax=ax)
             self.server.set_cell("loss_ma", image=fig)
             fig.clear()
 
@@ -140,12 +142,27 @@ class Trainer:
 
     def discriminate(self, image_batch: torch.Tensor, normalize: bool = False) -> torch.Tensor:
         if normalize:
-            image_batch = VF.normalize([.5]*self.channels, [1.]*self.channels)
+            image_batch = VF.normalize(image_batch, [.5]*self.channels, [1.]*self.channels)
         d = self.discriminator.forward(image_batch)
         # d = torch.round(d * 5) / 5
         return d
 
+    def render_image_grid(self, batch: torch.Tensor, nrow: int = 6, min_width: int = 48) -> PIL.Image.Image:
+        batch = torch.clamp(batch[:nrow*nrow], 0, 1)
+
+        image = make_grid(batch, nrow=nrow)
+        if self.width < min_width:
+            factor = 1 + min_width // self.width
+            image = VF.resize(image, [image.shape[-2]*factor, image.shape[-1]*factor], PIL.Image.NEAREST)
+        image = VF.to_pil_image(image)
+        return image
+
     def train(self):
+        if self.server:
+            self.server.set_cell("real samples", image=self.render_image_grid(
+                self.random_real_images(36)
+            ))
+
         expected_discriminator_result_for_gen = torch.ones(self.batch_size*2).reshape(-1, 1).to(self.device)
         expected_discriminator_result_for_dis = torch.Tensor(
             [1] * self.batch_size + [0] * self.batch_size
@@ -153,6 +170,9 @@ class Trainer:
 
         mutual_inhibit = 50.
         last_discriminator_loss = 0.
+        # add real images to generator training so that batchnorm
+        #   does not give the discriminator an advantage over the generator
+        gen_train_add_real = True
 
         last_print_time = 0
         last_snapshot_time = time.time()
@@ -161,11 +181,13 @@ class Trainer:
             for gen_iter in range(2):
                 # -- generate batch of images --
 
-                #generator_image_batch = self.generate_images(self.batch_size * 2)
-                generator_image_batch = torch.cat([
-                    self.random_real_images(self.batch_size),
-                    self.generate_images(self.batch_size),
-                ])
+                if not gen_train_add_real:
+                    generator_image_batch = self.generate_images(self.batch_size * 2)
+                else:
+                    generator_image_batch = torch.cat([
+                        self.random_real_images(self.batch_size),
+                        self.generate_images(self.batch_size),
+                    ])
 
                 # -- discriminate --
 
@@ -173,10 +195,16 @@ class Trainer:
                 # self.server.set_cell("gen_dis_result", text=f"{discriminator_result}")
                 # -- train generator on discriminator result --
 
-                generator_loss = self.criterion(
-                    discriminator_result[self.batch_size:],
-                    expected_discriminator_result_for_gen[self.batch_size:],
-                )
+                if not gen_train_add_real:
+                    generator_loss = self.criterion(
+                        discriminator_result,
+                        expected_discriminator_result_for_gen,
+                    )
+                else:
+                    generator_loss = self.criterion(
+                        discriminator_result[self.batch_size:],
+                        expected_discriminator_result_for_gen[self.batch_size:],
+                    )
 
                 last_generator_loss = float(generator_loss)
                 generator_loss = generator_loss / (1. + mutual_inhibit * last_discriminator_loss)
@@ -241,27 +269,26 @@ class Trainer:
                 if self.server:
                     self.server.set_cell(
                         "stats",
-                        text=f"frame {frame}"
-                             f", loss G {last_generator_loss:.3f}"
-                             f" D {last_discriminator_loss:.3f} correct real/gen {correct_real} / {correct_gen}"
+                        text=(
+                            self.info_text +
+                            f"frame {frame}"
+                            f", loss G {last_generator_loss:.3f}"
+                            f" D {last_discriminator_loss:.3f} correct real/gen {correct_real} / {correct_gen}"
+                        )
                     )
 
             if self.server:
                 if frame == 0 or cur_time - last_snapshot_time >= 3:
                     last_snapshot_time = cur_time
 
-                    image = (
-                        torch.clamp(generator_image_batch[self.batch_size:][:6*6], 0, 1)
-                        .reshape(-1, self.channels, self.height, self.width)
-                    )
-                    image = make_grid(image, nrow=6)
-                    if self.width < 64:
-                        factor = 1 + 48 // self.width
-                        image = VF.resize(image, [image.shape[-2]*factor, image.shape[-1]*factor], PIL.Image.NEAREST)
-                    image = VF.to_pil_image(image)
-                    #image.save("./snapshot.png")
+                    if not gen_train_add_real:
+                        gen_batch = generator_image_batch
+                    else:
+                        gen_batch = generator_image_batch[self.batch_size:]
+                    image_grid = self.render_image_grid(gen_batch)
+                    #image_grid.save("./snapshot.png")
 
-                    self.server.set_cell("samples", image=image)
+                    self.server.set_cell("samples", image=image_grid)
                     self.plot_loss_history()
 
                     df = pd.DataFrame({

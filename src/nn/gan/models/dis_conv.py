@@ -25,3 +25,26 @@ class DiscriminatorConv(DiscriminatorBase):
         y = self.l_out(y)
         return y
 
+
+
+class DiscriminatorConvP1(DiscriminatorBase):
+
+    def __init__(self, width: int, height: int, channels: int, batch_norm: bool = False):
+        super().__init__(width, height, channels)
+
+        n_feat = 64
+
+        self.layers = nn.Sequential(
+            nn.Conv2d(self.channels, n_feat, 2, 1, 1),
+            nn.BatchNorm2d(n_feat),
+            nn.LeakyReLU(inplace=True),
+
+            nn.Flatten(),
+            nn.Linear(n_feat*(width+1)*(height+1), 1),
+            # nn.BatchNorm1d(1),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = self.layers(x)
+        return y

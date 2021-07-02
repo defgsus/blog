@@ -39,7 +39,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (cell.text) {
-                html += `<p>${cell.text}</p>`;
+                for (const line of cell.text.split("\n"))
+                    html += `<p>${line}</p>`;
             }
 
             if (cell.actions) {
