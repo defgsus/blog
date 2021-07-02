@@ -1,13 +1,11 @@
 from .layers import *
+from .dis import DiscriminatorBase
 
 
-class DiscriminatorConv(nn.Module):
+class DiscriminatorConv(DiscriminatorBase):
 
     def __init__(self, width: int, height: int, channels: int, batch_norm: bool = False):
-        super().__init__()
-        self.width = width
-        self.height = height
-        self.channels = channels
+        super().__init__(width, height, channels)
 
         self.layers = nn.Sequential(
             ConvLayer(chan_in=self.channels, chan_out=32, kernel_size=3, padding=1, act="leaky_relu", batch_norm=batch_norm),
@@ -22,8 +20,7 @@ class DiscriminatorConv(nn.Module):
         self.l_out = LinearLayer(self.out_size, 1, torch.sigmoid, batch_norm=batch_norm)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        y = x.reshape(-1, self.channels, self.height, self.width)
-        y = self.layers(y)
+        y = self.layers(x)
         y = y.reshape(-1, self.out_size)
         y = self.l_out(y)
         return y

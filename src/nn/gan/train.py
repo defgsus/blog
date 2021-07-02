@@ -70,7 +70,7 @@ class Trainer:
 
         self.generator_optimizer = torch.optim.Adam(
             self.generator.parameters(),
-            lr=0.0001,
+            lr=0.001,
             weight_decay=0.001,
         )
         self.discriminator_optimizer = torch.optim.Adam(
@@ -78,6 +78,16 @@ class Trainer:
             lr=0.0001,
             weight_decay=0.001,
         )
+
+        # TODO: not working yet,
+        #   need to implement Queues for communication
+        #if self.server:
+        #    self.server.set_cell("actions", actions={
+        #        "weight_snapshot": self.store_weights
+        #    })
+
+    def store_weights(self):
+        print("STORE")
 
     def plot_loss_history(self):
         if self.server:
@@ -112,23 +122,15 @@ class Trainer:
         # generator_noise = generator_noise / generator_noise.norm(dim=-1, keepdim=True)
 
         generator_image_batch = self.generator.forward(generator_noise.to(self.device))
-        if generator_image_batch.ndim > 2:
-            generator_image_batch = generator_image_batch.reshape(count, -1)
 
         if random_transform:
             if not hasattr(self, "_random_transforms"):
                 self._random_transforms = VT.RandomRotation(7, center=[1./3, 2./3])
 
-            generator_image_batch = \
-                    generator_image_batch.reshape(-1, self.channels, self.height, self.width)
-
             generator_image_batch = torch.cat([
                 self._random_transforms(generator_image_batch[i]).unsqueeze(0)
                 for i in range(generator_image_batch.shape[0])
             ])
-
-            generator_image_batch = \
-                    generator_image_batch.reshape(-1, self.channels * self.height * self.width)
 
         return generator_image_batch
 
@@ -138,10 +140,7 @@ class Trainer:
 
     def discriminate(self, image_batch: torch.Tensor, normalize: bool = False) -> torch.Tensor:
         if normalize:
-            image_batch = VF.normalize(
-                image_batch.view(-1, self.channels, self.height, self.width),
-                [.5]*self.channels, [1.]*self.channels,
-            ).view(-1, self.channels*self.height*self.width)
+            image_batch = VF.normalize([.5]*self.channels, [1.]*self.channels)
         d = self.discriminator.forward(image_batch)
         # d = torch.round(d * 5) / 5
         return d

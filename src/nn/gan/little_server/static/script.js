@@ -33,15 +33,34 @@ document.addEventListener("DOMContentLoaded", function () {
             const cell_elem = dom_cell_elements[cell.name];
 
             let html = ``;
+
             if (cell.image) {
                 html += `<img src="${cell.image}?${cell.hash}" width="${cell.width}px" height="${cell.height}px">`;
             }
+
             if (cell.text) {
                 html += `<p>${cell.text}</p>`;
             }
 
+            if (cell.actions) {
+                for (const a of cell.actions) {
+                    html += `<button class="action-button" data-action="${a.id}">${a.name}</button>`;
+                }
+            }
+
             cell_elem.innerHTML = html;
             dom_cell_hashes[cell.name] = cell.hash;
+            for (const b of document.querySelectorAll("button.action-button")) {
+                b.onclick = on_action_click;
+            }
         }
+    }
+
+    function on_action_click(event) {
+        const action = event.target.getAttribute("data-action");
+        fetch(`action/?a=${action}`, {method: "post"})
+            .then(response => response.json())
+            //.then(response => render_cells(response["cells"]))
+        ;
     }
 });

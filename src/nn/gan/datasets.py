@@ -49,9 +49,9 @@ class ImageDataset:
 
     def random_samples(self, count: int) -> torch.Tensor:
         return torch.cat([
-            self.data[random.randrange(len(self.data))][0].reshape(1, -1)
+            self.data[random.randrange(len(self.data))][0].unsqueeze(0)
             for i in range(count)
-        ])
+        ], dim=0)
 
     def random_samples_with_labels(self, count: int) -> Tuple[torch.Tensor, torch.Tensor]:
         samples = [
@@ -59,6 +59,6 @@ class ImageDataset:
             for i in range(count)
         ]
         return (
-            torch.cat([s[0].reshape(1, -1) for s in samples]),
+            torch.cat([s[0].unsqueeze(0) for s in samples], dim=0),
             torch.Tensor([s[1] for s in samples]),
         )

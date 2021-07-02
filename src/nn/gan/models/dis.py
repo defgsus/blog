@@ -1,11 +1,20 @@
 from .layers import *
 
 
-class DiscriminatorLinear(nn.Module):
+class DiscriminatorBase(nn.Module):
+
+    def __init__(self, width: int, height: int, channels: int):
+        super().__init__()
+        self.width = width
+        self.height = height
+        self.channels = channels
+        self.n_in = width * height * channels
+
+
+class DiscriminatorLinear(DiscriminatorBase):
 
     def __init__(self, width: int, height: int, channels: int, batch_norm: bool = True):
-        super().__init__()
-        self.n_in = width * height * channels
+        super().__init__(width, height, channels)
 
         self.layers = nn.Sequential(
             LinearLayer(self.n_in, 1024, F.relu, batch_norm=batch_norm),
@@ -14,7 +23,8 @@ class DiscriminatorLinear(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layers(x)
+        y = x.view(-1, self.n_in)
+        return self.layers(y)
 
 
 class DiscriminatorLinear1(nn.Module):
@@ -30,4 +40,5 @@ class DiscriminatorLinear1(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layers(x)
+        y = x.view(-1, self.n_in)
+        return self.layers(y)

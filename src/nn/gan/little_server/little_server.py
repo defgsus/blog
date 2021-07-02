@@ -26,6 +26,7 @@ class LittleServer:
         self._cells = dict()
         self._cells_update = set()
         self._images = dict()
+        self._actions = dict()
 
     def start(self):
         if not self._thread:
@@ -47,6 +48,7 @@ class LittleServer:
         )
         self._app.add_url_rule("/", "index", self._index_view)
         self._app.add_url_rule("/cells/", "cells", self._cells_view)
+        self._app.add_url_rule("/action/", "action", self._action_view, methods=["POST"])
         self._app.add_url_rule("/img/<name>.png", "image", self._image_view)
 
         # print(f"http://{self.host}:{self.port}")
@@ -81,6 +83,13 @@ class LittleServer:
             cell["width"] = self._images[cell["name"]]["width"]
             cell["height"] = self._images[cell["name"]]["height"]
 
+        if cell.get("actions"):
+            self._actions.update(cell["actions"])
+            cell["actions"] = [
+                {"id": key, "name": key}
+                for key in cell["actions"]
+            ]
+
         hash_source = (
             json.dumps(cell).encode("ascii")
             + (self._images.get(cell["name"], {}).get("data") or b"")
@@ -114,6 +123,12 @@ class LittleServer:
 
     def _image_view(self, name):
         return self._images.get(name, {}).get("data")
+
+    def _action_view(self):
+        action = request.args.get("a")
+        if action in self._actions:
+            self._actions[action]()
+        return ""
 
 
 if __name__ == "__main__":

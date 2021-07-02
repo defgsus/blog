@@ -1,14 +1,11 @@
 from .layers import *
+from .gen import GeneratorBase
 
 
-class GeneratorCPPMBase(nn.Module):
+class GeneratorCPPMBase(GeneratorBase):
 
     def __init__(self, n_in: int, width: int, height: int, channels: int):
-        super().__init__()
-        self.n_in = n_in
-        self.width = width
-        self.height = height
-        self.channels = channels
+        super().__init__(n_in, width, height, channels)
         self._coordinate_cache = None
         self._coordinate_cache_size = None
 
@@ -44,7 +41,7 @@ class GeneratorCPPMBase(nn.Module):
             [
                 self.coordinates(width, height, x.device).reshape(1, -1, 2).expand(batch_size, -1, -1),
                 # shape=[batch_size, width*height, 2]
-                x.reshape(batch_size, 1, self.n_in).expand(-1, width*height, -1),
+                x.view(batch_size, 1, self.n_in).expand(-1, width*height, -1),
                 # shape=[batch_size, width*height, n_in]
             ],
             dim=-1,
