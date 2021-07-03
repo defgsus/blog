@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 from copy import deepcopy
-from multiprocessing import Process
+from queue import Queue, Empty
 from threading import Thread
 from functools import partial
 import urllib.parse
@@ -44,6 +44,7 @@ class LittleServer:
         self._cells_update = set()
         self._images = dict()
         self._actions = dict()
+        self._action_queue = Queue()
 
     def url(self, protocol: str = "http"):
         return f"{protocol}://{self.host}:{self.port}"
@@ -64,6 +65,12 @@ class LittleServer:
     def running(self) -> bool:
         return bool(self._io_loop)
 
+    def get_action(self) -> Optional[dict]:
+        try:
+            return self._action_queue.get_nowait()
+        except Empty:
+            pass
+
     def send_message(self, name: str, data: Optional[dict] = None):
         assert self._io_loop, f"Called send_message on stopped server"
         message = {"name": deepcopy(name), "data": deepcopy(data)}
@@ -74,25 +81,28 @@ class LittleServer:
             name: str,
             row: Optional[Union[int, Sequence[int]]] = None,
             column: Optional[Union[int, Sequence[int]]] = None,
+            fit: bool = False,
     ):
-        #if row is None or column is None:
-        #    assert row is None and column is None, "Must either supply 'row' AND 'column' or none of it"
-
         if name not in self._cells_layout:
             self._cells_layout[name] = dict()
         cell_layout = self._cells_layout[name]
 
-        layout_changed = False
-        if cell_layout.get("row") != row or cell_layout.get("column") != column:
-            layout_changed = True
+        new_cell_layout = {
+            "row": row,
+            "column": column,
+            "fit": fit,
+        }
+        #new_cell_layout = {
+        #    key: value
+        #    for key, value in new_cell_layout.items()
+        #    if value is not None
+        #}
 
-        cell_layout["row"] = row
-        cell_layout["column"] = column
+        if cell_layout != new_cell_layout:
+            self._cells_layout[name] = new_cell_layout
 
-        if layout_changed:
             if self._cells.get(name):
-                self._cells[name]["row"] = row
-                self._cells[name]["column"] = column
+                self._cells[name].update(**new_cell_layout)
                 self._update_cell(name)
 
     def set_cell(
@@ -106,20 +116,24 @@ class LittleServer:
             image: Optional[Union[PIL.Image.Image]] = None,
             images: Optional[List[Union[PIL.Image.Image]]] = None,
             actions: Optional[List[str]] = None,
-            fit: bool = False,
+            fit: Optional[bool] = None,
     ):
-        if row is not None or column is not None:
+        if row is not None or column is not None or fit is not None:
             if name not in self._cells_layout:
                 self._cells_layout[name] = dict()
             if row is not None:
                 self._cells_layout[name]["row"] = row
             if column is not None:
                 self._cells_layout[name]["column"] = column
+            if fit is not None:
+                self._cells_layout[name]["fit"] = fit
 
         if row is None:
             row = self._cells_layout.get(name, {}).get("row")
         if column is None:
             column = self._cells_layout.get(name, {}).get("column")
+        if fit is None:
+            fit = self._cells_layout.get(name, {}).get("fit")
 
         if row is not None:
             row = str(row) if isinstance(row, int) else " / ".join(str(i) for i in row)
@@ -271,8 +285,8 @@ class LittleServer:
                 client.write_message({"name": "cell", "data": cell})
 
         elif name == "action":
-            print("ACTION", data["name"])
-
+            # print("ACTION", data["name"])
+            self._action_queue.put_nowait(data)
         else:
             print(f"Unhandled client-message '{name}', {data}")
 
