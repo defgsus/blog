@@ -1,5 +1,6 @@
 html {
     background: #888;
+    font-family: Ubuntu, sans-serif;
 }
 
 .ls-header {
@@ -7,6 +8,7 @@ html {
     grid-template-columns: repeat(12, 1fr);
     gap: .5rem;
     background: #aaa;
+    border-radius: 5px;
     margin-bottom: .5rem;
     padding: .25rem;
 }
@@ -21,7 +23,7 @@ html {
     grid-row: 1;
     grid-column: 8 / 13;
     text-align: right;
-    font-family: mono, monospace, Monospaced, Arial;
+    font-family: mono, monospace;
 }
 
 .ls-header .ls-header-status.ls-connected {
@@ -32,15 +34,22 @@ html {
 .ls-cells {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(12, 10vh);
     gap: .5rem;
 }
 
 .ls-cells .ls-cell {
+    box-shadow: 2px 2px #6f6f6f;
+    background: #7f7f7f;
     position: relative;
     border: 1px solid black;
     border-radius: 5px;
     padding: .5rem;
     overflow: hidden;
+}
+
+.ls-cells .ls-cell p {
+    margin: 0 0 .5rem 0;
 }
 
 .ls-cells .ls-cell-code {
@@ -49,6 +58,15 @@ html {
 
 .ls-cells .ls-cell-log {
     padding: 0;
+}
+
+.ls-cells .ls-cell-image {
+    padding: 0;
+}
+
+.ls-cells .ls-cell-scrollable {
+    overflow: scroll;
+    scrollbar-color: #bbb #7f7f7f;
 }
 
 .ls-cells textarea {

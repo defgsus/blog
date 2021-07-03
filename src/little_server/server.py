@@ -105,6 +105,8 @@ class LittleServer:
             log: Optional[str] = None,
             image: Optional[Union[PIL.Image.Image]] = None,
             images: Optional[List[Union[PIL.Image.Image]]] = None,
+            actions: Optional[List[str]] = None,
+            fit: bool = False,
     ):
         if row is not None or column is not None:
             if name not in self._cells_layout:
@@ -126,9 +128,14 @@ class LittleServer:
 
         cell = {
             "name": name,
-            "row": row,
-            "column": column,
         }
+        if row is not None:
+            cell["row"] = row
+        if column is not None:
+            cell["column"] = column
+        if fit:
+            cell["fit"] = fit
+
         if text:
             cell["text"] = str(text)
         if code:
@@ -146,6 +153,12 @@ class LittleServer:
             cell["images"] = [
                 f"/img/{cell['name']}/{i}.png?h={cache['hash']}"
                 for i, cache in enumerate(self._images[name])
+            ]
+
+        if actions:
+            cell["actions"] = [
+                {"id": a, "name": a}
+                for a in actions
             ]
 
         hash_source = json.dumps(cell).encode("ascii")
@@ -257,4 +270,9 @@ class LittleServer:
             for cell in self._cells.values():
                 client.write_message({"name": "cell", "data": cell})
 
+        elif name == "action":
+            print("ACTION", data["name"])
+
+        else:
+            print(f"Unhandled client-message '{name}', {data}")
 

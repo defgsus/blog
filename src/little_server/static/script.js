@@ -90,6 +90,11 @@ document.addEventListener("DOMContentLoaded", function () {
             css_classes += " ls-cell-code";
         if (cell.log)
             css_classes += " ls-cell-log";
+        if (cell.images && cell.images.length) {
+            css_classes += " ls-cell-image";
+            if (!cell.fit)
+                css_classes += " ls-cell-scrollable";
+        }
 
         cell_elem.innerHTML = render_cell_html(cell);
         cell_elem.setAttribute("style", style);
@@ -107,7 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (cell.images) {
             for (const image of cell.images) {
-                html += `<img src="${image}">`; // width="${cell.width}px" height="${cell.height}px">`;
+                html += `<img src="${image}"`;
+                if (cell.fit) {
+                    html += `width="100%" height="${100 / cell.images.length}%"`;
+                }
+                html += `>`;
             }
         }
 
@@ -149,9 +158,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function on_action_click(event) {
         const action = event.target.getAttribute("data-action");
-        fetch(`action/?a=${action}`, {method: "post"})
-            .then(response => response.json())
-            //.then(response => render_cells(response["cells"]))
-        ;
+        send_ws_message("action", {name: action});
     }
 });
