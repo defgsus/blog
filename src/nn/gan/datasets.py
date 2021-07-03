@@ -18,7 +18,7 @@ class ImageDataset:
 
     ROOT = str(Path("~").expanduser() / "prog" / "data" / "datasets")
 
-    def __init__(self, name: str, resize: Optional[List[int]] = [4, 4]):
+    def __init__(self, name: str, resize: Optional[List[int]] = None):
         self.name = name
 
         transform = VF.to_tensor

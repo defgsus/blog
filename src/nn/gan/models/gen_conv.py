@@ -79,7 +79,7 @@ class GeneratorConv4x4(GeneratorBase):
         assert width == 4 and height == 4
         super().__init__(n_in, width, height, channels)
 
-        n_feat = 16
+        n_feat = 64*2
 
         self.layers = nn.Sequential(
             nn.ConvTranspose2d(self.n_in, n_feat, 2, 1, 0, bias=False),
@@ -92,6 +92,36 @@ class GeneratorConv4x4(GeneratorBase):
             #nn.LeakyReLU(inplace=True),
             nn.Tanh()
             # shape [N, channels, 4, 4]
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = x.view(-1, self.n_in, 1, 1)
+        y = self.layers(y)
+        return y
+
+
+class GeneratorConv8x8(GeneratorBase):
+    def __init__(self, n_in: int, width: int, height: int, channels: int, batch_norm: bool = False):
+        assert width == 8 and height == 8
+        super().__init__(n_in, width, height, channels)
+
+        n_feat = 64
+
+        self.layers = nn.Sequential(
+            nn.ConvTranspose2d(self.n_in, n_feat*2, 2, 1, 0, bias=False),
+            nn.BatchNorm2d(n_feat*2),
+            nn.LeakyReLU(inplace=True),
+            # shape [N, n_feat, 2, 2]
+
+            nn.ConvTranspose2d(n_feat*2, n_feat, 3, 1, 0, bias=False),
+            nn.BatchNorm2d(n_feat),
+            nn.LeakyReLU(inplace=True),
+            # shape [N, n_feat, 4, 4]
+
+            nn.ConvTranspose2d(n_feat, self.channels, 5, 1, 0, bias=False),
+            nn.BatchNorm2d(self.channels),
+            nn.Tanh()
+            # shape [N, channels, 8, 8]
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

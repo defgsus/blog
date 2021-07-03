@@ -1,3 +1,4 @@
+import sys
 import time
 import random
 import argparse
@@ -18,6 +19,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from tqdm import tqdm
 
+sys.path.insert(0, "../../")
 from models import get_module
 from little_server import LittleServer
 from datasets import ImageDataset
@@ -81,12 +83,13 @@ class Trainer:
             weight_decay=0.001,
         )
 
-        # TODO: not working yet,
-        #   need to implement Queues for communication
-        #if self.server:
-        #    self.server.set_cell("actions", actions={
-        #        "weight_snapshot": self.store_weights
-        #    })
+        if self.server:
+            self.server.set_cell_layout("stats", [1, 4], [1, 4])
+            self.server.set_cell_layout("dis_result", [4, 6], [1, 4], fit=True)
+            self.server.set_cell_layout("real_samples", [1, 6], [4, 8])
+            self.server.set_cell_layout("samples", [1, 6], [8, 12])
+            self.server.set_cell_layout("stats", [1, 6], [1, 4])
+            self.server.set_cell_layout("loss", [6, 13], [1, 13])
 
     def store_weights(self):
         print("STORE")
@@ -97,26 +100,18 @@ class Trainer:
 
             fig, ax = plt.subplots(figsize=(6, 2))
             df.plot(title="training loss", ax=ax)
-            self.server.set_cell("loss", image=fig)
-            fig.clear()
 
-            fig, ax = plt.subplots(figsize=(6, 2))
+            fig2, ax = plt.subplots(figsize=(6, 2))
             df.rolling(10000 // self.batch_size).mean().clip(0, 1.5).plot(title="training loss (ma)", ax=ax)
-            self.server.set_cell("loss_ma", image=fig)
-            fig.clear()
 
-            #fig = plt.figure(figsize=(6, 2))
-            #plt.title(f"training loss")
-            #plt.plot(self.stats["gen_loss"], label="gen loss")
-            #plt.plot(self.stats["dis_loss"], label="dis loss")
-            #plt.plot(self.stats["dis_correct_real"], label="corr. real")
-            #plt.plot(self.stats["dis_correct_gen"], label="corr. gen")
-            #plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
-            #self.server.set_cell("loss", image=fig)
-            #fig.clear()
+            self.server.set_cell("loss", images=[fig, fig2])
 
     def generate_images(self, count: int, random_transform: bool = False) -> torch.Tensor:
-        generator_noise = torch.randn(count, self.n_generator_in)
+        if False and hasattr(self, "_gen_noise"):
+            generator_noise = self._gen_noise
+        else:
+            generator_noise = torch.randn(count, self.n_generator_in)
+            self._gen_noise = generator_noise
         #generator_noise = torch.randn(count, self.n_generator_in) * .2
         #for row in generator_noise:
         #    row[random.randrange(row.shape[0])] += 1.
@@ -159,7 +154,7 @@ class Trainer:
 
     def train(self):
         if self.server:
-            self.server.set_cell("real samples", image=self.render_image_grid(
+            self.server.set_cell("real_samples", image=self.render_image_grid(
                 self.random_real_images(36)
             ))
 
@@ -176,9 +171,12 @@ class Trainer:
 
         last_print_time = 0
         last_snapshot_time = time.time()
+        last_generator_loss = 0.
+        correct_gen = 0
         for frame in tqdm(range(50000)):
 
-            for gen_iter in range(2):
+            num_iter = 1 #2 if correct_gen > self.batch_size*.6 else 1
+            for gen_iter in range(num_iter):
                 # -- generate batch of images --
 
                 if not gen_train_add_real:
@@ -204,6 +202,15 @@ class Trainer:
                     generator_loss = self.criterion(
                         discriminator_result[self.batch_size:],
                         expected_discriminator_result_for_gen[self.batch_size:],
+                    )
+                    #real_std = discriminator_result[:self.batch_size].std()
+                    #gen_std = discriminator_result[self.batch_size:].std()
+                    #generator_loss += F.mse_loss(gen_std, real_std)
+                    real_result = discriminator_result[self.batch_size:]
+                    gen_result = discriminator_result[:self.batch_size]
+                    generator_loss += F.mse_loss(
+                        gen_result - gen_result.mean(),
+                        real_result - real_result.mean(),
                     )
 
                 last_generator_loss = float(generator_loss)
@@ -318,6 +325,10 @@ def parse_args():
         help="Name of the torchvision dataset"
     )
     parser.add_argument(
+        "-r", "--resize", type=int, nargs="?", default=None,
+        help="Resize the dataset"
+    )
+    parser.add_argument(
         "-bs", "--batch-size", type=int, nargs="?", default=50,
         help="Batch-size: Number of images to be able to reproduce simultaneously"
     )
@@ -340,12 +351,13 @@ def parse_args():
 def main(args):
 
     data = ImageDataset(
-        args.dataset
+        args.dataset,
         #"MNIST"
         #"FashionMNIST"
         #"CIFAR10"
         #"CIFAR100"
         #"STL10"
+        resize=[args.resize, args.resize] if args.resize else None,
     )
     # print(data.targets.shape)
 
