@@ -76,8 +76,14 @@ document.addEventListener("DOMContentLoaded", function () {
         if (cell.row)
             style += `grid-row: ${cell.row};`;
 
+        let css_classes = "ls-cell";
+        if (cell.code)
+            css_classes += " ls-cell-code";
+
         cell_elem.innerHTML = render_cell_html(cell);
         cell_elem.setAttribute("style", style);
+        cell_elem.setAttribute("id", `ls-cell-${cell.name}`);
+        cell_elem.className = css_classes;
 
         dom_cell_hashes[cell.name] = cell.hash;
         for (const b of cell_elem.querySelectorAll("button.action-button")) {
@@ -89,12 +95,15 @@ document.addEventListener("DOMContentLoaded", function () {
         let html = ``;
 
         if (cell.image) {
-            html += `<img src="${cell.image}?${cell.hash}" width="${cell.width}px" height="${cell.height}px">`;
+            html += `<img src="${cell.image}">`; // width="${cell.width}px" height="${cell.height}px">`;
         }
 
         if (cell.text) {
             for (const line of cell.text.split("\n"))
                 html += `<p>${line}</p>`;
+        }
+        if (cell.code) {
+            html += `<pre>${cell.code}</pre>`;
         }
 
         if (cell.actions) {

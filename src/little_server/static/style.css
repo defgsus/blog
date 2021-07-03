@@ -12,9 +12,13 @@ html {
 .ls-cells .ls-cell {
     border: 1px solid black;
     border-radius: 5px;
-    /*margin: .25rem;
     padding: .5rem;
+    /*margin: .25rem;
     min-width: 2rem;
     min-height: 2rem;
      */
+}
+
+.ls-cells .ls-cell-code {
+    background: #aaa;
 }

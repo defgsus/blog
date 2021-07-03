@@ -22,6 +22,15 @@ class IndexHandler(BaseHandler):
         self.render("cells.html", **context)
 
 
+class ImageHandler(BaseHandler):
+
+    def get(self, name):
+        image = self.server._images.get(name)
+        if image:
+            self.set_header("Content-Type", "image/png")
+            self.write(image["data"])
+
+
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def initialize(self, server):

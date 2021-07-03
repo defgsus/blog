@@ -5,6 +5,9 @@ from copy import deepcopy
 from multiprocessing import Process
 from threading import Thread
 from functools import partial
+import urllib.parse
+import html
+from io import BytesIO
 from typing import Optional, Dict, Sequence, Union
 
 import tornado.ioloop
@@ -12,6 +15,7 @@ import tornado.web
 import tornado.websocket
 
 import PIL.Image
+import matplotlib.pyplot as plt
 
 
 class LittleServer:
@@ -65,12 +69,43 @@ class LittleServer:
         message = {"name": deepcopy(name), "data": deepcopy(data)}
         self._io_loop.add_callback(partial(self._send_message, message))
 
+    def set_cell_layout(
+            self,
+            name: str,
+            row: Optional[Union[int, Sequence[int]]] = None,
+            column: Optional[Union[int, Sequence[int]]] = None,
+    ):
+        #if row is None or column is None:
+        #    assert row is None and column is None, "Must either supply 'row' AND 'column' or none of it"
+
+        if name not in self._cells_layout:
+            self._cells_layout[name] = dict()
+        cell_layout = self._cells_layout[name]
+
+        layout_changed = False
+        if cell_layout.get("row") != row or cell_layout.get("column") != column:
+            layout_changed = True
+
+        cell_layout["row"] = row
+        cell_layout["column"] = column
+
+        if layout_changed:
+            if self._cells.get("name"):
+                self._cells[name]["row"] = row
+                self._cells[name]["column"] = column
+
+                if self.running:
+                    self.send_message("cell", self._cells["name"])
+                else:
+                    self._cells_update.add(name)
+
     def set_cell(
             self,
             name: str,
             row: Optional[Union[int, Sequence[int]]] = None,
             column: Optional[Union[int, Sequence[int]]] = None,
             text: Optional[str] = None,
+            code: Optional[str] = None,
             image: Optional[Union[PIL.Image.Image]] = None,
     ):
         if row is not None or column is not None:
@@ -81,9 +116,9 @@ class LittleServer:
             if column is not None:
                 self._cells_layout[name]["column"] = column
 
-        if row is None or column is None:
-            #assert row is None and column is None, "Must either supply 'row' AND 'column' or none of it"
+        if row is None:
             row = self._cells_layout.get(name, {}).get("row")
+        if column is None:
             column = self._cells_layout.get(name, {}).get("column")
 
         if row is not None:
@@ -98,6 +133,15 @@ class LittleServer:
         }
         if text:
             cell["text"] = str(text)
+        if code:
+            cell["code"] = html.escape(str(code))
+
+        if image:
+            if isinstance(image, (PIL.Image.Image, plt.Figure)):
+                self._set_image(name, image)
+                cell["image"] = f"/img/{cell['name']}.png?h={self._images[name]['hash']}"
+                cell["width"] = self._images[cell["name"]]["width"]
+                cell["height"] = self._images[cell["name"]]["height"]
 
         hash_source = json.dumps(cell).encode("ascii")
         cell["hash"] = hashlib.md5(hash_source).hexdigest()
@@ -109,13 +153,37 @@ class LittleServer:
             else:
                 self._cells_update.add(name)
 
+    def _set_image(self, name: str, image: Union[PIL.Image.Image, plt.Figure]):
+        fp = BytesIO()
+        if isinstance(image, PIL.Image.Image):
+            image.save(fp, "png")
+            width, height = image.width, image.height
+        elif isinstance(image, plt.Figure):
+            image.savefig(fp, format="png")
+            width, height = (
+                image.get_figwidth() * image.dpi,
+                image.get_figheight() * image.dpi,
+            )
+        else:
+            raise TypeError(f"Unhandled image type {type(image).__name__} in cell '{name}'")
+
+        fp.seek(0)
+        data = fp.read()
+        self._images[name] = {
+            "width": width,
+            "height": height,
+            "data": data,
+            "hash": hashlib.md5(data).hexdigest(),
+        }
+
     def _url_handlers(self) -> list:
         from .handlers import (
-            IndexHandler, WebSocketHandler
+            IndexHandler, WebSocketHandler, ImageHandler
         )
         return [
             (r"/", IndexHandler, {"server": self}),
             (r"/ws", WebSocketHandler, {"server": self}),
+            (r"/img/([a-z]+).png", ImageHandler, {"server": self}),
         ]
 
     def _mainloop(self):
