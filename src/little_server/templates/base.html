@@ -10,6 +10,10 @@
 <body
     data-ws-url="{{ websocket_url }}"
 >
+    <div class="ls-header">
+        <div class="ls-header-title">{{escape(title)}}</div>
+        <div class="ls-header-status">not connected</div>
+    </div>
 {% block content %}{{ content }}{% end %}
 </body>
 </html>

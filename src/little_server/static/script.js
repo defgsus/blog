@@ -3,28 +3,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const
         body = document.querySelector("body"),
-        websocket_url = body.getAttribute("data-ws-url");
+        websocket_url = body.getAttribute("data-ws-url"),
+        status_elem = document.querySelector(".ls-header .ls-header-status");
 
-    let ws = new WebSocket(websocket_url);
-    ws.onopen = on_ws_open;
-    ws.onmessage = on_ws_message;
-
-    let refresh_timeout = setTimeout(refresh, 300);
+    let ws = null;
+    let refresh_timeout = null;
     let dom_cell_container = document.querySelector(".ls-cells");
     let dom_cell_elements = {};
     let dom_cell_hashes = {};
 
-    function refresh() {
-        /*fetch("cells/")
-            .then(response => response.json())
-            .then(response => render_cells(response["cells"]))
-        ;*/
+    connect_ws();
 
-        //console.log(Math.random());
+    function connect_ws() {
+        ws = new WebSocket(websocket_url);
+        ws.onopen = on_ws_open;
+        ws.onclose = on_ws_close;
+        ws.onmessage = on_ws_message;
 
+    }
+
+    function try_reconnect_ws() {
         if (refresh_timeout)
             clearTimeout(refresh_timeout);
-        refresh_timeout = setTimeout(refresh, 1000)
+        refresh_timeout = setTimeout(connect_ws, 2000);
     }
 
     function send_ws_message(name, data) {
@@ -36,7 +37,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function on_ws_open() {
+        status_elem.innerText = "connected";
+        status_elem.classList.add("ls-connected");
         send_ws_message("dom-loaded");
+    }
+
+    function on_ws_close() {
+        status_elem.innerText = "not connected";
+        status_elem.classList.remove("ls-connected");
+        try_reconnect_ws();
     }
 
     function on_ws_message(event) {

@@ -2,6 +2,32 @@ html {
     background: #888;
 }
 
+.ls-header {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: .5rem;
+    background: #aaa;
+    margin-bottom: .5rem;
+    padding: .25rem;
+}
+
+.ls-header .ls-header-title {
+    grid-row: 1;
+    grid-column: 1 / 8;
+    font-weight: bold;
+}
+
+.ls-header .ls-header-status {
+    grid-row: 1;
+    grid-column: 8 / 13;
+    text-align: right;
+    font-family: mono, monospace, Monospaced, Arial;
+}
+
+.ls-header .ls-header-status.ls-connected {
+    color: #060;
+}
+
 
 .ls-cells {
     display: grid;

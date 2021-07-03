@@ -164,6 +164,7 @@ class LittleServer:
                 image.get_figwidth() * image.dpi,
                 image.get_figheight() * image.dpi,
             )
+            plt.close(image)
         else:
             raise TypeError(f"Unhandled image type {type(image).__name__} in cell '{name}'")
 
@@ -183,7 +184,7 @@ class LittleServer:
         return [
             (r"/", IndexHandler, {"server": self}),
             (r"/ws", WebSocketHandler, {"server": self}),
-            (r"/img/([a-z]+).png", ImageHandler, {"server": self}),
+            (r"/img/([a-z0-9_]+).png", ImageHandler, {"server": self}),
         ]
 
     def _mainloop(self):
