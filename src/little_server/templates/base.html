@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{ static_url('style.css') }}">
+    <script type="text/javascript" src="{{ static_url('script.js') }}"></script>
+    <title>{% block title %}{{ escape(title) }}{% end %}</title>
+</head>
+
+<body
+    data-ws-url="{{ websocket_url }}"
+>
+{% block content %}{{ content }}{% end %}
+</body>
+</html>
