@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ws.onopen = on_ws_open;
         ws.onclose = on_ws_close;
         ws.onmessage = on_ws_message;
-
     }
 
     function try_reconnect_ws() {
@@ -56,6 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         switch (name) {
             case "cell": render_cell(data); break;
+            case "log": cell_log(data); break;
             default:
                 console.log("unhandled message", name, data);
         }
@@ -88,6 +88,8 @@ document.addEventListener("DOMContentLoaded", function () {
         let css_classes = "ls-cell";
         if (cell.code)
             css_classes += " ls-cell-code";
+        if (cell.log)
+            css_classes += " ls-cell-log";
 
         cell_elem.innerHTML = render_cell_html(cell);
         cell_elem.setAttribute("style", style);
@@ -103,8 +105,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function render_cell_html(cell) {
         let html = ``;
 
-        if (cell.image) {
-            html += `<img src="${cell.image}">`; // width="${cell.width}px" height="${cell.height}px">`;
+        if (cell.images) {
+            for (const image of cell.images) {
+                html += `<img src="${image}">`; // width="${cell.width}px" height="${cell.height}px">`;
+            }
         }
 
         if (cell.text) {
@@ -114,6 +118,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (cell.code) {
             html += `<pre>${cell.code}</pre>`;
         }
+        if (cell.log) {
+            html += `<textarea contenteditable="false">${cell.log}</textarea>`;
+        }
 
         if (cell.actions) {
             for (const a of cell.actions) {
@@ -122,6 +129,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         return html;
+    }
+
+    function cell_log(data) {
+        if (dom_cell_elements[data.name]) {
+            const cell_elem = dom_cell_elements[data.name];
+            const textarea = cell_elem.querySelector("textarea");
+            if (textarea) {
+                const at_bottom = textarea.scrollHeight - textarea.scrollTop <= textarea.clientHeight + 100;
+
+                if (!textarea.textContent.endsWith("\n"))
+                    textarea.textContent += "\n";
+                textarea.textContent += data.log;
+                if (at_bottom)
+                    textarea.scrollTop = textarea.scrollHeight;
+            }
+        }
     }
 
     function on_action_click(event) {

@@ -7,8 +7,8 @@ from threading import Thread
 from functools import partial
 import urllib.parse
 import html
-from io import BytesIO
-from typing import Optional, Dict, Sequence, Union
+from io import BytesIO, StringIO
+from typing import Optional, Dict, Sequence, Union, List
 
 import tornado.ioloop
 import tornado.web
@@ -90,14 +90,10 @@ class LittleServer:
         cell_layout["column"] = column
 
         if layout_changed:
-            if self._cells.get("name"):
+            if self._cells.get(name):
                 self._cells[name]["row"] = row
                 self._cells[name]["column"] = column
-
-                if self.running:
-                    self.send_message("cell", self._cells["name"])
-                else:
-                    self._cells_update.add(name)
+                self._update_cell(name)
 
     def set_cell(
             self,
@@ -106,7 +102,9 @@ class LittleServer:
             column: Optional[Union[int, Sequence[int]]] = None,
             text: Optional[str] = None,
             code: Optional[str] = None,
+            log: Optional[str] = None,
             image: Optional[Union[PIL.Image.Image]] = None,
+            images: Optional[List[Union[PIL.Image.Image]]] = None,
     ):
         if row is not None or column is not None:
             if name not in self._cells_layout:
@@ -135,47 +133,86 @@ class LittleServer:
             cell["text"] = str(text)
         if code:
             cell["code"] = html.escape(str(code))
+        if log:
+            cell["log"] = html.escape(str(log))
 
+        if not images:
+            images = []
         if image:
-            if isinstance(image, (PIL.Image.Image, plt.Figure)):
-                self._set_image(name, image)
-                cell["image"] = f"/img/{cell['name']}.png?h={self._images[name]['hash']}"
-                cell["width"] = self._images[cell["name"]]["width"]
-                cell["height"] = self._images[cell["name"]]["height"]
+            images.append(image)
+
+        if images:
+            self._set_images(name, images)
+            cell["images"] = [
+                f"/img/{cell['name']}/{i}.png?h={cache['hash']}"
+                for i, cache in enumerate(self._images[name])
+            ]
 
         hash_source = json.dumps(cell).encode("ascii")
         cell["hash"] = hashlib.md5(hash_source).hexdigest()
 
         if self._cells.get(name) != cell:
             self._cells[name] = cell
+            self._update_cell(name)
+
+    def log(self, cell_name: str, *args):
+        fp = StringIO()
+        print(*args, file=fp)
+        fp.seek(0)
+        text = fp.read()
+
+        if cell_name not in self._cells or not self._cells[cell_name].get("log"):
+            self.set_cell(cell_name, log=text)
+        else:
+            self._cells[cell_name]["log"] += text
+            self.send_message("log", {"name": cell_name, "log": text})
+            #self._update_cell(cell_name)
+
+    def _set_images(
+            self,
+            name: str,
+            images: List[Union[PIL.Image.Image, plt.Figure]]
+    ):
+        image_cache_list = []
+
+        for image in images:
+            fp = BytesIO()
+            if isinstance(image, PIL.Image.Image):
+                image.save(fp, "png")
+                width, height = image.width, image.height
+            elif isinstance(image, plt.Figure):
+                image.savefig(fp, format="png")
+                width, height = (
+                    image.get_figwidth() * image.dpi,
+                    image.get_figheight() * image.dpi,
+                )
+                plt.close(image)
+            else:
+                raise TypeError(f"Unhandled image type {type(image).__name__} in cell '{name}'")
+
+            fp.seek(0)
+            data = fp.read()
+            image_cache_list.append({
+                "width": width,
+                "height": height,
+                "data": data,
+                "hash": hashlib.md5(data).hexdigest(),
+            })
+
+        self._images[name] = image_cache_list
+
+    def _update_cell(self, name: str):
+        if name in self._cells:
+            cell = self._cells[name]
+
+            hash_source = json.dumps(cell).encode("ascii")
+            cell["hash"] = hashlib.md5(hash_source).hexdigest()
+
             if self.running:
                 self.send_message("cell", cell)
-            else:
-                self._cells_update.add(name)
+                return
 
-    def _set_image(self, name: str, image: Union[PIL.Image.Image, plt.Figure]):
-        fp = BytesIO()
-        if isinstance(image, PIL.Image.Image):
-            image.save(fp, "png")
-            width, height = image.width, image.height
-        elif isinstance(image, plt.Figure):
-            image.savefig(fp, format="png")
-            width, height = (
-                image.get_figwidth() * image.dpi,
-                image.get_figheight() * image.dpi,
-            )
-            plt.close(image)
-        else:
-            raise TypeError(f"Unhandled image type {type(image).__name__} in cell '{name}'")
-
-        fp.seek(0)
-        data = fp.read()
-        self._images[name] = {
-            "width": width,
-            "height": height,
-            "data": data,
-            "hash": hashlib.md5(data).hexdigest(),
-        }
+        self._cells_update.add(name)
 
     def _url_handlers(self) -> list:
         from .handlers import (
@@ -184,7 +221,7 @@ class LittleServer:
         return [
             (r"/", IndexHandler, {"server": self}),
             (r"/ws", WebSocketHandler, {"server": self}),
-            (r"/img/([a-z0-9_]+).png", ImageHandler, {"server": self}),
+            (r"/img/([a-z0-9_]+)/([0-9]+).png", ImageHandler, {"server": self}),
         ]
 
     def _mainloop(self):

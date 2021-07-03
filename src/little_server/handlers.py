@@ -24,11 +24,12 @@ class IndexHandler(BaseHandler):
 
 class ImageHandler(BaseHandler):
 
-    def get(self, name):
-        image = self.server._images.get(name)
-        if image:
+    def get(self, name, index):
+        index = int(index)
+        images = self.server._images.get(name)
+        if images:
             self.set_header("Content-Type", "image/png")
-            self.write(image["data"])
+            self.write(images[index]["data"])
 
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):

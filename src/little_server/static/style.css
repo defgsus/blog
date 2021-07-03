@@ -36,15 +36,24 @@ html {
 }
 
 .ls-cells .ls-cell {
+    position: relative;
     border: 1px solid black;
     border-radius: 5px;
     padding: .5rem;
-    /*margin: .25rem;
-    min-width: 2rem;
-    min-height: 2rem;
-     */
+    overflow: hidden;
 }
 
 .ls-cells .ls-cell-code {
     background: #aaa;
+}
+
+.ls-cells .ls-cell-log {
+    padding: 0;
+}
+
+.ls-cells textarea {
+    width: 98%;
+    height: 98%;
+    background: #aaa;
+    border: none;
 }
