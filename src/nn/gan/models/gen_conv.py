@@ -11,15 +11,15 @@ class GeneratorConv(GeneratorBase):
         self.layers = nn.Sequential(
             ConvLayer(
                 chan_in=1, chan_out=32, kernel_size=3, padding=0,
-                act="leaky_relu", batch_norm=batch_norm, reverse=True
+                act="leaky_relu", batch_norm=batch_norm, transpose=True
             ),  # 8+2
             ConvLayer(
                 chan_in=32, chan_out=32, kernel_size=5, padding=0,
-                act="leaky_relu", batch_norm=batch_norm, reverse=True
+                act="leaky_relu", batch_norm=batch_norm, transpose=True
             ),  # 8+2+4
             ConvLayer(
                 chan_in=32, chan_out=self.channels, kernel_size=[self.height-14+1, self.width-14+1], padding=0,
-                act="tanh", batch_norm=batch_norm, reverse=True
+                act="tanh", batch_norm=batch_norm, transpose=True
             ),
         )
 

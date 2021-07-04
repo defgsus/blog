@@ -29,3 +29,21 @@ class GeneratorLinear(GeneratorBase):
         y = self.layers(x)
         return y.view(-1, self.channels, self.height, self.width)
         #return torch.clamp(y, 0, 1)
+
+
+class GeneratorLinearSmall(GeneratorBase):
+
+    def __init__(self, n_in: int, width: int, height: int, channels: int):
+        super().__init__(n_in, width, height, channels)
+
+        self.layers = nn.Sequential(
+            LinearLayer(n_in, 64, F.leaky_relu, batch_norm=True, bias=False),
+            # nn.Dropout(0.5),
+            LinearLayer(64, 128, F.leaky_relu, batch_norm=True, bias=False),
+            # nn.Dropout(0.5),
+            LinearLayer(128, self.n_out, "tanh", batch_norm=True, bias=False),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = self.layers(x)
+        return y.view(-1, self.channels, self.height, self.width)

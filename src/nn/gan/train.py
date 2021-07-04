@@ -237,6 +237,15 @@ class Trainer:
 
             discriminator_result = self.discriminate(dis_image_batch)
 
+            with torch.no_grad():
+                correct_all = (torch.abs(
+                    discriminator_result - expected_discriminator_result_for_dis
+                ) < .5).type(torch.int8)
+                #print(correct_all)
+                correct_real = int(correct_all[:self.batch_size].sum())
+                correct_gen = int(correct_all[self.batch_size:].sum())
+                correct_all = correct_real + correct_gen
+
             discriminator_loss = F.binary_cross_entropy(
                 discriminator_result,
                 expected_discriminator_result_for_dis,
@@ -245,18 +254,12 @@ class Trainer:
             last_discriminator_loss = float(discriminator_loss)
             discriminator_loss = discriminator_loss / (1. + mutual_inhibit * last_generator_loss)
 
+            #discriminator_loss *= 1. - .99 * correct_all / (self.batch_size*2)
+
             #if last_generator_loss <= 1.:
             self.discriminator.zero_grad()
             discriminator_loss.backward()
             self.discriminator_optimizer.step()
-
-            with torch.no_grad():
-                correct_all = (torch.abs(
-                    discriminator_result - expected_discriminator_result_for_dis
-                ) < .5).type(torch.int8)
-                #print(correct_all)
-                correct_real = int(correct_all[:self.batch_size].sum())
-                correct_gen = int(correct_all[self.batch_size:].sum())
 
             self.stats["gen_loss"].append(last_generator_loss)
             self.stats["dis_loss"].append(last_discriminator_loss)

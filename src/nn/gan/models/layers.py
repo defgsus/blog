@@ -63,29 +63,34 @@ class ConvLayer(nn.Module):
             chan_in: int,
             chan_out: int,
             kernel_size: int,
+            stride: int = 1,
             padding: int = 0,
             act: Optional[Union[str, Callable]] = None,
             bias: bool = True,
             batch_norm: bool = False,
-            reverse: bool = False,
+            transpose: bool = False,
     ):
         super().__init__()
         self.chan_in = chan_in
         self.chan_out = chan_out
         self.kernel_size = kernel_size
         self.padding = padding
-        self.reverse = reverse
+        self.reverse = transpose
 
-        klass = nn.ConvTranspose2d if reverse else nn.Conv2d
+        klass = nn.ConvTranspose2d if transpose else nn.Conv2d
         self.conv = klass(
             in_channels=self.chan_in,
             out_channels=self.chan_out,
             kernel_size=self.kernel_size,
+            stride=stride,
             padding=self.padding,
             bias=bias,
         )
 
-        self.batch_norm = None#torch.nn.BatchNorm1d()
+        if batch_norm:
+            self.batch_norm = torch.nn.BatchNorm2d(self.chan_out)
+        else:
+            self.batch_norm = None
 
         if act is None:
             self.act = None

@@ -248,7 +248,7 @@ class LittleServer:
         return [
             (r"/", IndexHandler, {"server": self}),
             (r"/ws", WebSocketHandler, {"server": self}),
-            (r"/img/([a-z0-9_]+)/([0-9]+).png", ImageHandler, {"server": self}),
+            (r"/img/([a-z0-9_\-]+)/([0-9]+).png", ImageHandler, {"server": self}),
         ]
 
     def _mainloop(self):

@@ -18,19 +18,21 @@ class ImageDataset:
 
     ROOT = str(Path("~").expanduser() / "prog" / "data" / "datasets")
 
-    def __init__(self, name: str, resize: Optional[List[int]] = None):
+    def __init__(self, name: str, resize: Optional[List[int]] = None, bw: bool = False):
         self.name = name
 
-        transform = VF.to_tensor
-        if resize:
-            def _transform(p: PIL.Image.Image) -> torch.Tensor:
-                return VF.resize(VF.to_tensor(p), [resize[1], resize[0]])
-            transform = _transform
+        def _transform(p: PIL.Image.Image) -> torch.Tensor:
+            t = VF.to_tensor(p)
+            if bw and t.shape[-3] == 3:
+                t = VF.rgb_to_grayscale(t)
+            if resize:
+                t = VF.resize(t, [resize[1], resize[0]])
+            return t
 
         self.data = getattr(datasets, self.name)(
             root=self.ROOT,
             download=True,
-            transform=transform,
+            transform=_transform,
         )
         self.shape = self.data.data.shape
         self.num = self.shape[0]
@@ -44,6 +46,8 @@ class ImageDataset:
 
         if resize:
             self.width, self.height = resize
+        if bw:
+            self.channels = 1
 
         print(f"dataset: {self.num} x {self.width}x{self.height}x{self.channels}")
 
