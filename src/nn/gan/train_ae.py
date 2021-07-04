@@ -72,9 +72,11 @@ class Trainer:
             for p in model.parameters():
                 num_params += p.shape.numel()
             print(key, "params:", num_params)
-            self.info_text += f"{key} params: {num_params}\n"
+            self.info_text += f"{model.__class__.__name__} params: {num_params}\n"
 
         self.optimizer = torch.optim.Adam(
+        #self.optimizer = torch.optim.RMSprop(
+        #self.optimizer = torch.optim.AdamW(
             list(self.encoder.parameters()) + list(self.decoder.parameters()),
             lr=0.001,
             weight_decay=0.001,
@@ -87,7 +89,9 @@ class Trainer:
             self.server.set_cell_layout("samples", [1, 6], [7, 10])
             self.server.set_cell_layout("fixed_samples", [1, 6], [10, 13])
             self.server.set_cell_layout("stats", [1, 6], [1, 4])
-            self.server.set_cell_layout("loss", [6, 13], [1, 12])
+            self.server.set_cell_layout("loss", [6, 13], [1, 6])
+            self.server.set_cell_layout("weights_e", [6, 13], [6, 9])
+            self.server.set_cell_layout("weights_d", [6, 13], [9, 12])
             self.server.set_cell("actions", [6, 13], [12, 13], actions=[
                 "new_samples", "store_weights"
             ])
@@ -138,8 +142,8 @@ class Trainer:
         batch = torch.clamp(batch[:nrow*nrow], 0, 1)
 
         image = make_grid(batch, nrow=nrow)
-        if self.width < min_width:
-            factor = 1 + min_width // self.width
+        if batch.shape[-1] < min_width:
+            factor = 1 + min_width // batch.shape[-1]
             image = VF.resize(image, [image.shape[-2]*factor, image.shape[-1]*factor], PIL.Image.NEAREST)
         image = VF.to_pil_image(image)
         return image
@@ -175,18 +179,34 @@ class Trainer:
             features = self.encoder.forward(train_image_batch)
             repro_image_batch = self.decoder(features)
 
+            features_std = features.std(dim=0).mean()
+
             loss = self.criterion(
                 repro_image_batch,
                 train_image_batch,
             )
+            reconst_loss = float(loss)
+
+            weight_means = []
+            weight_loss = torch.tensor(0).type_as(loss).to(self.device)
+            for group in self.optimizer.param_groups:
+                for p in group["params"]:
+                    weight_mean = p.abs().mean()
+                    weight_means.append(float(weight_mean))
+                    if weight_mean > .2:
+                        weight_loss += self.criterion(weight_mean, torch.tensor(.2).to(self.device))
+                break
+
+            # loss += weight_loss
+
+            # loss -= features_std
 
             self.decoder.zero_grad()
             loss.backward()
             self.optimizer.step()
 
-            features_std = features.std()
-
-            self.stats["loss"].append(float(loss))
+            self.stats["loss"].append(float(reconst_loss))
+            #self.stats["loss"].append(float(loss))
             self.stats["features_std"].append(float(features_std))
 
             cur_time = time.time()
@@ -202,8 +222,10 @@ class Trainer:
                         text=(
                             self.info_text +
                             f"frame {frame}"
-                            f", loss {loss:.3f}"
+                            f", recon-loss {reconst_loss:.3f}"
+                            f", weight-loss {weight_loss:.3f}"
                             f", feat-std {features_std:.3f}"
+                            f"\nweight means: {', '.join(f'{w:.3f}' for w in weight_means)}"
                         )
                     )
 
@@ -227,6 +249,28 @@ class Trainer:
                         )
                         image_grid = self.render_image_grid(sample_batch)
                         self.server.set_cell("fixed_samples", image=image_grid)
+
+                        image_grids = dict()
+                        for cell_name, module in (("weights_e", self.encoder), ("weights_d", self.decoder)):
+                            if hasattr(module, "interesting_weights"):
+                                for weights in module.interesting_weights():
+                                    weights = weights[:, :1, :, :]
+
+                                    mi, ma = weights.min(), weights.max()
+                                    weights_norm = (weights - mi) / (ma - mi)
+                                    #weights = weights / weights.abs().max()
+
+                                    weights_image = weights_norm.repeat(1, 3, 1, 1)
+                                    #weights_image[:, 0, :, :] *= (weights[:, 0, :, :] < 0).type_as(weights)
+                                    weights_image[:, 0, :, :] *= (weights[:, 0, :, :] >= 0).type_as(weights)
+
+                                    #torch.Tensor.typ
+                                    if cell_name not in image_grids:
+                                        image_grids[cell_name] = []
+                                    image_grids[cell_name].append(self.render_image_grid(weights_image, min_width=24, nrow=10))
+
+                        for cell_name, images in image_grids.items():
+                            self.server.set_cell(cell_name, images=images)
 
 
 def parse_args():

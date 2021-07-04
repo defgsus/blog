@@ -29,6 +29,9 @@ class EncoderLinear(AutoEncoderBase):
         y = x.view(-1, self.n_pixels)
         return self.layers(y)
 
+    def interesting_weights(self) -> Generator[torch.Tensor, None, None]:
+        yield self.layers[0].weight.view(self.channels, self.height, self.width, 1024)
+
 
 class DecoderLinear(AutoEncoderBase):
 

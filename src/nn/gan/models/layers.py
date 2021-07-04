@@ -1,4 +1,4 @@
-from typing import List, Optional, Callable, Union, Tuple
+from typing import List, Optional, Callable, Union, Tuple, Generator
 
 import numpy as np
 import torch
@@ -68,6 +68,7 @@ class ConvLayer(nn.Module):
             act: Optional[Union[str, Callable]] = None,
             bias: bool = True,
             batch_norm: bool = False,
+            drop_out: float = 0.0,
             transpose: bool = False,
     ):
         super().__init__()
@@ -86,6 +87,10 @@ class ConvLayer(nn.Module):
             padding=self.padding,
             bias=bias,
         )
+        if drop_out:
+            self.drop_out = nn.Dropout2d(drop_out)
+        else:
+            self.drop_out = None
 
         if batch_norm:
             self.batch_norm = torch.nn.BatchNorm2d(self.chan_out)
@@ -104,7 +109,8 @@ class ConvLayer(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         y = self.conv(x)
-
+        if self.drop_out is not None:
+            y = self.drop_out(y)
         if self.batch_norm is not None:
             y = self.batch_norm(y)
         if self.act is not None:
