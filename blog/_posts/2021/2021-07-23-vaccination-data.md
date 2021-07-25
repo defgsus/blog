@@ -169,7 +169,7 @@ Here's a dump of the data that was collected in my browser:
 }
 ```  
 
-This data is POSTed to 
+This data is POSTed to a url similar to
 
     https://www.impfterminservice.de/akam/11/pixel_1afc1679
  
@@ -179,15 +179,15 @@ numbers. From my point of view this is nothing other than a
 **fingerprint** to (re-)identify a user system without relying on cookies. 
 
 Probably a shortened version of this is repeatedly POSTed 
-to a cryptic url
+to a cryptic url like this
 
     https://www.impfterminservice.de/mB2r7RnT/KLD88p2/M-GlWn_/0j/7EiDGzVVOSh1/bjl5/Yj/ILYhxYFSw
-    
+
 The responsible javascript is delivered with a 
 [GET request to that url](https://www.impfterminservice.de/mB2r7RnT/KLD88p2/M-GlWn_/0j/7EiDGzVVOSh1/bjl5/Yj/ILYhxYFSw).
 It's highly obfuscated but can be inspected with a little effort. The script
-places it's obfuscated strings in a variable called `_ac` so you can actually
-read them or filter by regular expressions in the web console:
+places it's obfuscated strings in a public variable called `_ac` so you 
+can actually read them or filter with regular expressions in the web console:
 
 ```js
 _ac.filter(i => RegExp("[pP]lugin").exec(i))
