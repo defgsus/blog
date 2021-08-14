@@ -22,12 +22,16 @@ except ImportError:
 from little_server import LittleServer
 
 
+render_pos = torch.Tensor([0, .5, -2])
+
+
 def train_sdf(
         server: LittleServer,
         model: nn.Module,
         sdf: Callable,
         batch_size: int,
         epochs: int,
+        position_mode: str = "surface",
 ):
     assert batch_size % 2 == 0, "batch_size must be even"
 
@@ -39,17 +43,56 @@ def train_sdf(
         weight_decay=0.0001,
     )
 
+    num_params = sum(
+        sum(len(p) for p in g["params"])
+        for g in optimizer.param_groups
+    )
+    print("  trainable params:", num_params)
+
     losses = []
     last_server_time = 0
+    last_image_time = 0
+
+    if position_mode == "surface":
+        surface_positions = get_random_surface_positions(sdf, 100000)
+        print("surface_positions:", torch.min(surface_positions), "-", torch.max(surface_positions))
 
     for epoch in range(epochs):
         # print("-"*10, "epoch", epoch, "-"*10)
 
-        pos_batch, target_dist_batch = build_position_batch(sdf, batch_size * 8 // 10, batch_size * 2 // 10)
+        #pos_batch = torch.cat([
+        #    surface_positions[torch.randperm(surface_positions.shape[0])[:batch_size//2]]
+        #    ,#    + torch.randn(batch_size//2, 3) * 0.01,
+        #    torch.rand(batch_size//2, 3) * 2. - 1.,
+        #])
+        if position_mode == "surface":
+            pos_batch = (
+                surface_positions[torch.randperm(surface_positions.shape[0])[:batch_size]]
+                + torch.randn(batch_size, 3) * 0.2
+            )
+            target_dist_batch = sdf(pos_batch)
+
+        elif position_mode == "random":
+            pos_batch = torch.rand(batch_size, 3) * 4 - 2
+            target_dist_batch = sdf(pos_batch)
+
+        elif position_mode == "half":
+            pos_batch, target_dist_batch = build_position_batch_inout(sdf, batch_size // 2, batch_size // 2)
+            #pos_batch, target_dist_batch = build_position_batch(sdf, batch_size * 8 // 10, batch_size * 2 // 10)
 
         dist_batch = model.forward(pos_batch)
 
-        loss = criterion(dist_batch, target_dist_batch)
+        loss_dist = criterion(dist_batch, target_dist_batch)
+
+        if False:# % 20 == 0:
+            target_normal_batch = sdf_normal(sdf, pos_batch, e=0.1, normalized=False)
+            normal_batch = sdf_normal(model, pos_batch, e=0.1, normalized=False)
+            loss_normal = criterion(normal_batch, target_normal_batch)
+
+            loss = loss_dist + loss_normal
+        else:
+            loss = loss_dist
+
         losses.append(float(loss))
 
         model.zero_grad()
@@ -60,6 +103,11 @@ def train_sdf(
         if cur_time - last_server_time > 2:
             last_server_time = cur_time
             plot_loss_history(server, epoch, losses)
+
+        if cur_time - last_image_time > 10:
+            with torch.no_grad():
+                server.set_cell("image", image=raymarch(model, render_pos, as_pil=True)[0])
+            last_image_time = cur_time
 
 
 def build_position_batch(
@@ -154,7 +202,7 @@ def plot_loss_history(server: LittleServer, epoch: int, losses: Sequence[float])
     df = pd.DataFrame(losses)
 
     fig, ax = plt.subplots(figsize=(6, 2))
-    df.iloc[-200:].plot(title="training loss", ax=ax)
+    df.iloc[-1000:].plot(title="training loss", ax=ax)
 
     fig2, ax = plt.subplots(figsize=(6, 2))
     df.rolling(100).mean().clip(0, 1.5).plot(title="training loss (ma)", ax=ax)
@@ -164,10 +212,17 @@ def plot_loss_history(server: LittleServer, epoch: int, losses: Sequence[float])
 
 
 def sdf_scene(pos: torch.Tensor) -> torch.Tensor:
-    d = sdf_sphere(pos, 1)
-    d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([-1,0,0]), .5))
-    d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([1,0,0]), .5))
-    d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([0,1.25,0]), .25))
+    #d = sdf_sphere(pos, 1)
+    #d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([-1,0,0]), .5))
+    #d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([1,0,0]), .5))
+    #d = torch.minimum(d, sdf_sphere(pos - torch.Tensor([0,1.25,0]), .25))
+    d = sdf_difference(
+        sdf_box(pos, torch.Tensor([0.5, .7, .6])),
+        sdf_box(pos, torch.Tensor([0.3, .5, .7]))
+    )
+    d = sdf_union(d, sdf_sphere(pos - torch.Tensor([0,1.25,0]), .25))
+    #d = sdf_tube(pos, .5, 1)
+    d = sdf_union(d, sdf_tube(pos - torch.Tensor([0,1.25,0]), .1, 0))
     return d
 
 
@@ -176,6 +231,10 @@ if __name__ == "__main__":
     server.start()
     server.set_cell_layout("loss", [1, 5], [1, 7], fit=True)
     server.set_cell_layout("status", [1, 5], [7, 13], fit=True)
+    server.set_cell_layout("target", [5, 9], [1, 5], fit=True)
+    server.set_cell_layout("image", [5, 9], [5, 9], fit=True)
+
+    server.set_cell("target", image=raymarch(sdf_scene, render_pos, as_pil=True)[0])
 
     model = Net1()
 
@@ -184,7 +243,7 @@ if __name__ == "__main__":
         sdf=sdf_scene,
         model=model,
         batch_size=1000,
-        epochs=5000,
+        epochs=25000,
     )
 
     torch.save(model.state_dict(), "./model-snapshot.pt")
