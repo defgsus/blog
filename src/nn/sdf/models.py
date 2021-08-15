@@ -1,5 +1,5 @@
 import math
-from typing import Callable, Tuple, Sequence
+from typing import Callable, Tuple, Sequence, Optional
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -79,3 +79,70 @@ class Net3(SirenNet):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return super().forward(x).reshape(-1)
+
+
+class Mat4Layer(nn.Module):
+    def __init__(self, n_in: int = 1, n_out: int = 1, act: Optional[Callable] = torch.sin, w_std: float = 1.):
+        super().__init__()
+        self.n_in = n_in
+        self.n_out = n_out
+        self.weights = [
+            nn.Parameter(torch.randn(4, 4) * w_std)
+            for i in range(max(n_in, n_out))
+        ]
+        self.biases = [
+            nn.Parameter(torch.randn(4) * w_std)
+            for i in range(n_out)
+        ]
+        # attach to Module
+        for i, w in enumerate(self.weights):
+            setattr(self, f"w{i}", w)
+        for i, b in enumerate(self.biases):
+            setattr(self, f"b{i}", b)
+
+        self.act = act
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = torch.zeros(x.shape[0], 4 * self.n_out)
+        for i in range(max(self.n_in, self.n_out)):
+            i_in = i % self.n_in
+            i_out = i % self.n_out
+
+            v_in = x[:, i_in*4: i_in*4+4]
+            v_out = F.linear(v_in, self.weights[i])
+
+            y[:, i_out*4: i_out*4+4] += v_out
+
+        for i in range(self.n_out):
+            y[:, i*4: i*4+4] += self.biases[i]
+
+        if self.act is not None:
+            y = self.act(y)
+
+        return y
+
+
+class Mat4Net(nn.Module):
+
+    def __init__(self, num_layers: int = 4, num_features: int = 4):
+        super().__init__()
+        self.layers = nn.Sequential(*(
+            Mat4Layer(
+                n_in=1 if i == 0 else num_features,
+                n_out=1 if i == num_layers -1 else num_features,
+                act=torch.sin if i < num_layers - 1 else None,
+                w_std=5. if i < num_layers - 1 else 1.,
+            )
+            for i in range(num_layers)
+        ))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # append x to xyz to form a vec4
+        if x.shape[-1] == 3:
+            x = torch.cat([x, x[:, 0].unsqueeze(-1)], dim=-1)
+
+        y = self.layers(x)
+
+        # drop yzw
+        y = y[:, 0]
+        return y

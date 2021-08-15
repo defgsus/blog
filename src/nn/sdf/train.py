@@ -43,8 +43,14 @@ def train_sdf(
         weight_decay=0.0001,
     )
 
+    def prod(*values):
+        p = values[0]
+        for v in values[1:]:
+            p *= v
+        return p
+
     num_params = sum(
-        sum(len(p) for p in g["params"])
+        sum(prod(*p.shape) for p in g["params"])
         for g in optimizer.param_groups
     )
     print("  trainable params:", num_params)
@@ -57,14 +63,10 @@ def train_sdf(
         surface_positions = get_random_surface_positions(sdf, 100000)
         print("surface_positions:", torch.min(surface_positions), "-", torch.max(surface_positions))
 
+    print("start training")
     for epoch in range(epochs):
         # print("-"*10, "epoch", epoch, "-"*10)
 
-        #pos_batch = torch.cat([
-        #    surface_positions[torch.randperm(surface_positions.shape[0])[:batch_size//2]]
-        #    ,#    + torch.randn(batch_size//2, 3) * 0.01,
-        #    torch.rand(batch_size//2, 3) * 2. - 1.,
-        #])
         if position_mode == "surface":
             pos_batch = (
                 surface_positions[torch.randperm(surface_positions.shape[0])[:batch_size]]
@@ -205,7 +207,7 @@ def plot_loss_history(server: LittleServer, epoch: int, losses: Sequence[float])
     df.iloc[-1000:].plot(title="training loss", ax=ax)
 
     fig2, ax = plt.subplots(figsize=(6, 2))
-    df.rolling(100).mean().clip(0, 1.5).plot(title="training loss (ma)", ax=ax)
+    df.rolling(100).mean().plot(title="training loss (ma)", ax=ax)
 
     server.set_cell("loss", images=[fig, fig2])
     server.set_cell("status", code=f"epoch {epoch}\nloss {losses[-1]}")
@@ -226,7 +228,19 @@ def sdf_scene(pos: torch.Tensor) -> torch.Tensor:
     return d
 
 
+def print_model(model: nn.Module):
+    print(model.state_dict())
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=.001,
+        weight_decay=0.0001,
+    )
+
+
 if __name__ == "__main__":
+    model = Mat4Net()
+    # print_model(model); exit()
+
     server = LittleServer()
     server.start()
     server.set_cell_layout("loss", [1, 5], [1, 7], fit=True)
@@ -235,8 +249,6 @@ if __name__ == "__main__":
     server.set_cell_layout("image", [5, 9], [5, 9], fit=True)
 
     server.set_cell("target", image=raymarch(sdf_scene, render_pos, as_pil=True)[0])
-
-    model = Net1()
 
     train_sdf(
         server=server,
