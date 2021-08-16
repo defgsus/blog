@@ -87,11 +87,11 @@ class Mat4Layer(nn.Module):
         self.n_in = n_in
         self.n_out = n_out
         self.weights = [
-            nn.Parameter(torch.randn(4, 4) * w_std)
+            nn.Parameter(torch.rand(4, 4) * w_std * 2. - w_std)
             for i in range(max(n_in, n_out))
         ]
         self.biases = [
-            nn.Parameter(torch.randn(4) * w_std)
+            nn.Parameter(torch.rand(4) * w_std * 2. - w_std)
             for i in range(n_out)
         ]
         # attach to Module
@@ -131,7 +131,7 @@ class Mat4Net(nn.Module):
                 n_in=1 if i == 0 else num_features,
                 n_out=1 if i == num_layers -1 else num_features,
                 act=torch.sin if i < num_layers - 1 else None,
-                w_std=5. if i < num_layers - 1 else 1.,
+                w_std=2. if i < num_layers - 1 else .5,
             )
             for i in range(num_layers)
         ))

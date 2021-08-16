@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 
 try:
     from .sdf import *
@@ -37,11 +38,9 @@ def train_sdf(
 
     criterion = nn.L1Loss()
 
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=.001,
-        weight_decay=0.0001,
-    )
+    #optimizer = torch.optim.Adam(model.parameters(), lr=.01, weight_decay=0.0001)
+    #optimizer = torch.optim.Adadelta(model.parameters(), lr=1., weight_decay=0.0001)
+    optimizer = torch.optim.RMSprop(model.parameters(), lr=0.01, momentum=0.5)
 
     def prod(*values):
         p = values[0]
@@ -64,7 +63,7 @@ def train_sdf(
         print("surface_positions:", torch.min(surface_positions), "-", torch.max(surface_positions))
 
     print("start training")
-    for epoch in range(epochs):
+    for epoch in tqdm(range(epochs)):
         # print("-"*10, "epoch", epoch, "-"*10)
 
         if position_mode == "surface":
@@ -106,7 +105,7 @@ def train_sdf(
             last_server_time = cur_time
             plot_loss_history(server, epoch, losses)
 
-        if cur_time - last_image_time > 10:
+        if cur_time - last_image_time > 20 or epoch == epochs - 1:
             with torch.no_grad():
                 server.set_cell("image", image=raymarch(model, render_pos, as_pil=True)[0])
             last_image_time = cur_time
@@ -245,8 +244,8 @@ if __name__ == "__main__":
     server.start()
     server.set_cell_layout("loss", [1, 5], [1, 7], fit=True)
     server.set_cell_layout("status", [1, 5], [7, 13], fit=True)
-    server.set_cell_layout("target", [5, 9], [1, 5], fit=True)
-    server.set_cell_layout("image", [5, 9], [5, 9], fit=True)
+    server.set_cell_layout("target", [5, 9], [1, 4], fit=True)
+    server.set_cell_layout("image", [5, 9], [4, 7], fit=True)
 
     server.set_cell("target", image=raymarch(sdf_scene, render_pos, as_pil=True)[0])
 
@@ -255,7 +254,7 @@ if __name__ == "__main__":
         sdf=sdf_scene,
         model=model,
         batch_size=1000,
-        epochs=25000,
+        epochs=10000,
     )
 
     torch.save(model.state_dict(), "./model-snapshot.pt")
