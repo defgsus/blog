@@ -86,39 +86,14 @@ class Mat4Layer(nn.Module):
         super().__init__()
         self.n_in = n_in
         self.n_out = n_out
-        self.weights = [
-            nn.Parameter(torch.rand(4, 4) * w_std * 2. - w_std)
-            for i in range(max(n_in, n_out))
-        ]
-        self.biases = [
-            nn.Parameter(torch.rand(4) * w_std * 2. - w_std)
-            for i in range(n_out)
-        ]
-        # attach to Module
-        for i, w in enumerate(self.weights):
-            setattr(self, f"w{i}", w)
-        for i, b in enumerate(self.biases):
-            setattr(self, f"b{i}", b)
-
+        self.weight = nn.Parameter(torch.rand(4 * self.n_out, 4 * self.n_in) * w_std * 2. - w_std)
+        self.bias = nn.Parameter(torch.rand(4 * self.n_out) * w_std * 2. - w_std)
         self.act = act
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        y = torch.zeros(x.shape[0], 4 * self.n_out)
-        for i in range(max(self.n_in, self.n_out)):
-            i_in = i % self.n_in
-            i_out = i % self.n_out
-
-            v_in = x[:, i_in*4: i_in*4+4]
-            v_out = F.linear(v_in, self.weights[i])
-
-            y[:, i_out*4: i_out*4+4] += v_out
-
-        for i in range(self.n_out):
-            y[:, i*4: i*4+4] += self.biases[i]
-
+        y = F.linear(x, self.weight, self.bias)
         if self.act is not None:
             y = self.act(y)
-
         return y
 
 
