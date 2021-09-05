@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>handling ebay push notifications in python | def.gsus-</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="handling ebay push notifications in python" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="For the e-commerce developers out there, whether they like what they do or not, the 31th of August 2021 was the deadline to register for a new type of ebay notification. namely Account Deletion/Closure notifications." />
+<meta property="og:description" content="For the e-commerce developers out there, whether they like what they do or not, the 31th of August 2021 was the deadline to register for a new type of ebay notification. namely Account Deletion/Closure notifications." />
+<link rel="canonical" href="https://defgsus.github.io/blog/2021/09/05/ebay-push-notification-verification-in-python.html" />
+<meta property="og:url" content="https://defgsus.github.io/blog/2021/09/05/ebay-push-notification-verification-in-python.html" />
+<meta property="og:site_name" content="def.gsus-" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-09-05T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="handling ebay push notifications in python" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","headline":"handling ebay push notifications in python","dateModified":"2021-09-05T00:00:00+02:00","datePublished":"2021-09-05T00:00:00+02:00","url":"https://defgsus.github.io/blog/2021/09/05/ebay-push-notification-verification-in-python.html","mainEntityOfPage":{"@type":"WebPage","@id":"https://defgsus.github.io/blog/2021/09/05/ebay-push-notification-verification-in-python.html"},"description":"For the e-commerce developers out there, whether they like what they do or not, the 31th of August 2021 was the deadline to register for a new type of ebay notification. namely Account Deletion/Closure notifications.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://defgsus.github.io/blog/feed.xml" title="def.gsus-" /></head>
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+
+    <link rel="stylesheet" href="/blog/style.css">
+
+    
+
+    
+
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">def.gsus-</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">handling ebay push notifications in python</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-09-05T00:00:00+02:00" itemprop="datePublished">Sep 5, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>For the e-commerce developers out there, whether they like what they do or not, the 31th of August 2021 was the deadline to register for a new type of ebay notification. namely <a href="https://www.developer.ebay.com/marketplace-account-deletion">Account Deletion/Closure</a> notifications.</p>
+
+<blockquote>
+  <p>eBay provides their users a way to request that their personal data be deleted from eBay’s systems, as well as deleted from the systems of all eBay partners who store/display their personal data, including third-party developers integrated with eBay APIs via the eBay Developers Program.</p>
+</blockquote>
+
+<p>For reasons, i’m one of those third-party devs required to hook into that system. There was an email from <em>developers.ebay</em> in March which somehow did not find it’s way into my perception. The reminder email was sent during my holidays and the first day back at work was the 31th August ;)</p>
+
+<p>With slightly raised adrenaline levels, we read the documentation and tried to connect to those deletion notifications, without immediate success.</p>
+
+<p>The first thing to do is to send the correct <a href="https://www.developer.ebay.com/marketplace-account-deletion#preparingURL">challenge response</a> to ebay. It’s not super difficult but it took us until the 1st of September to get it working. Without loosing api access, mind you.</p>
+
+<p>Here’s a <a href="https://www.djangoproject.com/">Django</a> view that generates the challenge response as the ebay docs require it:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">challenge_response_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">challenge_code</span> <span class="o">=</span> <span class="n">request</span><span class="p">.</span><span class="n">GET</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="s">"challenge_code"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">challenge_code</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+        
+        <span class="n">verification_token</span> <span class="o">=</span> <span class="p">...</span>  <span class="c1"># read it from database or somewhere
+</span>        <span class="n">callback_url</span> <span class="o">=</span> <span class="p">...</span>        <span class="c1"># the full url of this endpoint (including https://)
+</span>
+        <span class="n">response_code</span> <span class="o">=</span> <span class="n">hashlib</span><span class="p">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">challenge_code</span> <span class="o">+</span> <span class="n">verification_token</span> <span class="o">+</span> <span class="n">callback_url</span><span class="p">).</span><span class="n">encode</span><span class="p">(</span><span class="s">"ascii"</span><span class="p">)</span>
+        <span class="p">).</span><span class="n">hexdigest</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">({</span><span class="s">"challengeResponse"</span><span class="p">:</span> <span class="n">response_code</span><span class="p">})</span>
+
+    <span class="k">except</span> <span class="nb">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Why did it not work? The forums provide a couple of hints and allegations since March 2021.</p>
+
+<ul>
+  <li>The url must not include the term <em>ebay</em> because it’s protected by copyright. (Funny idea but not true)</li>
+  <li>The url must not contain nested paths. (Why should this be important? It’s not true)</li>
+</ul>
+
+<p>A range of other speculations and discussions are available, in the manner of <em>i had the same problem and did …</em></p>
+
+<p>So here’s mine: Well, maybe there where issues with the url path previously but it seems not the case anymore. After making sure that <strong>the verification token is not longer than 64 characters</strong> it finally worked after <strong>saving the email address first</strong> in the Account Deletion Notification configuration view before saving the callback url and verification token. All of a sudden, there were notifications streaming in.</p>
+
+<p>As <em>responsible</em> developers we need to make sure that only ebay is able to push into our endpoint, not any script kiddy or botnet. Ebay provides a signature header using ECDSA private-public-key cryptography which, as far as i can tell, is super secure. But i can not tell very far because i’m quite overwhelmed by crypto technology at every confrontation. Well, once we where hooked up to the ebay endpoint (almost before the deadline) the signature check could be implemented in due time.</p>
+
+<p>Here’s the validation function using the pure-python library <a href="https://github.com/tlsfuzzer/python-ecdsa">ecdsa</a>. The method is based on the node.js version of the 
+<a href="https://github.com/eBay/event-notification-nodejs-sdk/blob/main/lib/validator.js">ebay sdk code</a> and very helpful insights came from this
+<a href="https://stackoverflow.com/questions/59904522/asn1-encoding-routines-errors-when-verifying-ecdsa-signature-type-with-openssl">stackoverflow thread</a> regarding invalid
+lengths of signatures (<em>should be 64 but is 71</em>).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">ecdsa</span>
+
+<span class="k">def</span> <span class="nf">validate_ebay_signature</span><span class="p">(</span>
+        <span class="n">payload</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> 
+        <span class="n">signature_b64</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+        <span class="n">cached</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="s">"""
+    Validate an ebay notification request.
+    
+    If this function does not return None, the validation has 
+    failed and the returned value is a *somewhat* descriptive
+    error text.
+
+    :param payload: bytes, 
+        the payload that has been signed (body of the POST request)
+    
+    :param signature_b64: str, 
+        the base64 encoded signature object as provided by ebay request header 'x-ebay-signature'
+    
+    :param cached: bool, 
+        whether to request the ebay public key (False) or use the cached key if possible (True)
+    
+    :return None (validation succeeded) or str (validation failed)
+    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># the signature in the ebay request header is a base64 encoded json object
+</span>        <span class="n">signature</span> <span class="o">=</span> <span class="n">json</span><span class="p">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="p">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">signature_b64</span><span class="p">).</span><span class="n">decode</span><span class="p">(</span><span class="s">"ascii"</span><span class="p">))</span>
+        <span class="c1"># check if required fields are there
+</span>        <span class="n">signature</span><span class="p">[</span><span class="s">"alg"</span><span class="p">]</span>
+        <span class="n">signature</span><span class="p">[</span><span class="s">"kid"</span><span class="p">]</span>
+        <span class="n">signature</span><span class="p">[</span><span class="s">"signature"</span><span class="p">]</span>
+
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s">"signature decoding failed: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">).</span><span class="n">__name__</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s">"</span>
+
+    <span class="k">if</span> <span class="n">signature</span><span class="p">[</span><span class="s">"alg"</span><span class="p">]</span> <span class="o">!=</span> <span class="s">"ecdsa"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s">"only supporting 'ecdsa' algorithm, got '</span><span class="si">{</span><span class="n">signature</span><span class="p">[</span><span class="s">'alg'</span><span class="p">]</span><span class="si">}</span><span class="s">'"</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># retrieve the public key from ebay notification api
+</span>        <span class="c1"># https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
+</span>        <span class="n">public_key_info</span> <span class="o">=</span> <span class="n">SomeEbayApi</span><span class="p">.</span><span class="n">get_public_key</span><span class="p">(</span>
+            <span class="n">public_key_id</span><span class="o">=</span><span class="n">signature</span><span class="p">[</span><span class="s">"kid"</span><span class="p">],</span>
+            <span class="n">cached</span><span class="o">=</span><span class="n">cached</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s">"error getting ebay public key: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">).</span><span class="n">__name__</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s">"</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># validate the PEM format of the public key
+</span>        <span class="n">BEGIN</span> <span class="o">=</span> <span class="s">"-----BEGIN PUBLIC KEY-----"</span>
+        <span class="n">END</span> <span class="o">=</span> <span class="s">"-----END PUBLIC KEY-----"</span>
+
+        <span class="n">public_key</span> <span class="o">=</span> <span class="n">public_key_info</span><span class="p">[</span><span class="s">"key"</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">public_key</span><span class="p">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">BEGIN</span><span class="p">),</span> <span class="sa">f</span><span class="s">"public key not starting with </span><span class="si">{</span><span class="n">BEGIN</span><span class="si">}</span><span class="s">"</span>
+        <span class="k">assert</span> <span class="n">public_key</span><span class="p">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">END</span><span class="p">),</span> <span class="sa">f</span><span class="s">"public key not ending with </span><span class="si">{</span><span class="n">END</span><span class="si">}</span><span class="s">"</span>
+        
+        <span class="c1"># and newlines after header and before footer
+</span>        <span class="n">public_key</span> <span class="o">=</span> <span class="n">public_key</span><span class="p">.</span><span class="n">replace</span><span class="p">(</span><span class="n">BEGIN</span><span class="p">,</span> <span class="n">BEGIN</span> <span class="o">+</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">).</span><span class="n">replace</span><span class="p">(</span><span class="n">END</span><span class="p">,</span> <span class="s">"</span><span class="se">\n</span><span class="s">"</span> <span class="o">+</span> <span class="n">END</span><span class="p">)</span>
+        
+        <span class="c1"># create a ecdsa.VerifyingKey instance from the PEM
+</span>        <span class="n">public_key</span> <span class="o">=</span> <span class="n">ecdsa</span><span class="p">.</span><span class="n">VerifyingKey</span><span class="p">.</span><span class="n">from_pem</span><span class="p">(</span><span class="n">public_key</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span><span class="s">"ascii"</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s">"error preparing ebay public key: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">).</span><span class="n">__name__</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s">key: </span><span class="si">{</span><span class="n">public_key_info</span><span class="si">}</span><span class="s">"</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># the actual signature resides inside the signature object
+</span>        <span class="c1">#   and is a base64 encoded DER represantation 
+</span>        <span class="n">signature_bin</span> <span class="o">=</span> <span class="n">base64</span><span class="p">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">signature</span><span class="p">[</span><span class="s">"signature"</span><span class="p">].</span><span class="n">encode</span><span class="p">(</span><span class="s">"ascii"</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">public_key</span><span class="p">.</span><span class="n">verify</span><span class="p">(</span>
+                <span class="n">signature</span><span class="o">=</span><span class="n">signature_bin</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span>
+                <span class="n">hashfunc</span><span class="o">=</span><span class="n">hashlib</span><span class="p">.</span><span class="n">sha1</span><span class="p">,</span>
+                <span class="n">sigdecode</span><span class="o">=</span><span class="n">ecdsa</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">sigdecode_der</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s">"signature validation failed"</span>
+    
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s">"signature validation failed: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">).</span><span class="n">__name__</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s">"</span>
+
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">SomeEbayApi</code> object is just a placeholder for whatever implementation you use. We are automatically creating the api implementation from the swagger files provided by ebay. The <code class="language-plaintext highlighter-rouge">get_public_key</code> method caches each <em>kid / key</em> combination in memory so the api is only queried once after start/restart of the service.</p>
+
+<p>How does the data look like? Below is the message received after pressing the <em>test notification</em> button in the config view.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="s">"metadata"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">"topic"</span><span class="p">:</span> <span class="s">"MARKETPLACE_ACCOUNT_DELETION"</span><span class="p">,</span>
+    <span class="s">"deprecated"</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+    <span class="s">"schemaVersion"</span><span class="p">:</span> <span class="s">"1.0"</span>
+  <span class="p">},</span>
+  <span class="s">"notification"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">"data"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">"userId"</span><span class="p">:</span> <span class="s">"ma8vp1jySJC"</span><span class="p">,</span>
+      <span class="s">"username"</span><span class="p">:</span> <span class="s">"test_user"</span><span class="p">,</span>
+      <span class="s">"eiasToken"</span><span class="p">:</span> <span class="s">"nY+sHZ2PrBmdj6wVnY+sEZ2PrA2dj6wJnY+gAZGEpwmdj6x9nY+seQ=="</span>
+    <span class="p">},</span>
+    <span class="s">"eventDate"</span><span class="p">:</span> <span class="s">"2021-03-19T20:43:59.462Z"</span><span class="p">,</span>
+    <span class="s">"publishDate"</span><span class="p">:</span> <span class="s">"2021-03-19T20:43:59.679Z"</span><span class="p">,</span>
+    <span class="s">"notificationId"</span><span class="p">:</span> <span class="s">"49feeaeb-4982-42d9-a377-9645b8479411_33f7e043-fed8-442b-9d44-791923bd9a6d"</span><span class="p">,</span>
+    <span class="s">"publishAttemptCount"</span><span class="p">:</span> <span class="mi">1</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>These notifications include the <strong>username</strong> (login) of the ebay user that wants to be removed. Well, okay, there needs to be some way of identifying the user to clean up it’s data traces in your system. I never understood why ebay is providing the login name in the first place. It’s certainly not required to deliver packages and in many cases it’s quite personal information.</p>
+
+<p>So, since September the 1st, we are receiving more than 1000 of real deletion requests every day. The users are not tied to an actual merchant that has connected the app to it’s ebay account. It’s simply <strong>all</strong> requests that happen on ebay which leads to the following conclusion:</p>
+
+<p><strong>If you delete your ebay account (or however this notification is triggered) your login name will be posted to every ebay-connected applications in the world.</strong></p>
+
+<p>Here’s a time series for the last few days (resampled to a 30 minutes interval):</p>
+
+<p><img src="/blog/assets/nb/2021-09-05-ebay-push-notification-verification-in-python_files/2021-09-05-ebay-push-notification-verification-in-python_8_0.png" alt="png" /></p>
+
+<p>(The little gap on Sep 3rd was caused by the change of the callback URL from development to production. In case of URL or token change, the challenge by ebay will be renewed and all intermediate requests are discarded. Together with an unrelated technical problem this led to some downtime.)</p>
+
+<p>Great! I don’t think these deletion notifications are implemented by ebay in a privacy compliant way but i certainly like to collect such data (e.g. <a href="https://defgsus.github.io/blog/2021/04/08/one-year-parking.html">free parking spaces</a> or <a href="https://github.com/defgsus/office-schedule-scraper">office appointments</a>).</p>
+
+<p>Stay tuned for a post in a year were we can examine the long term trends.</p>
+
+<h3 id="disclaimer">Disclaimer</h3>
+
+<p>I do not store the <strong>username</strong> field. Trust me!</p>
+
+  </div><a class="u-url" href="/blog/2021/09/05/ebay-push-notification-verification-in-python.html" hidden></a>
+</article>
+
+    </div>
+</main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">def.gsus-</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">def.gsus-</li><li><a class="u-email" href="mailto:echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d">echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/defgsus"><svg class="svg-icon"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg> <span class="username">defgsus</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Programming stuff mainly</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
