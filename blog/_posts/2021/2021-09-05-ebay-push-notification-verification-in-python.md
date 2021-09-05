@@ -194,9 +194,7 @@ Here's a time series for the last few days (resampled to a 30 minutes interval):
     
 
 
-(The little gap on Sep 3rd was caused by the change of the callback URL from development to production. In case of URL or token change, the challenge by ebay will be renewed and all intermediate requests are discarded. Together with an unrelated technical problem this led to some downtime.)
-
-Great! I don't think these deletion notifications are implemented by ebay in a privacy compliant way but i certainly like to collect such data (e.g. [free parking spaces](https://defgsus.github.io/blog/2021/04/08/one-year-parking.html) or [office appointments](https://github.com/defgsus/office-schedule-scraper)). 
+**Great!** I don't think these deletion notifications are implemented by ebay in a privacy compliant way but i certainly like to collect such *social* data (e.g. [free parking spaces](https://defgsus.github.io/blog/2021/04/08/one-year-parking.html) or [office appointments](https://github.com/defgsus/office-schedule-scraper)). 
 
 Stay tuned for a post in a year were we can examine the long term trends. 
 
