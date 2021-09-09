@@ -183,7 +183,7 @@ So, since September the 1st, we are receiving more than 1000 of real deletion re
 
 **If you delete your ebay account (or however this notification is triggered) your login name will be posted to every ebay-connected applications in the world.**
 
-Here's a time series for the last few days (resampled to a 30 minutes interval):
+Here's a time series for the last few days resampled to a 1 hour interval ([csv file](https://github.com/defgsus/blog/blob/master/src/general/ebay-deletion-requests.csv)):
 
 
 

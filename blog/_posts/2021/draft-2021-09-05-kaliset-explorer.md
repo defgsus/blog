@@ -1,13 +1,13 @@
 ---
 layout: post
-title: kali-set explorer
+title: kaliset explorer
 custom_js: 
   - kali/kali-gl.js
 custom_css: 
   - kali/kali-gl.css
 ---
 
-<!-- Actually i'd like to place them somewhere else.. -->
+<!-- I'd like to place the glsl code into own files but it's more complicated.. -->
 <script type="application/x-glsl" class="kali-exp-vert">
 
 attribute vec3 aVertexPosition;

@@ -4,6 +4,19 @@
     display: inline-block;
 }
 
+.kali-gl label .param-name {
+    display: inline-block;
+    min-width: 8rem;
+}
+
+.kali-gl label .param-name-short {
+    display: inline-block;
+    min-width: 1rem;
+}
+.kali-gl label .right {
+    text-align: right;
+}
+
 .kali-gl label.hidden {
     display: none;
 }

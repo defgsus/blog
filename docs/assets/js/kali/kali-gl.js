@@ -301,12 +301,15 @@ function render_kali(element_id, control_element_id, parameters) {
             const new_group = (c.group !== prev_group) || c.group === undefined;
             prev_group = c.group;
             let html = ``;
+            let param_class = c.name.length > 1 ? "param-name" : "param-name-short";
             if (new_group) {
                 if (i > 0)
                     html += `</div>`;
                 html += `<div class="param-group">`;
             }
-            html += `<label><b>${c.name}</b> `;
+            else
+                param_class += " right";
+            html += `<label><b class="${param_class}">${c.name}</b> `;
             let type = c.type === "int" || c.type === "float" ? "number" : c.type;
             let elem_tag = c.type === "select" ? "select" : "input";
             html += `<${elem_tag} id="${control_element_id}-${c.id}" class="${c.type}" type="${type}"`;
