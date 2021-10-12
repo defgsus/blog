@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Wurst - a web synthesizer | def.gsus-</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Wurst - a web synthesizer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A live demo of wurst, the Web-Utilized React Synthesizer Test." />
+<meta property="og:description" content="A live demo of wurst, the Web-Utilized React Synthesizer Test." />
+<link rel="canonical" href="https://defgsus.github.io/blog/2021/10/12/wurst-web-synth.html" />
+<meta property="og:url" content="https://defgsus.github.io/blog/2021/10/12/wurst-web-synth.html" />
+<meta property="og:site_name" content="def.gsus-" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-10-12T00:00:00+02:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Wurst - a web synthesizer" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","url":"https://defgsus.github.io/blog/2021/10/12/wurst-web-synth.html","dateModified":"2021-10-12T00:00:00+02:00","datePublished":"2021-10-12T00:00:00+02:00","headline":"Wurst - a web synthesizer","mainEntityOfPage":{"@type":"WebPage","@id":"https://defgsus.github.io/blog/2021/10/12/wurst-web-synth.html"},"description":"A live demo of wurst, the Web-Utilized React Synthesizer Test.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://defgsus.github.io/blog/feed.xml" title="def.gsus-" /></head>
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+
+    <link rel="stylesheet" href="/blog/style.css">
+
+    
+        
+            <link rel="stylesheet" href="/blog/assets/css/wurst1/index.css">
+        
+    
+
+    
+        
+            <script type="text/javascript" src="/blog/assets/js/wurst1/index.js"></script>
+        
+    
+
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">def.gsus-</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Wurst - a web synthesizer</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-10-12T00:00:00+02:00" itemprop="datePublished">Oct 12, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>A live demo of <a href="https://github.com/defgsus/wurst">wurst</a>, the 
+<strong>W</strong>eb-<strong>U</strong>tilized <strong>R</strong>eact <strong>S</strong>ynthesizer <strong>T</strong>est.</p>
+
+<div id="app"></div>
+<p><br /></p>
+
+<p><em>What can i do?</em></p>
+
+<p>Not much at the moment ;) The sequences have a <strong>target</strong> selection, 
+this is where the value is directed to. The sequence buttons
+are either <strong>0</strong> or <strong>1</strong> and then multiplied by the <strong>amp</strong> value.</p>
+
+<p>A <strong>gate</strong> starts an attack/decay envelope. Everything else is <strong>added</strong>
+on top of the modulated value.</p>
+
+<p>The sequences can target <strong>anything</strong> of a voice generator, the BPM and beat
+settings or other sequences’ values.</p>
+
+<p>It’s all fairly untested and just a weekend project after all.</p>
+
+<p>If you like a song, you can type in a name and press the <strong>SAVE</strong> button. 
+It will be stored in the browser’s 
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage">sessionStorage</a>
+and also printed to the console output.</p>
+
+<p><em>What is this, anyway?</em></p>
+
+<p>My first contact with the browser’s 
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API">Web Audio API</a>.
+I used <a href="https://reactjs.org/">React</a> for the user interface and, apparently, 
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/setTimeout">setTimeout</a> to 
+step the sequencer which is funny because of it’s timing irregularity but 
+probably not the way i’ll do it next time.</p>
+
+<p>The UI elements also need some more work although i certainly spent more time for 
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS">CSS</a> 
+and <a href="https://developer.mozilla.org/en-US/docs/Web/Events">DOM event handling</a>
+than the actual audio stuff.</p>
+
+  </div><a class="u-url" href="/blog/2021/10/12/wurst-web-synth.html" hidden></a>
+</article>
+
+    </div>
+</main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">def.gsus-</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">def.gsus-</li><li><a class="u-email" href="mailto:echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d">echo cy5iZXJrZUBuZXR6a29sY2hvc2UuZGUK | base64 -d</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/defgsus"><svg class="svg-icon"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg> <span class="username">defgsus</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Programming stuff mainly</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
