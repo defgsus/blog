@@ -11,6 +11,7 @@ function render_kali(element_id, control_element_id, parameters) {
         {id: "accumulator", name: "accumulator", type: "select", default: "final", recompile: true, group: 2, options: [
                 ["final", "final"],
                 ["average", "average"],
+                ["xyz", "xyz"],
                 ["min", "min"],
                 ["max", "max"],
                 ["exp", "exp"],
