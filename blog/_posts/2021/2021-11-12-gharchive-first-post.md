@@ -109,11 +109,13 @@ Python's generators are quite useful to walk through a CSV or ndjson file which 
 import csv
 import gzip
 import time
+import io
+import pandas as pd
 
 # per-line iterator through the gzipped csv
-def iter_lines():
-    with gzip.open("../../../gharchive-stats/server-all/2018/watch_h.csv.gz", "rt") as fp:
-        yield from fp.readlines()
+def iter_lines(filename: str = "../../../gharchive-stats/server-all/2018/watch_h.csv.gz"):
+    with io.TextIOWrapper(io.BufferedReader(gzip.open(filename))) as fp:
+        yield from fp
 
 start_time = time.time()
 
@@ -131,7 +133,7 @@ df = pd.DataFrame(rows)
 df
 ```
 
-    took 97.88 seconds
+    took 112.14 seconds
 
 
 
@@ -258,7 +260,7 @@ df
 
 
 
-A hundred seconds simply to parse through the CSV, no matter what we are actually looking for. This would probably lead to a query time of 10 minutes for the whole dataset. Far from optimal but it requires no complicated stuff, google accounts or lots of memory. 
+Over a hundred seconds simply to parse through the CSV, no matter what we are actually looking for. This would probably lead to a query time of 20 minutes for the whole dataset. Far from optimal but it requires no complicated stuff, google accounts or lots of memory. 
 
 For reasons, i quite like [Elastisearch](https://www.elastic.co/elasticsearch/) so i moved the CSV file into an elasticsearch index which took **90 minutes** and resulted in an index size of **4.2 Gb**. Repeating the above query using [elastipy](https://elastipy.readthedocs.io/en/latest/):
 
@@ -477,9 +479,18 @@ There's certainly procrastination potential for more posts. I'll just wrap up so
 - ... Or, these are no duplicates but instead *star - unstar - star* sequences but the *unstar* is not reported. 
 - ... But, from what i've seen in the `PushEvent` data, there are particular and manifold reasons why events repeat. Not all of them can be determined, i think. Sometimes there is a correlation with the actual commits, sometimes not. Some people
 push the same things to 7,000 cryptically named branches... One guy has somehow issued 30,000 push events over a month on a repository which only has 14 commits or so. 
-- In other words: It's quite messy. And to get to that realisation requires quite intense data shoveling already.
+- In other words: It's quite messy. And to get to that realisation requires quite intense data shoveling already. Just look at the `PushEvent` file:
+  - 145,893,474 rows
+  - 3,018,256,231 bytes compressed
+  - 12,934,378,008 bytes uncompressed
+  
+  I mean, 12Gb is better than 200 but still... 
+  
 
 Anyways, one nice plot at the end:
+
+
+
 
 
 ```python
