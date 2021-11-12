@@ -3,6 +3,7 @@
 *.json
 *.ndjson
 *.sh
+.log
 geckodriver
 geckodriver.log
 *cache/
