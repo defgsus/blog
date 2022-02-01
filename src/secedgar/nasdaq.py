@@ -25,6 +25,14 @@ class NasdaqPublic:
         url = f"https://api.nasdaq.com/api/company/{symbol}/company-profile"
         return self.web.request(url, json=True)
 
+    def company_summary(self, symbol: str) -> dict:
+        url = f"https://api.nasdaq.com/api/quote/{symbol}/summary?assetclass=stocks"
+        return self.web.request(url, json=True)
+
+    def company_financials(self, symbol: str) -> dict:
+        url = f"https://api.nasdaq.com/api/company/{symbol}/financials?frequency=1"
+        return self.web.request(url, json=True)
+
     def institutional_holdings(
             self,
             id: Union[int, str],

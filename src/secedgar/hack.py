@@ -4,6 +4,7 @@ https://www.investor.gov/introduction-investing/general-resources/news-alerts/al
 
 """
 import json
+from typing import Union, Iterable
 
 import pandas as pd
 import numpy as np
@@ -62,6 +63,8 @@ def search_company(query: str):
 
 
 def get_nasdaq_holder_graph(
+        filename: str,
+        start_symbols: Iterable[Union[int, str]],
         scan_limit: int = 100,
         request_limit: int = 100,
         min_value: int = 1_000_000,
@@ -69,13 +72,7 @@ def get_nasdaq_holder_graph(
 ):
     todo = {
         (key, 0)
-        for key in [
-            61322,  # vanguard
-            "ddaif",  # mercedes
-            "lmt",  # lockheed
-            #"aldnf",
-            #"TSLA", "AAPL", "MSFT", "AMZN", "AMD", "NVDA"
-        ]
+        for key in start_symbols
     }
     done = set()
 
@@ -87,7 +84,10 @@ def get_nasdaq_holder_graph(
     edge_weights = []
 
     while todo:
-        company_id, distance = todo.pop()
+        pick_entry = sorted(todo, key=lambda e: str(e[0]))[0]
+        company_id, distance = pick_entry
+        todo.remove(pick_entry)
+
         if isinstance(company_id, str):
             company_id = company_id.lower()
 
@@ -155,20 +155,44 @@ def get_nasdaq_holder_graph(
         attributes = {}
         if isinstance(company_id, str):
             profile = profile_map[company_id]
+            holdings = holdings_map[company_id]
             if profile["status"]["rCode"] == 400:
-                attributes["name"] = company_id
+                attributes.update({
+                    "name": company_id,
+                    "market_value": 0,
+                })
             else:
                 try:
                     attributes.update({
-                        "name": profile["data"]["CompanyName"]["value"]
+                        "name": profile["data"]["CompanyName"]["value"],
+                        "sector": profile["data"]["Sector"]["value"],
+                        "region": profile["data"]["Region"]["value"],
+                        "industry": profile["data"]["Industry"]["value"],
                     })
                 except:
                     raise ValueError(f"'{company_id}' in {profile}")
+
+                value = int(((
+                     (holdings["data"].get("ownershipSummary") or {})
+                     .get("TotalHoldingsValue") or {}
+                 ).get("value") or "$0").replace(",", "")[1:])
+                attributes["market_value"] = value
+
         else:
+            holdings = holdings_map[company_id]
+            value = int(((
+                (holdings["data"].get("positionStatistics") or {})
+                .get("TotalMktValue") or {}
+            ).get("value") or "0").replace(",", ""))
             attributes.update({
-                "name": holdings_map[company_id]["data"]["title"],
+                "name": holdings["data"]["title"],
+                "market_value": value,
             })
-        attributes["label"] = attributes["name"]
+        attributes.update({
+            "label": attributes["name"],
+            "symbol": str(company_id),
+            #"market_value": str(attributes["market_value"]) + ".0",
+        })
         graph.add_vertex(**attributes)
 
     max_edge_weight = max(edge_weights)
@@ -177,12 +201,37 @@ def get_nasdaq_holder_graph(
 
     graph.add_edges(edges, {"weight": edge_weights})
     #print(graph)
-    graph.write_dot("graph.dot")
+    graph.write_dot(f"{filename}.dot")
+    graph.write_gml(f"{filename}.gml")
+    #graph.write_edgelist("graph.edge")
 
 #print(json.dumps(holdings, indent=2))
 
 
 #main()
 #store_transactions("microsoft")
-get_nasdaq_holder_graph()
+
+if 1:
+    get_nasdaq_holder_graph(
+        filename="graph-100m",
+        start_symbols=[
+            61322,  # vanguard
+            #"vwagy",  # volkswagen ag adr
+            #"ddaif",  # mercedes
+            #"lmt",  # lockheed
+            #"aldnf",
+            #"TSLA", "AAPL", "MSFT", "AMZN", "AMD", "NVDA"
+        ],
+        max_distance=10,
+        min_value=100_000,
+    )
+elif 1:
+    get_nasdaq_holder_graph(
+        filename="graph-vw",
+        start_symbols=[
+            "vwagy",  # volkswagen ag adr
+        ],
+        max_distance=1,
+        min_value=1_000,
+    )
 #print(json.dumps(nasdaq.institutional_holdings(973119), indent=2))
