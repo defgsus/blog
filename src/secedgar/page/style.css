@@ -1,7 +1,7 @@
 :root {
-    --bg-color: #444;
-    --bg-color-dark1: #333;
-    --bg-color-dark2: #222;
+    --bg-color: #222;
+    --bg-color-dark1: #111;
+    --bg-color-dark2: #000;
     --bg-color-light0: #494949;
     --bg-color-light1: #555;
     --bg-color-light2: #666;
@@ -45,6 +45,9 @@ input {
 }
 #network .node circle:hover {
     stroke: rgba(150, 150, 150, .4);
+}
+#network text  {
+    pointer-events: none;
 }
 
 #network .hidden {
