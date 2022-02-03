@@ -36,7 +36,15 @@ input {
 }
 
 #network .node {
-    fill: var(--bg-color-dark1);
+
+}
+
+#network .node circle {
+    stroke: rgba(0, 0, 0, .3);
+    stroke-width: 3px;
+}
+#network .node circle:hover {
+    stroke: rgba(150, 150, 150, .4);
 }
 
 #network .hidden {
