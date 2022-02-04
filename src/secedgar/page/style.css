@@ -31,6 +31,31 @@ input {
     color: var(--color);
 }
 
+.grid-x {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.grid-x.nowrap {
+    flex-wrap: nowrap;
+}
+
+.grid-x.margin-right > * {
+    margin-right: .5rem;
+}
+.grid-x.margin-bottom > * {
+    margin-bottom: .5rem;
+}
+.grid-x > .grow {
+    flex-grow: 1000;
+}
+.grid-x.inline {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
 #network {
     background: var(--bg-color-dark1);
 }

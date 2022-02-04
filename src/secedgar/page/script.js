@@ -29,7 +29,6 @@ class Network {
             e.node_to.edges_in.push(e);
             this.edge_map[e.id] = e;
         }
-        this.update_radius();
         this.selected_nodes = [];
         this.on_selection_changed = (
             selected_nodes, unselected_nodes,
@@ -40,12 +39,14 @@ class Network {
     get_node_min_max = (field) => {
         let mi = null, ma = null;
         for (const n of this.nodes) {
-            if (mi === null) {
-                mi = n[field];
-                ma = n[field];
-            } else {
-                mi = Math.min(mi, n[field]);
-                ma = Math.max(ma, n[field]);
+            if (typeof n[field] === "number") {
+                if (mi === null) {
+                    mi = n[field];
+                    ma = n[field];
+                } else {
+                    mi = Math.min(mi, n[field]);
+                    ma = Math.max(ma, n[field]);
+                }
             }
         }
         return [mi, ma];
@@ -99,12 +100,13 @@ class Network {
         return returned_nodes;
     };
 
-    update_radius = (field="totalHoldingsMillionDollar", min_radius=10, max_radius=50) => {
+    update_radius = (field, min_radius, max_radius) => {
         const field_min_max = this.get_node_min_max(field);
         for (const n of this.nodes) {
-            n.radius = min_radius + (max_radius - min_radius) * (
+            const radius = min_radius + (max_radius - min_radius) * (
                 (n[field] - field_min_max[0]) / (field_min_max[1] - field_min_max[0])
             );
+            n.radius = isNaN(radius) ? min_radius : radius;
         }
     };
 
@@ -324,17 +326,13 @@ class Diagram {
             );
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             edge_g.appendChild(line);
-            const [x1, y1, x2, y2, x3, y3, x4, y4] = this._get_edge_positions(edge);
-            line.setAttribute("x1", `${x1}`);
-            line.setAttribute("y1", `${y1}`);
-            line.setAttribute("x2", `${x2}`);
-            line.setAttribute("y2", `${y2}`);
+            edge.element_line = line;
 
             const arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
             edge_g.appendChild(arrow);
-            arrow.setAttribute("points", `${x2},${y2} ${x3},${y3} ${x4},${y4}`);
-
+            edge.element_polygon = arrow;
             g.appendChild(edge_g);
+            this.update_edge(edge);
         }
         for (const node of this.network.nodes) {
             const node_g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -347,14 +345,10 @@ class Diagram {
             );
             let elem = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             node_g.appendChild(elem);
-            elem.setAttribute("r", `${node.radius}`);
-            elem.setAttribute("cx", `${node.x}`);
-            elem.setAttribute("cy", `${node.y}`);
-            elem.setAttribute("style", `fill: ${this.node_color(node)}`);
+            node.element_circle = elem;
             elem = document.createElementNS("http://www.w3.org/2000/svg", "text");
             node_g.appendChild(elem);
-            elem.setAttribute("x", `${node.x}`);
-            elem.setAttribute("y", `${node.y}`);
+            node.element_text = elem;
             elem.setAttribute("style", "stroke: black; font-size: 1rem");
             elem.setAttribute("paint-order", "stroke");
             elem.classList.add("hidden");
@@ -368,9 +362,11 @@ class Diagram {
 
     update_all = () => {
         this.update_view();
-        for (const elem of this.element.querySelectorAll(".node")) {
-            const node = this.network.node_map[parseInt(elem.id.slice(5))];
-            this.update_node(elem, node);
+        for (const node of this.network.nodes) {
+            this.update_node(node);
+        }
+        for (const edge of this.network.edges) {
+            this.update_edge(edge);
         }
     };
 
@@ -392,28 +388,29 @@ class Diagram {
     };
 
     update_node = (node) => {
+        const color = this.node_color(node);
         const elem = node.element;
+        elem.setAttribute("style", `fill: ${color}`);
         if (node.hidden)
             elem.classList.add("hidden");
         else
             elem.classList.remove("hidden");
         if (node.selected) {
             elem.classList.add("selected");
-            const text = elem.querySelector("text");
-            text.classList.remove("hidden");
+            node.element_text.classList.remove("hidden");
             // TODO: bb is zero-sized
-            const bb = text.getBoundingClientRect();
-            text.setAttribute("transform", `translate(${-bb.width/2},0)`);
-            text.setAttribute("style", `fill: ${this.node_color(node)}; stroke: black`);
+            const bb = node.element_text.getBoundingClientRect();
+            node.element_text.setAttribute("transform", `translate(${-bb.width/2},0)`);
+            node.element_text.setAttribute("style", `fill: ${color}; stroke: black`);
+            node.element_text.setAttribute("x", `${node.x}`);
+            node.element_text.setAttribute("y", `${node.y}`);
         } else {
             elem.classList.remove("selected");
             elem.querySelector("text").classList.add("hidden");
         }
-        const shape = elem.querySelector("circle");
-        shape.setAttribute("r", `${node.radius}`);
-        shape.setAttribute("cx", `${node.x}`);
-        shape.setAttribute("cy", `${node.y}`);
-        shape.setAttribute("style", `fill: ${this.node_color(node)}`);
+        node.element_circle.setAttribute("r", `${node.radius}`);
+        node.element_circle.setAttribute("cx", `${node.x}`);
+        node.element_circle.setAttribute("cy", `${node.y}`);
     };
 
     update_edge = (edge) => {
@@ -426,7 +423,12 @@ class Diagram {
             "style",
             `stroke: ${color}; fill: ${color}; stroke-width: ${width}px`
         );
-
+        const [x1, y1, x2, y2, x3, y3, x4, y4] = this._get_edge_positions(edge);
+        edge.element_line.setAttribute("x1", `${x1}`);
+        edge.element_line.setAttribute("y1", `${y1}`);
+        edge.element_line.setAttribute("x2", `${x2}`);
+        edge.element_line.setAttribute("y2", `${y2}`);
+        edge.element_polygon.setAttribute("points", `${x2},${y2} ${x3},${y3} ${x4},${y4}`);
     };
 
     update_selection = (
@@ -460,6 +462,33 @@ class Diagram {
 
 window.addEventListener("DOMContentLoaded", () => {
 
+    const NODE_NUMBER_VALUES = [
+        {key: "totalShares", label: "total shares"},
+        {key: "totalHoldingsMillionDollar", label: "total holdings $"},
+        {key: "pagerank", label: "graph PageRank"},
+        {key: "hub", label: "graph hub"},
+        {key: "authority", label: "graph authority"},
+        {key: "hubOrAuthority", label: "max(graph hub, authority)"},
+        {key: "x", label: "x position"},
+        {key: "y", label: "y position"},
+    ];
+
+    const CONTROLS = {
+        "radius": {
+            type: "select", value: "totalHoldingsMillionDollar",
+            label: "radius", title: "what value determines the radius of the spheres",
+            choices: NODE_NUMBER_VALUES,
+        },
+        "min_radius": {
+            type: "number", value: 10, min: 1, max: 1000,
+            label: "min radius", title: "the smallest possible radius"
+        },
+        "max_radius": {
+            type: "number", value: 50, min: 1, max: 1000,
+            label: "max radius", title: "the largest possible radius"
+        }
+    };
+
     const diagram = new Diagram(document.getElementById("network"));
     window.diagram = diagram;
     let network = null;
@@ -469,12 +498,12 @@ window.addEventListener("DOMContentLoaded", () => {
         .then(data => {
             network = new Network(data.nodes, data.edges);
             window.network = network;
-            const [x, y] = network.center();
-            console.log("CENTER", x, y);
-            diagram.view.x = x;
-            diagram.view.y = y;
+            const node = network.node_map["61322"];
+            diagram.view.x = node.x;
+            diagram.view.y = node.y;
             diagram.view.zoom = .2;
             diagram.set_network(network);
+            on_control_change(CONTROLS["radius"], CONTROLS["radius"].value);
         });
 
     diagram.on_click = (x, y) => {
@@ -489,5 +518,75 @@ window.addEventListener("DOMContentLoaded", () => {
             network.set_selected([]);
         }
     };
+    
+    function update_controls() {
+        const container = document.querySelector(".controls");
+        for (const name of Object.keys(CONTROLS)) {
+            const control = CONTROLS[name];
+            control.name = name;
+            if (!control.element) {
+                if (control.type === "select") {
+                    control.element = document.createElement("select");
+                    control.element.setAttribute("name", control.name);
+                    for (const opt of control.choices) {
+                        const e = document.createElement("option");
+                        e.setAttribute("value", opt.key);
+                        if (opt.key === control.value)
+                            e.setAttribute("selected", "selected");
+                        e.innerText = opt.label;
+                        control.element.appendChild(e);
+                    }
+                    control.element.addEventListener("change", e => {
+                        on_control_change(control, control.element.value);
+                    });
+                } else {
+                    control.element = document.createElement("input");
+                    control.element.setAttribute("type", control.type);
+                    control.element.setAttribute("name", control.name);
+                    control.element.setAttribute("value", control.value);
+                    if (control.min !== undefined)
+                        control.element.setAttribute("min", control.min);
+                    if (control.max !== undefined)
+                        control.element.setAttribute("max", control.max);
+                    control.element.addEventListener("change", e => {
+                        on_control_change(control, control.element.value);
+                    });
+                }
+                const wrapper = document.createElement("div");
+                wrapper.setAttribute("class", "control");
+                const label = document.createElement("div");
+                const text = document.createTextNode(control.label);
+                label.appendChild(text);
+                wrapper.appendChild(label);
+                wrapper.appendChild(control.element);
+                container.appendChild(wrapper);
+            }
+        }
+    }
+
+    function on_control_change(control, value) {
+        if (!network)
+            return;
+
+        if (control.type === "number")
+            control.value = parseInt(value);
+        else
+            control.value = value;
+
+        switch (control.name) {
+            case "radius":
+            case "min_radius":
+            case "max_radius":
+                network.update_radius(
+                    CONTROLS["radius"].value,
+                    CONTROLS["min_radius"].value,
+                    CONTROLS["max_radius"].value,
+                );
+                diagram.update_all();
+                break;
+        }
+    }
+    
+    update_controls();
 
 });
