@@ -75,6 +75,39 @@ input {
     pointer-events: none;
 }
 
-#network .hidden {
+.hidden {
     visibility: hidden;
+}
+
+.controls {
+    position: relative;
+    padding: .5rem;
+}
+
+.controls .headline {
+    margin-bottom: .1rem;
+    font-size: 133%;
+}
+
+.palette {
+    width: 14rem;
+    max-height: 20rem;
+    overflow: scroll;
+    margin: .5rem;
+}
+
+.palette .entry {
+    cursor: pointer;
+    padding-right: .5rem;
+    font-weight: bold;
+    text-align: right;
+    text-shadow:
+            1px 0 0 black,
+            -1px 0 0 black,
+            0 -1px 0 black,
+            0 -1px 0 black;
+}
+
+.palette .entry .prefix {
+    min-width: 4rem;
 }
