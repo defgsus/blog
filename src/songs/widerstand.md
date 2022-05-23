@@ -16,13 +16,13 @@
 
     - Refrain -
     
-         C               D          G
+         D               C          G
     Denn F wird hier von keinem toleriert
     
-         C               D         G
+         D               C         G
     Egal was hinten oder vorne rum pläsiert
 
-          C              D          G
+          D              C          G
     Unser Widerstand ist fest organisiert
     
           C              D          G
@@ -80,7 +80,7 @@
     Apple kämpft gegen Microsoft, Nike gegen Adidas
     Schwurbler gegen Lauterbach, Chaos gegen Überwach
     Hunger gegen Überfluss, Mercedes gegen Autobus
-    Blackrock gegen Transparenz, Glaube gegen Insolvenz
+    Blackrock gegen Transparenz, Journalismus gegen Insolvenz
     
     Wahlgang gegen Walgesang
     Untergang gegen Neuanfang
