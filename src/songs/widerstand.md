@@ -1,4 +1,6 @@
 # Widerstand, intellektueller
+
+(May 2022)
     
     - Strophe -
 
@@ -62,7 +64,7 @@
     Und ist das erstmal absolviert
     Wird an der Börse hoch dotiert
     Denn egal was F idealisiert
-    Am Ende werden wir abkassiert
+    Am Ende werden wir abserviert
 
     Und damit das niemals wieder passiert
     wird immer weiter dezentralisiert
@@ -84,5 +86,5 @@
     
     Wahlgang gegen Walgesang
     Untergang gegen Neuanfang
-    Profit machen gegen fairtraide Sachen (oder: Transgender gegen hetero Ständer)
+    Transgender gegen hetero Ständer
     Tellerrand gegen Unbekannt
