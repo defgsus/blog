@@ -1,0 +1,164 @@
+$color-outside-hl: rgba(0, 0, 0, .1);
+$color-neck: #d0d0d0;
+$color-neck-hl: #c0c0c0;
+$color-string: #604050;
+$color-fret: #303030;
+$fret-height: 2rem;
+$fret-width: 2rem;
+$string-width: .1rem;
+$note-radius: .618rem;
+$note-color: #707070;
+$note-color-hl: #989898;
+$note-char-color: #fff;
+$cross-color: #000;
+$title-font-size: 1rem;
+$title-font-color: #000;
+
+pre.bars {
+  font-size: large;
+}
+
+.chord-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  .chord {
+    margin-top: $title-font-size * 1.1;
+    font-family: monospace;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+    display: block;
+    position: relative;
+    //border: 1px solid green;
+    min-height: $fret-height;
+
+    .title {
+      position: absolute;
+      top: -$title-font-size;
+      width: 100%;
+      text-align: center;
+      font-size: $title-font-size;
+      font-weight: bold;
+      color: $title-font-color;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    &.strings-3 {
+      width: $fret-width * 3;
+    }
+
+    &.strings-4 {
+      width: $fret-width * 4;
+    }
+
+    &.strings-5 {
+      width: $fret-width * 5;
+    }
+
+    &.strings-6 {
+      width: $fret-width * 6;
+    }
+
+    .fret {
+      border-bottom: .2rem solid $color-fret;
+      height: $fret-height;
+
+      .fret-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        position: absolute;
+        left: 0;
+        height: $fret-height;
+        &.pass-events {
+          pointer-events: none;
+        }
+      }
+
+      .note-field {
+        width: $fret-width;
+        height: $fret-height;
+
+        &:hover {
+          background: $color-outside-hl;
+        }
+
+        &.inside {
+          background: $color-neck;
+
+          &:hover {
+            background: $color-neck-hl;
+          }
+        }
+      }
+
+      .string {
+        width: $string-width;
+        background: $color-string;
+        margin-left: ($fret-width - $string-width) / 2;
+        margin-right: ($fret-width - $string-width) / 2;
+      }
+
+      .note {
+        position: absolute;
+        width: $note-radius * 2;
+        height: $note-radius * 2;
+        top: $fret-height / 2 - $note-radius;
+        left: $fret-width / 2 - $note-radius;
+
+        font-size: $note-radius;
+        color: $note-char-color;
+        font-weight: bold;
+
+        &.filled {
+          background: $note-color;
+          border-radius: $note-radius;
+          &:hover {
+            background: $note-color-hl;
+          }
+          &.length-2 {
+            width: $note-radius * 2 + $fret-width;
+          }
+          &.length-3 {
+            width: $note-radius * 2 + $fret-width * 2;
+          }
+          &.length-4 {
+            width: $note-radius * 2 + $fret-width * 3;
+          }
+          &.length-5 {
+            width: $note-radius * 2 + $fret-width * 5;
+          }
+          &.length-6 {
+            width: $note-radius * 2 + $fret-width * 6;
+          }
+        }
+
+        .note-name, .crossed {
+          position: relative;
+          text-align: center;
+          top: $note-radius / 3;
+          cursor: pointer;
+        }
+
+        .crossed {
+          color: $cross-color;
+        }
+
+        &.string-1 {
+          left: $fret-width / 2 - $note-radius + $fret-width;
+        }
+        &.string-2 {
+          left: $fret-width / 2 - $note-radius + $fret-width * 2;
+        }
+        &.string-3 {
+          left: $fret-width / 2 - $note-radius + $fret-width * 3;
+        }
+        &.string-4 {
+          left: $fret-width / 2 - $note-radius + $fret-width * 4;
+        }
+      }
+    }
+  }
+}
