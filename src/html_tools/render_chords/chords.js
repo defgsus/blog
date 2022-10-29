@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function play_notes(notes) {
         clean_sources();
         notes = notes.split(",").map(n => parseInt(n) + 12);
-        console.log("playing notes", notes);
 
         let interval = 0;
         for (const note of notes) {
@@ -23,33 +22,44 @@ document.addEventListener("DOMContentLoaded", () => {
             const time = audio_context.currentTime + interval;
             interval = interval * 1.3 + 1./30;
             osc.frequency.setValueAtTime(freq, 0);
-            osc2.frequency.setValueAtTime(freq * 3., 0);
             env.gain.setValueAtTime(0, 0);
             env.gain.linearRampToValueAtTime(0, time);
             env.gain.linearRampToValueAtTime(.95 / 6, time + 1./150);
-            env.gain.linearRampToValueAtTime(0, time + 2);
+            env.gain.linearRampToValueAtTime(0, time + 1.3);
 
-            env2.gain.setValueAtTime(100, 0)
+            osc2.frequency.setValueAtTime(freq * .125, 0);
+            env2.gain.setValueAtTime(20, 0)
             osc2.connect(env2).connect(osc.frequency);
 
-            audio_sources[Object.keys(audio_sources).length] = {osc, env, time: audio_context.currentTime};
+            audio_sources[Object.keys(audio_sources).length] = {
+                osc, env,
+                time: audio_context.currentTime,
+                stop: () => {
+                    osc.stop();
+                    osc2.stop();
+                    osc.disconnect();
+                    osc2.disconnect();
+                    env.disconnect();
+                },
+            };
             osc.start();
             osc2.start();
         }
+
+        console.log("playing notes", notes, "active voices:", Object.keys(audio_sources).length);
     }
 
     function clean_sources() {
         for (const key of Object.keys(audio_sources)) {
             const source = audio_sources[key];
             if (audio_context.currentTime - source.time > 3) {
-                source.osc.disconnect();
-                source.env.disconnect();
+                source.stop();
                 delete audio_sources[key];
             }
         }
     }
 
-    for (const elem of document.querySelectorAll('.chord [data-notes]')) {
+    for (const elem of document.querySelectorAll('[data-notes]')) {
         elem.addEventListener("click", event => {
             play_notes(elem.getAttribute("data-notes"));
         });

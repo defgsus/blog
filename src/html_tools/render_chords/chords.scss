@@ -13,9 +13,21 @@ $note-char-color: #fff;
 $cross-color: #000;
 $title-font-size: 1rem;
 $title-font-color: #000;
+$bars-chord-color: #164ab3;
 
-pre.bars {
+.bars {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   font-size: large;
+
+  pre {
+    margin: 0;
+  }
+
+  .chord {
+    color: $bars-chord-color;
+    cursor: pointer;
+  }
 }
 
 .chord-row {

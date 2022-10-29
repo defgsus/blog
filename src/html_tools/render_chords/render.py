@@ -1,6 +1,7 @@
 """
 """
 import re
+import secrets
 from pathlib import Path
 import argparse
 import sys
@@ -38,6 +39,10 @@ class ChordRenderer(MarkdownRenderer):
 <a href="{filename}">{short_filename}</a>
 """.strip().replace("\n", " ")
 
+    def __init__(self):
+        super().__init__()
+        self.chord_map = dict()
+
     def render_raw_text(self, element: RawText) -> str:
         text = super().render_raw_text(element)
         def _sub(match):
@@ -53,21 +58,35 @@ class ChordRenderer(MarkdownRenderer):
         if not element.children:
             return super().render_fenced_code(element)
 
+        # text: RawText = element.children[0]
+        text = super().render_raw_text(element.children[0])
+
         if language.startswith("chords-"):
             strings = language[7:].split("/")
             strings = self._convert_strings(strings)
-            text: RawText = element.children[0]
 
+            bars_text = None
+            if "bars:\n" in text:
+                text, bars_text = text.split("bars:\n")
+
+            lines = text.splitlines()
             chords = []
-            for line in text.children.splitlines():
-                line = line.strip()
+            while lines:
+                line = lines.pop(0).strip()
                 if line:
                     chords.append(line)
 
-            return self._render_chords(strings, chords)
+            result = self._render_chords(strings, chords)
+            if bars_text:
+                result = self._render_bars(bars_text) + result
 
         elif language.startswith("bars"):
-            return self._render_bars(super().render_raw_text(element.children[0]))
+            result = self._render_bars(text)
+
+        else:
+            return super().render_fenced_code(element)
+
+        return f"\n\n{result}\n\n"
 
     def _convert_strings(self, strings: List[str]) -> List[int]:
         root_note = self.NOTES.index(strings[0][0].lower())
@@ -84,6 +103,7 @@ class ChordRenderer(MarkdownRenderer):
 
     def _render_chords(self, strings: List[int], chords: List[str]) -> str:
         markup = ""
+        chords_id = f"chords-{secrets.token_hex(12)}"
         for chord in chords:
             if ":" in chord:
                 title, chord = [i.strip() for i in chord.split(":")]
@@ -96,6 +116,8 @@ class ChordRenderer(MarkdownRenderer):
             if title:
                 notes = ",".join(str(n) for n in all_notes)
                 markup += f'<div class="title" data-notes="{notes}">{title}</div>'
+                self.chord_map[title] = {"notes": all_notes}
+
             for fret_idx, fret_row in enumerate(fret_matrix):
                 markup += f'<div class="fret fret-{fret_idx}">'
 
@@ -144,9 +166,9 @@ class ChordRenderer(MarkdownRenderer):
 
                 markup += '</div>'  # .fret
 
-            markup += '</div>'
+            markup += '</div>'  # .chord
 
-        return f'<div class="chord-row">{markup}</div>'
+        return f'<div class="chord-row" id="{chords_id}">{markup}</div>'
 
     def _get_fret_data(self, strings: List[int], chord: str) -> Tuple[
         List[List[dict]],
@@ -227,9 +249,31 @@ class ChordRenderer(MarkdownRenderer):
             if all(c.isnumeric() or c.isspace() or c == "." for c in line):
                 pass
             else:
-                lines[idx] = f'<b>{line}</b>'
-        lines = "\n".join(lines)
-        return f'<pre class="bars">{lines}</pre>'
+                line = self._split_with_whitespace(line)
+                for idx2, word in enumerate(line):
+                    if word in self.chord_map:
+                        if self.chord_map[word]["notes"]:
+                            notes = ",".join(str(n) for n in self.chord_map[word]["notes"])
+                            line[idx2] = f'<span class="chord" data-notes="{notes}">{word}</span>'
+
+                line = f'<b>{"".join(line)}</b>'
+
+            lines[idx] = f'<pre>{line or " "}</pre>'
+
+        lines = "".join(lines)
+        return f'<div class="bars">{lines}</div>'
+
+    def _split_with_whitespace(self, text: str) -> List[str]:
+        result = []
+        for c in text:
+            if not result:
+                result.append(c)
+            else:
+                if result[-1][0].isspace() ^ c.isspace():
+                    result.append("")
+
+                result[-1] += c
+        return result
 
     def _note_name(self, n: int) -> str:
         return f"{self.NOTES[n % 12].upper()}"#{n // 12}"
