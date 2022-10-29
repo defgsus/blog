@@ -14,6 +14,8 @@ from marko.block import FencedCode
 from marko.inline import RawText
 import scss
 
+PROJECT_DIR: Path = Path(__file__).resolve().parent.parent.parent.parent
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -48,7 +50,12 @@ class ChordRenderer(MarkdownRenderer):
         def _sub(match):
             filename = match.groups()[0]
             short_filename = Path(filename).name
-            markup = self.AUDIO_TEMPLATE.format(filename=filename, short_filename=short_filename)
+            abs_filename = (PROJECT_DIR / "docs" / "assets" / "songs" / filename)
+            assert abs_filename.exists(), abs_filename
+            markup = self.AUDIO_TEMPLATE.format(
+                filename=f"/blog/assets/songs/{filename}",
+                short_filename=short_filename,
+            )
             return f"\n\n{markup}\n\n"
 
         return self.RE_TAG_AUDIO.sub(_sub, text)
@@ -310,7 +317,13 @@ def main(args):
     md = render_markdown(input_filename=options.filename)
 
     if not options.html:
-        result = md
+        result = """---
+layout: post
+title: Summer of Music
+custom_css: chords.css
+custom_js: chords.js
+---
+""" + md
     else:
         with HTMLRenderer() as renderer:
             doc = marko.parse(md)
