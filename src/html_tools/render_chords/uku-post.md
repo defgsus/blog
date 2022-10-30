@@ -21,7 +21,7 @@ The deep **G** sounds quite nice, a bit banjo-esque even, but the string was too
 My "A543" tuning: 0/0/0/0
 ```
 
-It's a **D major** with a bass **A**. And this effectively kept me away from laptop and instead led to countless hours of playing. Below is a small collection of songs that came to life during this year. They have been recorded with a BOSS BR80, a little multi-track recorder with nice microphones and effects. Some recordings also have bass or percussion, some have 3 ukulele tracks and even a bit of mandolin. It's basically just ideas that can get better when played together. There is not much of an arrangement. Mostly the parts are played three or four times in a loop. 
+It's a **D major** with a bass **A**. And this effectively kept me away from laptop and instead led to countless hours of playing. Below is a collection of songs that came to life during this year. They have been recorded with a BOSS BR80, a little multi-track recorder with nice microphones and effects. Some recordings also have bass or percussion, some have 3 ukulele tracks and even a bit of mandolin. It's basically just ideas that can get better when played together. There is not much of an arrangement, mostly the parts are repeated three or four times. 
 
 
 ---
@@ -30,7 +30,7 @@ It's a **D major** with a bass **A**. And this effectively kept me away from lap
 
 That's the first piece that i recorded. Then developed it a bit further, recorded again, aso. It's fun to play it solo as well.
 
-The numbers show the current bar for each chord. All songs are 4/4 time unless noted otherwise. Some *'special'* chords have been suffixed with **x**, **y** or **2** or something like that. I'm not really able to tell the official name in all cases. The tabs for the chords are listed in order of appearance below the bars.
+The numbers show the current bar for each chord. All songs are 4/4 time. Some *'special'* chords have been suffixed with **x**, **y** or **2** or something like that. I'm not really able to tell the official name in all cases. For example, the **Bo** below stands for an *"open B"* which is neither *major* nor *minor*. You can read the involved notes from the tabs which are listed in order of appearance below the bars or by hovering the mouse over the chord name.
 
 ```chords-A/5/4/3
 F: 3-4
@@ -77,7 +77,9 @@ E: 2-4
 G: 2/0/1/2
 Gx: 2/0/1/0
 A7: 4/2/3/2
+A7x: 2-2//3/2
 B: 2/1/0/2
+B7: 2/1/3/2
 Cm7: 3/1-3
 Dm7: 5/3-3
 D#x: 1/3/1-2
@@ -91,8 +93,8 @@ B7: 2/1/0/0
 
 bars:
   (part I)
-    1    2    3    4    5    6    7    8 
-    Ex E Ex E G Gx G Gx A7        B
+    1      2      3      4      5      6      7      8 
+    Ex  E  Ex  E  G  Gx  G  Gx  A7x A7 A7x A7 B      B7
     
   (part II)
     1    2    3    4    5    6    7    8
@@ -116,7 +118,7 @@ bars:
 
 {audio:depe.mp3}
 
-An idea developed with a friend called Pepe, but it's on D, not on P. An easy piece and good for singing a 60ies melody on top.
+An idea developed with my friend Pepe, but it's on D, not on P. An easy piece and good for singing a 60ies melody on top.
 
 ```chords-A/5/4/3
 Cx: 3/2/1
@@ -154,7 +156,7 @@ bars:
 
 A very simple piece, but it has some merry drive. At that time, i began to realize that most of my new songs are good-tempered. 
 
-You need to do a bit of fingering in the verse that is not written down, but it's easy to find out.
+You need to do a bit of extra fingering that is not written down, but it's easy to find out.
 
 ```chords-A/5/4/3
 E: 2-4
@@ -359,7 +361,7 @@ bars:
     1   2   3   4   5   6   7   8
     Am  Dm  Am  F   C   D   F
 
-    1   2   3   4   5   6   7   8   9   10  11
+    1   2   3   4   5   6   7   8   9   10  11  12
     Am  Dm  Am  F   C   D   F       C   Gm  F
   
   (bridge/chorus)
@@ -378,7 +380,7 @@ bars:
 
 Both recordings are based on the same chords. The lyrics are picked more or less randomly from an old book. They are from [The H-Bomb's Thunder](https://unionsong.com/u576.html) by John Brunner, written for the *Aldermaston March* in 1958. 
 
-The important thing is the rhythmic tapping/release of the lowest string in the **open B** chord in the beginning. And a nice overdrive ;) 
+The important thing is the rhythmic tapping/release of the low **A**-string in the **open B** chord in the beginning. And a nice overdrive ;) 
 
 ```chords-A/5/4/3
 Bo: 2/4/5/

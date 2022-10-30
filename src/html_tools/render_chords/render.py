@@ -6,6 +6,7 @@ from pathlib import Path
 import argparse
 import sys
 from typing import List, Tuple
+from html import escape
 
 import marko
 from marko.md_renderer import MarkdownRenderer
@@ -230,7 +231,7 @@ class ChordRenderer(MarkdownRenderer):
 
         all_played_notes = sorted(all_played_notes)
         for fret_idx, row in enumerate(result):
-            for f in row:
+            for string_idx, f in enumerate(row):
                 if not f["play_notes"]:
                     f["play_notes"] = all_played_notes
 
@@ -241,8 +242,8 @@ class ChordRenderer(MarkdownRenderer):
                 else:
                     if f["press_length"] > 1:
                         note_names = [
-                            self._note_name(f["note"] + n)
-                            for n in range(f["press_length"])
+                            self._note_name(n)
+                            for n in f["play_notes"]
                         ]
                         f["title"] = f"Notes {' '.join(note_names)} (held on {self._fret_name(fret_idx)})"
                     else:
@@ -256,19 +257,21 @@ class ChordRenderer(MarkdownRenderer):
             if all(c.isnumeric() or c.isspace() or c == "." for c in line):
                 pass
             else:
-                line = self._split_with_whitespace(line)
+                line = self._split_with_whitespace(escape(line))
                 for idx2, word in enumerate(line):
                     if word in self.chord_map:
                         if self.chord_map[word]["notes"]:
                             notes = ",".join(str(n) for n in self.chord_map[word]["notes"])
-                            line[idx2] = f'<span class="chord" data-notes="{notes}">{word}</span>'
+                            note_names = " ".join(self._note_name(n) for n in self.chord_map[word]["notes"])
+                            title = f"Notes: {note_names}"
+                            line[idx2] = f'<span class="chord" data-notes="{notes}" title="{title}">{word}</span>'
 
                 line = f'<b>{"".join(line)}</b>'
 
-            lines[idx] = f'<pre>{line or " "}</pre>'
+            lines[idx] = f'<div>{line or " "}</div>'
 
         lines = "".join(lines)
-        return f'<div class="bars">{lines}</div>'
+        return f'<pre class="bars">{lines}</pre>'
 
     def _split_with_whitespace(self, text: str) -> List[str]:
         result = []
