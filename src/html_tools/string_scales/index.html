@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>String Scales</title>
+    <link rel="stylesheet" href="string-scales.css">
+    <script src="string-scales.js"></script>
+</head>
+<body>
+</body>
+    <div class="string-scales">
+        <div class="row">
+            <div class="settings">
+                <div class="row">
+                    <div>
+                        <label for="tuning-select">tuning</label>
+                        <select id="tuning-select"></select>
+                    </div>
+                    <div>
+                        <input id="custom-tuning" placeholder="custom, e.g: E A D G">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label for="scale-select">scale</label>
+                        <select id="scale-select"></select>
+                    </div>
+                    <div>
+                        <input id="custom-scale" placeholder="custom, e.g: 0 1 2 4">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label for="note-select">root note</label>
+                        <select id="note-select"></select>
+                    </div>
+                    <div>
+                        <label for="octave-switch">show octave</label>
+                        <input type="checkbox" id="octave-switch">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <svg id="note-svg" width="160" height="160" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+        </div>
+
+        <br/>
+        <pre></pre>
+    </div>
+</html>
