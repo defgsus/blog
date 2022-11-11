@@ -6,18 +6,25 @@ document.addEventListener("DOMContentLoaded", () => {
         {short: "r", name: "root"},
         {short: "♭2", name: "minor second"},
         {short: "2", name: "major second"},
-        {short: "♯2", name: "augmented second"},
-        {short: "♭3", name: "minor third"},
+        {short: "♯2/♭3", name: "augmented second/minor third"},
         {short: "3", name: "major third"},
         {short: "4", name: "perfect fourth"},
-        {short: "♯4", name: "augmented fourth"},
-        {short: "♭5", name: "diminished fifth"},
+        {short: "♯4/♭5", name: "augmented fourth/diminished fifth"},
         {short: "5", name: "perfect fifth"},
-        {short: "♯5", name: "augmented fifth"},
-        {short: "♭6", name: "minor sixth"},
+        {short: "♯5/♭6", name: "augmented fifth/minor sixth"},
         {short: "6", name: "major sixth"},
         {short: "7", name: "minor seventh"},
         {short: "M7", name: "major seventh"},
+        {short: "r", name: "compound octave"},
+        {short: "♭9", name: "compound minor second"},
+        {short: "9", name: "compound major second"},
+        {short: "♯9/♭10", name: "compound augmented second/minor third"},
+        {short: "10", name: "compound major third"},
+        {short: "11", name: "compound perfect fourth"},
+        {short: "♯11", name: "compound augmented fourth"},
+        {short: "?", name: "19 semitones above root"},
+        {short: "♭13", name: "compound minor sixth"},
+        {short: "13", name: "compound major sixth"},
     ];
     const TUNINGS = [
         {"name": "Ukulele A543", strings: "A2 5 4 3"},
@@ -43,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
         {name: "m7", short: "m7", intervals:        [0, 3, 7, 10]},
         {name: "m9", short: "m9", intervals:        [0, 3, 7, 10, 14]},
         {name: "madd9", short: "madd9", intervals:  [0, 3, 7, 14]},
+        {name: "dim", short: "o", intervals:        [0, 3, 6]},
         {name: "dim7", short: "o7", intervals:      [0, 3, 6, 9]},
     ];
     const SCALES = [
@@ -234,6 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
             "name": "Yo scale",
             "intervals": [0, 3, 5, 7, 10],
         },
+        {
+            "name": "Custom...",
+            "intervals": [],
+        },
     ]
 
     const settings = {
@@ -244,12 +256,21 @@ document.addEventListener("DOMContentLoaded", () => {
         strings: [],
         num_frets: 12,
         show_octave: false,
+        hide_notes: false,
         is_note_highlighted: n => false,
         is_fret_dot: f => (f % 12) === 5 || (f % 12) === 7 || (f % 12) === 10,
     };
+    window.settings = settings;
 
+    const $tuning_select = document.querySelector("select#tuning-select");
+    const $scale_select = document.querySelector("select#scale-select");
+    const $note_select = document.querySelector("select#note-select");
+    const $octave_switch = document.querySelector("#octave-switch");
+    const $hide_notes_switch = document.querySelector("#hide-notes-switch");
     const $custom_tuning = document.querySelector("#custom-tuning");
     const $custom_scale = document.querySelector("#custom-scale");
+    const $pre = document.querySelector(".string-scales pre");
+    const $svg = document.querySelector(".string-scales #note-svg");
 
     function name_to_note(name) {
         const num_index = Array.from(name).findIndex(c => parseInt(c) >= 0);
@@ -285,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function note_name(note, pad_length, pad_char) {
         const n = note % 12, o = Math.floor(note / 12);
-        let name = NOTE_NAMES[n];
+        let name = NOTE_NAMES[n].replace("#", "♯");
         if (settings.show_octave && o > 0)
             name = `${name}${o}`;
         if (pad_length) {
@@ -308,7 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const is_hl = settings.is_note_highlighted(note);
         const note_class = is_hl ? "note hl" : "note";
         const space = fret === 0 ? " " : "-";
-        const name = note_name(note);
+        const name = !settings.hide_notes || is_hl ? note_name(note) : "";
         const spacing = space.padEnd(4 - name.length, space);
         return `${space}<span class="${note_class}" data-notes="${note}">${name}</span>${spacing}|`;
     }
@@ -335,39 +356,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const scale = SCALES[i];
             markup += `<option value="${i}">${scale.name}</option>`;
         }
-        let $select = document.querySelector("select#scale-select");
-        $select.innerHTML = markup;
-        $select.onchange = (e) => set_scale(e.target.value);
+        $scale_select.innerHTML = markup;
+        $scale_select.onchange = on_change;
+        $custom_scale.oninput = on_change;
 
         markup = ``;
         for (const n of NOTE_NAMES) {
             markup += `<option value="${n}">${n}</option>`;
         }
-        $select = document.querySelector("select#note-select");
-        $select.innerHTML = markup;
-        $select.onchange = (e) => set_root_note(e.target.value);
+        $note_select.innerHTML = markup;
+        $note_select.onchange = on_change;
 
         markup = ``;
         for (const i in TUNINGS) {
             const tuning = TUNINGS[i];
             markup += `<option value="${i}">${tuning.name}</option>`;
         }
-        $select = document.querySelector("select#tuning-select");
-        $select.innerHTML = markup;
-        $select.onchange = (e) => set_tuning(e.target.value);
+        $tuning_select.innerHTML = markup;
+        $tuning_select.onchange = on_change;
+        $custom_tuning.oninput = on_change;
 
-        document.querySelector("#octave-switch").onchange = (e) => {
-            settings.show_octave = !!e.target.checked;
-            update_from_settings();
-        };
-        $custom_tuning.oninput = (e) => {
-            TUNINGS[TUNINGS.length-1].strings = $custom_tuning.value;
-            update_from_settings();
-        };
-        $custom_scale.oninput = (e) => {
-            SCALES[SCALES.length-1].intervals = parse_intervals(e.target.value);
-            update_from_settings();
-        };
+        $octave_switch.onchange = on_change;
+        $hide_notes_switch.onchange = on_change;
     }
 
     function render_strings() {
@@ -377,15 +387,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         markup += `intervals:`.padEnd(14);
         for (const i of settings.scale.intervals) {
-            markup += `${i}`.padEnd(4);
+            markup += `${i}`.padEnd(6);
         }
         markup += `\n` + ``.padEnd(14);
         for (const i of settings.scale.intervals) {
-            markup += interval_elem(i, 4);
+            markup += interval_elem(i, 6);
         }
         markup += `\n` + `notes on ${note_name(settings.root_note)}:`.padEnd(14);
         for (const i of settings.scale.intervals) {
-            markup += note_elem(settings.root_note_normal + i, 4);
+            markup += note_elem(settings.root_note_normal + i, 6);
         }
         const note_str = settings.scale.intervals.map(n => `${n+settings.root_note_normal}`).join(",");
         markup += ` <span data-notes="${note_str}">(play all)</span>\n`;
@@ -428,7 +438,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         markup += `</span>`; // .text
 
-        document.querySelector(".string-scales pre").innerHTML = markup;
+        $pre.innerHTML = markup;
 
         _render_note_svg();
 
@@ -471,29 +481,15 @@ document.addEventListener("DOMContentLoaded", () => {
             markup += `<line x1="${x1*radius}" y1="${y1*radius}" x2="${x2*radius}" y2="${y2*radius}" stroke="black"/>`;
         }
 
-        const $elem = document.querySelector(".string-scales #note-svg");
-        $elem.innerHTML = markup;
+        $svg.innerHTML = markup;
         const r = radius + fs * 4;
-        $elem.setAttribute("viewBox", `${-r} ${-r} ${r*2} ${r*2}`)
+        $svg.setAttribute("viewBox", `${-r} ${-r} ${r*2} ${r*2}`)
     }
 
-    function set_tuning(tuning_id) {
-        settings.tuning = TUNINGS[parseInt(tuning_id)];
-        update_from_settings();
-    }
-    function set_scale(scale_id) {
-        settings.scale = SCALES[parseInt(scale_id)];
-        update_from_settings();
-    }
-    function set_root_note(note_str) {
-        settings.root_note = NOTE_NAMES.indexOf(note_str);
-        settings.root_note_normal = settings.root_note;
-        while (settings.root_note_normal < ROOT_OCTAVE * 12)
-            settings.root_note_normal += 12;
-        update_from_settings();
-    }
-
-    function update_from_settings() {
+    function update_settings_from_gui() {
+        // -- tuning --
+        TUNINGS[TUNINGS.length-1].strings = $custom_tuning.value;
+        settings.tuning = TUNINGS[parseInt($tuning_select.value)];
         const tuning_str = settings.tuning.strings.split(" ").filter(s => s.length);
         settings.strings = [];
         for (const s of tuning_str) {
@@ -505,7 +501,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 settings.strings.push(prev_note + num);
             }
         }
-        //console.log("string notes", settings.strings);
+
+        // -- root note --
+        settings.root_note = NOTE_NAMES.indexOf($note_select.value);
+        settings.root_note_normal = settings.root_note;
+        while (settings.root_note_normal < ROOT_OCTAVE * 12)
+            settings.root_note_normal += 12;
+
+        // -- scale --
+        SCALES[SCALES.length-1].intervals = parse_intervals($custom_scale.value);
+        settings.scale = SCALES[parseInt($scale_select.value)];
         settings.is_note_highlighted = (note) => {
             const note12 = note % 12;
             for (const i of settings.scale.intervals) {
@@ -514,11 +519,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             return false;
         };
+
+        // -- other bits --
+        settings.show_octave = !!$octave_switch.checked;
+        settings.hide_notes = !!$hide_notes_switch.checked;
+    }
+
+    function update_gui_from_settings() {
         render_strings();
     }
 
+    function on_change() {
+        update_settings_from_gui();
+        update_gui_from_settings();
+    }
+
     render_menu();
-    update_from_settings();
+    on_change();
 
     // ---------------------------------- AUDIO ----------------------------------
 

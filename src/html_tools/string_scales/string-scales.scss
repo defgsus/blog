@@ -1,3 +1,4 @@
+$color-spacer: #e0e0e0;
 $color-back: #f3f3f3;
 $color-fret: #686868;
 $color-neck: #eaeaea;
@@ -17,6 +18,12 @@ $color-text: #606060;
 
     > div {
       margin-right: .5rem;
+    }
+
+    .v-space {
+      margin: 0 .5rem 0 0.3rem;
+      padding: 0 .05rem;
+      background: $color-spacer;
     }
   }
 
