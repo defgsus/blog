@@ -1,0 +1,17 @@
+---
+title: what side do you take in equal rights, russia vs. ukraine and AI?
+---
+
+okay, this is some deeper content that i try to bring up, starting at several locations at once.
+
+First of all, today are totally freaked-out digital times. I'm doing stuff with computers since the mid-1990s and my perceived world has changed a lot. In the past people interested in computers where the minority. And mostly "nerds" and in some way considered not quite socially compatible. Nowadays the majority of people around me keep starring at their computer screens, all, the, time. If not, then at least the "computer" must be buzzing and doing something. I'm still the "nerd" person in comparison, and trying to convince people to use and understand script-blockers in their browsers still renders me somewhat socially incompatible. But the number of people using computers outside the special interest scene has somehow grown from almost no one to, at times, every one. Say, in the tram, in a waiting queue, in streets, in parks, at home...
+
+The "pandemic years" did solidify the whole permanent internet self-exposure which was already alarming before that, from my point of view. I really dig "getting lost in internet" at times but not on a daily basis. And, i think, if all the decision makers during the beginning of 2020 wouldn't have been already used to skyping and tweeting and zooming and retweeting, a couple of decisions of the pandemic control would have been wiser and more thought through. But, hey! When you can tweet a change of decision or regulation just an hour after the morning news then you can "try" things and "read back" from the public what they think, make adjustments, see how it goes. Just as an example, the decision to not close schools in germany at the time was made at a federal conference among all states, then officially disseminated and then changed in a twink. Hey, everybody with internet connection will find out for sure! 
+
+Back to the title of this post. I have strong opinions about certain things. Some of them even align with the "mainstream" in parts. Equal rights to anyone, any color, any gender any religion. That feels kind of natural and is certainly the mainstream opinion in germany. Still there is a lot to do to actually make it real for people that suffer un-equality in some way. It's not a brand-new topic either but in the recent couple of years it's representation in society is growing over the edges of endurability for many people. Sure, grumpy old man does not really know (or care) about women specific problems in business and life in general. But there are not only "two sides and you have to decide!" but something in today's western (german) society seems to constantly push me towards a definite side, a definite opinion! I think it has to do with the over-dosing of "connectedness". The problem is not the real connection between individuals but that most of the web and the media is run on business decisions with eloquent managers pitching The Newest masturbation feature in The App, aso.
+
+Assange, Snowden, Manning
+
+- web developer with experience in wrong code, and now the majority is running "on the web"
+- A.I. "tooling"
+- internet crime 
